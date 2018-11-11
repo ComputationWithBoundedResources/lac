@@ -1,0 +1,6 @@
+.stack-work/
+lac.cabal
+*~
+
+# vim
+*.swp
