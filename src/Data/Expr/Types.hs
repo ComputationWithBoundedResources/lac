@@ -3,7 +3,6 @@
 module Data.Expr.Types where
 
 import           Data.Text    (Text)
-import qualified Data.Text    as T
 
 data Expr where
   T :: Expr -> Expr -> Expr -> Expr
