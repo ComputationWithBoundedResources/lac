@@ -1,0 +1,54 @@
+name:                lac
+version:             0.1.0.0
+github:              "githubuser/lac"
+license:             BSD3
+author:              "David Obwaller"
+maintainer:          "david.obwaller@uibk.ac.at"
+copyright:           "2018 David Obwaller"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/lac#readme>
+
+ghc-options:
+- -Wall
+- -Werror
+
+dependencies:
+- base >= 4.7 && < 5
+- parsec
+- text
+
+library:
+  source-dirs: src
+
+executables:
+  lac-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - lac
+
+tests:
+  lac-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - lac
