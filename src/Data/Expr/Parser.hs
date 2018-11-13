@@ -50,12 +50,12 @@ ite = do
 match :: Stream s m Char => ParsecT s u m Expr
 match = do
   keyword "match"
-  x <- T.pack <$> identifier
+  e <- expr
   keyword "with"
   e1 <- pipe *> keyword "nil" *> arrow *> expr
   (x1, x2, x3) <- pipe *> tree (T.pack <$> identifier)
   e2 <- arrow *> expr
-  return $ Match x e1 (x1, x2, x3, e2)
+  return $ Match e e1 (x1, x2, x3, e2)
 
 tree :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (a, a, a)
 tree p = do

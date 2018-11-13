@@ -19,6 +19,6 @@ data Expr where
   -- f(x1, ... xN)
   Fun :: Text -> [Text] -> Expr
   -- match x with | nil -> e | <x, x, x> -> e
-  Match :: Text -> Expr -> (Text, Text, Text, Expr) -> Expr
+  Match :: Expr -> Expr -> (Text, Text, Text, Expr) -> Expr
 
 deriving instance Show Expr
