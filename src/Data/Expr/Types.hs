@@ -23,8 +23,13 @@ data Expr where
   Match :: Expr -> NonEmpty (Pattern, Expr) -> Expr
 
 deriving instance Show Expr
+deriving instance Eq Expr
 
 data Pattern
   = PNil
   | PNode Text Text Text
+  deriving (Eq, Show)
+
+data Decl
+  = Decl Text [Text] Expr
   deriving (Eq, Show)

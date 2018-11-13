@@ -42,3 +42,7 @@ instance Pretty Expr where
   pretty (l :<  r) = pretty l <> " < " <> pretty r
   pretty (l :== r) = pretty l <> " = " <> pretty r
   pretty (l :>  r) = pretty l <> " > " <> pretty r
+
+instance Pretty Decl where
+  pretty (Decl n as e) =
+    n <> " " <> T.intercalate " " as <> " = " <> pretty e <> ";"

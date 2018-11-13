@@ -92,20 +92,42 @@ expr = (controlExpr <|> valueExpr) `chainl1` (op <$> cmpOp)
         CmpGt -> (:>)
 
 controlExpr :: Stream s m Char => ParsecT s u m Expr
-controlExpr = match <|> ite
+controlExpr = try match <|> ite
 
 valueExpr :: Stream s m Char => ParsecT s u m Expr
 valueExpr =
   do
-    operands <- many1' p
-    case operands of
-      x :| [] -> return x
-      f :| xs ->
-        case Fun <$> fromVar f <*> pure (mapMaybe fromVar xs) of
-          Just app -> return app
-          Nothing -> error "valueExpr" -- fail
+    (x, xs) <- app
+    return $
+      if null xs
+        then x
+        else
+          let V f = x
+          in
+          Fun f (mapMaybe fromVar xs)
+
+app :: Stream s m Char => ParsecT s u m (Expr, [Expr])
+app =
+  do
+    (f :| xs) <- many1' p
+    return (f, xs)
   where
     p = try literal <|> try (V <$> var)
+
+decl :: Stream s m Char => ParsecT s u m Decl
+decl =
+  do
+    (name, args) <- hd
+    string "=" >> spaces
+    e <- expr
+    string ";" >> spaces
+    return $ Decl name args e
+  where
+    hd =
+      app >>=
+        \case
+          (V f, xs) -> return (f, mapMaybe fromVar xs)
+          _         -> parserZero
 
 fromVar :: Expr -> Maybe Text
 fromVar (V x) = Just x
