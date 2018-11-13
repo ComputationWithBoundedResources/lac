@@ -1,14 +1,19 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase       #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Data.Expr.Parser where
 
 import           Data.Expr.Types
 
 import           Control.Applicative ((<*))
-import           Control.Monad       (void)
+import           Control.Monad       (void, when)
+import           Data.List.NonEmpty
+import           Data.Maybe          (mapMaybe)
+import           Data.Text           (Text)
 import qualified Data.Text           as T
 import           Text.Parsec
+import           Text.Parsec.Helpers (many1')
 
 data CmpOp
   = CmpLt
@@ -76,7 +81,21 @@ controlExpr :: Stream s m Char => ParsecT s u m Expr
 controlExpr = match <|> ite
 
 valueExpr :: Stream s m Char => ParsecT s u m Expr
-valueExpr = try literal <|> var
+valueExpr =
+  do
+    operands <- many1' p
+    case operands of
+      x :| [] -> return x
+      f :| xs ->
+        case Fun <$> fromVar f <*> pure (mapMaybe fromVar xs) of
+          Just app -> return app
+          Nothing -> error "valueExpr" -- fail
+  where
+    p = try literal <|> try var
+
+fromVar :: Expr -> Maybe Text
+fromVar (V x) = Just x
+fromVar _ = Nothing
 
 keyword :: Stream s m Char => String -> ParsecT s u m ()
 keyword s = void $ string s <* spaces
@@ -88,7 +107,13 @@ pipe :: Stream s m Char => ParsecT s u m ()
 pipe = void $ string "|" >> spaces
 
 var :: Stream s m Char => ParsecT s u m Expr
-var = (V . T.pack) <$> identifier
+var =
+  do
+    i <- identifier
+    when (i `elem` reserved) parserZero
+    return $ (V . T.pack) i
+  where
+    reserved = ["if", "then", "else", "match", "with", "true", "false"]
 
 -- TODO: `nil` (empty tree)
 literal :: Stream s m Char => ParsecT s u m Expr
