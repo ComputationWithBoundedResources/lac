@@ -8,6 +8,7 @@ import           Data.Expr.Types
 
 import           Control.Applicative ((<*))
 import           Control.Monad       (void, when)
+import           Data.Function.Ext   (uncurry3)
 import           Data.List.NonEmpty
 import           Data.Maybe          (mapMaybe)
 import           Data.Text           (Text)
@@ -58,13 +59,16 @@ match =
   where
     case_ = do
       pipe
-      p <- nil <|> node
+      p <- tree var PNil (uncurry3 PNode)
       arrow
       e <- expr
       return (p, e)
 
-tree :: Stream s m Char => ParsecT s u m Expr -> ParsecT s u m Literal
-tree p = do
+tree :: Stream s m Char => ParsecT s u m a -> b -> ((a, a, a) -> b) -> ParsecT s u m b
+tree p x g = (nil >> return x) <|> (g <$> node p)
+
+node :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (a, a, a)
+node p = do
   string "{" >> spaces
   e1 <- p
   string "," >> spaces
@@ -72,15 +76,10 @@ tree p = do
   string "," >> spaces
   e3 <- p
   string "}" >> spaces
-  return $ LNode e1 e2 e3
+  return (e1, e2, e3)
 
-nil :: Stream s m Char => ParsecT s u m Pattern
-nil = keyword "nil" *> return PNil
-
-node :: Stream s m Char => ParsecT s u m Pattern
-node = do
-  LNode (V x) (V y) (V z) <- tree (V <$> var)
-  return $ PNode x y z
+nil :: Stream s m Char => ParsecT s u m ()
+nil = void $ keyword "nil"
 
 expr :: Stream s m Char => ParsecT s u m Expr
 expr = (controlExpr <|> valueExpr) `chainl1` (op <$> cmpOp)
@@ -149,12 +148,11 @@ var =
     when (i `elem` reserved) parserZero
     return (T.pack i)
   where
-    reserved = ["if", "then", "else", "match", "with", "true", "false"]
-    -- TODO: nil, let, in
+    reserved = ["if", "then", "else", "match", "with", "true", "false", "nil"]
+    -- TODO: let, in
 
--- TODO: `nil` (empty tree)
 literal :: Stream s m Char => ParsecT s u m Literal
-literal = true <|> false <|> tree expr
+literal = true <|> false <|> tree expr LNil (uncurry3 LNode)
   where
     true = keyword "true" *> return (LBool True)
     false = keyword "false" *> return (LBool False)
