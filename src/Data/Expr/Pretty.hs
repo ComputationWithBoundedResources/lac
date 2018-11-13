@@ -9,7 +9,7 @@ import           Data.Expr.Types
 import qualified Data.List.NonEmpty as NE
 import           Data.Monoid        ((<>))
 import           Data.Text          (Text)
-import qualified Data.Text          as T (intercalate)
+import qualified Data.Text          as T
 
 class Pretty t where
   pretty :: t -> Text
@@ -17,12 +17,18 @@ class Pretty t where
 instance Pretty Text where
   pretty = id
 
-instance Pretty Expr where
-  pretty (T x y z) = "{" <> T.intercalate ", " (map pretty [x, y, z]) <> "}"
-  pretty (V x) = pretty x
+instance Pretty Literal where
+  pretty (LBool True) = "true"
+  pretty (LBool False) = "false"
 
-  pretty (B True) = "true"
-  pretty (B False) = "false"
+  pretty LNil = "nil"
+  pretty (LNode x y z) = "{" <> T.intercalate ", " (map pretty [x, y, z]) <> "}"
+
+  -- pretty (LNat n) = (T.pack . show) n
+
+instance Pretty Expr where
+  pretty (L l) = pretty l
+  pretty (V x) = pretty x
 
   pretty (Ite p e1 e2) = "if " <> pretty p <> " then " <> pretty e1 <> " else " <> pretty e2
 

@@ -6,9 +6,16 @@ module Data.Expr.Types where
 import           Data.List.NonEmpty
 import           Data.Text          (Text)
 
+data Literal
+  = LNil
+  | LNode Expr Expr Expr
+  | LBool Bool -- LTrue/LFalse?
+  -- | LNat Int
+  deriving (Eq, Show)
+
 data Expr where
-  T :: Expr -> Expr -> Expr -> Expr
-  B :: Bool -> Expr
+  -- true, false, nil, {x, y, z}
+  L :: Literal -> Expr
   V :: Text -> Expr
   (:<) :: Expr -> Expr -> Expr
   (:==) :: Expr -> Expr -> Expr

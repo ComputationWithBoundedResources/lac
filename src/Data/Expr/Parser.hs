@@ -63,7 +63,7 @@ match =
       e <- expr
       return (p, e)
 
-tree :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (a, a, a)
+tree :: Stream s m Char => ParsecT s u m Expr -> ParsecT s u m Literal
 tree p = do
   string "{" >> spaces
   e1 <- p
@@ -72,14 +72,14 @@ tree p = do
   string "," >> spaces
   e3 <- p
   string "}" >> spaces
-  return (e1, e2, e3)
+  return $ LNode e1 e2 e3
 
 nil :: Stream s m Char => ParsecT s u m Pattern
 nil = keyword "nil" *> return PNil
 
 node :: Stream s m Char => ParsecT s u m Pattern
 node = do
-  (x, y, z) <- tree var
+  LNode (V x) (V y) (V z) <- tree (V <$> var)
   return $ PNode x y z
 
 expr :: Stream s m Char => ParsecT s u m Expr
@@ -112,7 +112,7 @@ app =
     (f :| xs) <- many1' p
     return (f, xs)
   where
-    p = try literal <|> try (V <$> var)
+    p = try (L <$> literal) <|> try (V <$> var)
 
 decl :: Stream s m Char => ParsecT s u m Decl
 decl =
@@ -153,8 +153,8 @@ var =
     -- TODO: nil, let, in
 
 -- TODO: `nil` (empty tree)
-literal :: Stream s m Char => ParsecT s u m Expr
-literal = true <|> false <|> ((\(x, y, z) -> T x y z) <$> tree expr)
+literal :: Stream s m Char => ParsecT s u m Literal
+literal = true <|> false <|> tree expr
   where
-    true = keyword "true" *> return (B True)
-    false = keyword "false" *> return (B False)
+    true = keyword "true" *> return (LBool True)
+    false = keyword "false" *> return (LBool False)
