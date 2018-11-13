@@ -1,4 +1,5 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Data.Expr.Types where
 
@@ -19,3 +20,5 @@ data Expr where
   Fun :: Text -> [Text] -> Expr
   -- match x with | nil -> e | <x, x, x> -> e
   Match :: Text -> Expr -> (Text, Text, Text, Expr) -> Expr
+
+deriving instance Show Expr
