@@ -48,14 +48,20 @@ ite = do
   return $ Ite e1 e2 e3
 
 match :: Stream s m Char => ParsecT s u m Expr
-match = do
-  keyword "match"
-  e <- expr
-  keyword "with"
-  e1 <- pipe *> keyword "nil" *> arrow *> expr
-  (x1, x2, x3) <- pipe *> tree (T.pack <$> identifier)
-  e2 <- arrow *> expr
-  return $ Match e e1 (x1, x2, x3, e2)
+match =
+  do
+    keyword "match"
+    e <- expr
+    keyword "with"
+    cs <- many1' case_
+    return $ Match e cs
+  where
+    case_ = do
+      pipe
+      p <- nil <|> node
+      arrow
+      e <- expr
+      return (p, e)
 
 tree :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (a, a, a)
 tree p = do
@@ -67,6 +73,14 @@ tree p = do
   e3 <- p
   string "}" >> spaces
   return (e1, e2, e3)
+
+nil :: Stream s m Char => ParsecT s u m Pattern
+nil = keyword "nil" *> return PNil
+
+node :: Stream s m Char => ParsecT s u m Pattern
+node = do
+  (x, y, z) <- tree var
+  return $ PNode x y z
 
 expr :: Stream s m Char => ParsecT s u m Expr
 expr = (controlExpr <|> valueExpr) `chainl1` (op <$> cmpOp)
@@ -91,7 +105,7 @@ valueExpr =
           Just app -> return app
           Nothing -> error "valueExpr" -- fail
   where
-    p = try literal <|> try var
+    p = try literal <|> try (V <$> var)
 
 fromVar :: Expr -> Maybe Text
 fromVar (V x) = Just x
@@ -106,14 +120,15 @@ arrow = void $ string "->" >> spaces
 pipe :: Stream s m Char => ParsecT s u m ()
 pipe = void $ string "|" >> spaces
 
-var :: Stream s m Char => ParsecT s u m Expr
+var :: Stream s m Char => ParsecT s u m Text
 var =
   do
     i <- identifier
     when (i `elem` reserved) parserZero
-    return $ (V . T.pack) i
+    return (T.pack i)
   where
     reserved = ["if", "then", "else", "match", "with", "true", "false"]
+    -- TODO: nil, let, in
 
 -- TODO: `nil` (empty tree)
 literal :: Stream s m Char => ParsecT s u m Expr

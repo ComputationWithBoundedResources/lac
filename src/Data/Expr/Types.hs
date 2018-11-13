@@ -3,7 +3,8 @@
 
 module Data.Expr.Types where
 
-import           Data.Text    (Text)
+import           Data.List.NonEmpty
+import           Data.Text          (Text)
 
 data Expr where
   T :: Expr -> Expr -> Expr -> Expr
@@ -19,6 +20,11 @@ data Expr where
   -- f(x1, ... xN)
   Fun :: Text -> [Text] -> Expr
   -- match x with | nil -> e | <x, x, x> -> e
-  Match :: Expr -> Expr -> (Text, Text, Text, Expr) -> Expr
+  Match :: Expr -> NonEmpty (Pattern, Expr) -> Expr
 
 deriving instance Show Expr
+
+data Pattern
+  = PNil
+  | PNode Text Text Text
+  deriving (Eq, Show)

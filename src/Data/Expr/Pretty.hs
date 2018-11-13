@@ -6,9 +6,10 @@ module Data.Expr.Pretty (
 
 import           Data.Expr.Types
 
-import           Data.Monoid     ((<>))
-import           Data.Text       (Text)
-import qualified Data.Text       as T (intercalate)
+import qualified Data.List.NonEmpty as NE
+import           Data.Monoid        ((<>))
+import           Data.Text          (Text)
+import qualified Data.Text          as T (intercalate)
 
 class Pretty t where
   pretty :: t -> Text
@@ -29,7 +30,14 @@ instance Pretty Expr where
 
   pretty (Let x e1 e2) = "let " <> pretty x <> " = " <> pretty e1 <> " in " <> pretty e2
 
-  pretty (Match e e1 (x1, x2, x3, e2)) = "match " <> pretty e <> " with | nil -> " <> pretty e1 <> " | {" <> T.intercalate ", " (map pretty [x1, x2, x3]) <> "} -> " <> pretty e2
+  pretty (Match e cs) =
+      "match " <> pretty e <> " with " <> T.intercalate " " cases
+    where
+      cases =
+        map (\(p, e) -> "| " <> pat p <> " -> " <> pretty e) (NE.toList cs)
+
+      pat PNil          = "nil"
+      pat (PNode x y z) = "{" <> pretty x <> ", " <> pretty y <> ", " <> pretty z <> "}"
 
   pretty (l :<  r) = pretty l <> " < " <> pretty r
   pretty (l :== r) = pretty l <> " == " <> pretty r
