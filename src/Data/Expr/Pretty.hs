@@ -1,9 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Data.Expr.Pretty (
     Pretty(..)
   ) where
 
 import           Data.Expr.Types
 
+import           Data.Monoid     ((<>))
 import           Data.Text       (Text)
 import qualified Data.Text       as T (intercalate)
 
