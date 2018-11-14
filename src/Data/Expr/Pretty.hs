@@ -18,6 +18,8 @@ instance Pretty Text where
   pretty = id
 
 instance Pretty Literal where
+  pretty (LNat x) = (T.pack . show) x
+
   pretty (LBool True) = "true"
   pretty (LBool False) = "false"
 

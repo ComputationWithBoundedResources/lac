@@ -152,7 +152,10 @@ var =
     -- TODO: let, in
 
 literal :: Stream s m Char => ParsecT s u m Literal
-literal = true <|> false <|> tree expr LNil (uncurry3 LNode)
+literal = nat <|> true <|> false <|> tree expr LNil (uncurry3 LNode)
   where
     true = keyword "true" *> return (LBool True)
     false = keyword "false" *> return (LBool False)
+
+nat :: Stream s m Char => ParsecT s u m Literal
+nat = (LNat . read) <$> many1 digit
