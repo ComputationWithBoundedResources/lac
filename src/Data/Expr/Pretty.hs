@@ -26,8 +26,6 @@ instance Pretty Literal where
   pretty LNil = "nil"
   pretty (LNode x y z) = "{" <> T.intercalate ", " (map pretty [x, y, z]) <> "}"
 
-  -- pretty (LNat n) = (T.pack . show) n
-
 instance Pretty Expr where
   pretty (L l) = pretty l
   pretty (V x) = pretty x
