@@ -38,6 +38,16 @@ identifier = do
   spaces
   return $ c : (cs ++ ps)
 
+let_ :: Stream s m Char => ParsecT s u m Expr
+let_ = do
+  keyword "let"
+  x <- var
+  keyword "="
+  e1 <- expr
+  keyword "in"
+  e2 <- expr
+  return $ Let x e1 e2
+
 ite :: Stream s m Char => ParsecT s u m Expr
 ite = do
   keyword "if"
@@ -91,7 +101,7 @@ expr = (controlExpr <|> valueExpr) `chainl1` (op <$> cmpOp)
         CmpGt -> (:>)
 
 controlExpr :: Stream s m Char => ParsecT s u m Expr
-controlExpr = try match <|> ite
+controlExpr = try let_ <|> try match <|> ite
 
 valueExpr :: Stream s m Char => ParsecT s u m Expr
 valueExpr =
@@ -148,8 +158,7 @@ var =
     when (i `elem` reserved) parserZero
     return (T.pack i)
   where
-    reserved = ["if", "then", "else", "match", "with", "true", "false", "nil"]
-    -- TODO: let, in
+    reserved = ["if", "then", "else", "match", "with", "true", "false", "nil", "let", "in"]
 
 literal :: Stream s m Char => ParsecT s u m Literal
 literal = nat <|> true <|> false <|> tree expr LNil (uncurry3 LNode)
@@ -158,4 +167,4 @@ literal = nat <|> true <|> false <|> tree expr LNil (uncurry3 LNode)
     false = keyword "false" *> return (LBool False)
 
 nat :: Stream s m Char => ParsecT s u m Literal
-nat = (LNat . read) <$> many1 digit
+nat = (LNat . read) <$> (many1 digit <* spaces)
