@@ -10,7 +10,7 @@ data Literal
   = LNil
   | LNode Expr Expr Expr
   | LBool Bool -- LTrue/LFalse?
-  -- | LNat Int
+  | LNat Int
   deriving (Eq, Show)
 
 data Expr where

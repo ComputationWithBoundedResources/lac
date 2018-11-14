@@ -15,9 +15,9 @@ eval env expr =
 
     V x -> let Just l = M.lookup x env in l
 
-    e1 :<  e2 -> undefined
-    e1 :== e2 -> undefined
-    e1 :>  e2 -> undefined
+    e1 :<  e2 -> cmp lt e1 e2
+    e1 :== e2 -> cmp eq e1 e2
+    e1 :>  e2 -> cmp gt e1 e2
 
     Ite e1 e2 e3 ->
       case eval env e1 of
@@ -42,3 +42,19 @@ eval env expr =
       in
       eval env' e
     match l (_ : xs) = match l xs
+
+    lt (LBool False) (LBool True) = True
+    lt (LBool _)     (LBool _)    = False
+    lt (LNat x) (LNat y) = x < y
+
+    ne x y = lt x y || lt y x
+
+    eq x y = not (ne x y)
+
+    gt x y = lt y x
+
+    cmp op e1 e2 =
+      let x = eval env e1
+          y = eval env e2
+      in
+      LBool (op x y)
