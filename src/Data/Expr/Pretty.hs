@@ -53,4 +53,7 @@ instance Pretty Expr where
 
 instance Pretty Decl where
   pretty (Decl n as e) =
-    n <> " " <> T.intercalate " " as <> " = " <> pretty e <> ";"
+    n <> args <> " = " <> pretty e <> ";"
+    where
+      args | null as   = ""
+           | otherwise = " " <> T.intercalate " " as
