@@ -13,6 +13,9 @@ data Literal
   | LNat Int
   deriving (Eq, Show)
 
+toExpr :: Literal -> Expr
+toExpr = L
+
 data Expr where
   -- true, false, nil, {x, y, z}
   L :: Literal -> Expr
