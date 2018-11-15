@@ -101,7 +101,7 @@ expr = (controlExpr <|> valueExpr) `chainl1` (op <$> cmpOp)
         CmpGt -> (:>)
 
 controlExpr :: Stream s m Char => ParsecT s u m Expr
-controlExpr = try let_ <|> try match <|> ite
+controlExpr = try let_ <|> try match <|> try ite
 
 valueExpr :: Stream s m Char => ParsecT s u m Expr
 valueExpr =
@@ -113,7 +113,7 @@ valueExpr =
         else
           let V f = x
           in
-          Fun f (mapMaybe fromVar xs)
+          Fun f xs
 
 app :: Stream s m Char => ParsecT s u m (Expr, [Expr])
 app =
@@ -121,7 +121,7 @@ app =
     (f :| xs) <- many1' p
     return (f, xs)
   where
-    p = try (L <$> literal) <|> try (V <$> var)
+    p = (L <$> nat) <|> try (L <$> literal) <|> try (V <$> var)
 
 decl :: Stream s m Char => ParsecT s u m Decl
 decl =
