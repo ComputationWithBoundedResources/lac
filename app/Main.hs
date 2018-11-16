@@ -15,15 +15,18 @@ import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.IO           as T
 import           System.Environment.Ext
-import           System.IO              (getLine)
 import qualified System.Repl            as Repl
 import           Text.Parsec            (many1, parse)
 
-data Repl
-  = Repl {
-    decls :: Map Text Binding
+data ReplState
+  = ReplState {
+    rsEnv   :: Map Text Binding
+  , rsFlags :: [String]
   }
   deriving (Eq, Show)
+
+defaultReplState :: ReplState
+defaultReplState = ReplState mempty mempty
 
 main :: IO ()
 main = do
@@ -35,36 +38,46 @@ main = do
       Right decls ->
         do
           let env = M.fromList . map (\(Decl x xs e) -> (x, EDecl xs e)) $ decls
-          repl env
+          let rs = defaultReplState {
+                rsEnv = env
+              , rsFlags = flags
+              }
+          repl rs
 
-repl :: Map Text Binding -> IO ()
-repl env =
-  void $ Repl.repl "> " (Repl env) $
+repl :: ReplState -> IO ()
+repl s =
+  void $ Repl.repl "> " s $
     \case
       ':' : cmd -> command cmd
       line      -> input line
   where
-    command :: String -> StateT Repl IO Bool
+    command :: String -> StateT ReplState IO Bool
     command "quit" = return False
-    command "decls" =
-      do
-        (mapMaybe select . M.toList . decls) <$> get >>= mapM_ (liftIO . f)
-        return True
+    command "decls" = rsFlags <$> get >>= go
       where
-        select (name, EDecl xs e) = Just $ Decl name xs e
-        select _                  = Nothing
+        go :: [String] -> StateT ReplState IO Bool
+        go flags =
+          do
+            (mapMaybe select . M.toList . rsEnv) <$> get >>= mapM_ (liftIO . f)
+            return True
+          where
+            select (name, EDecl xs e) = Just $ Decl name xs e
+            select _                  = Nothing
 
-        f | "--ast" `elem` [] = print
-          | otherwise         = T.putStrLn . pretty
+            f | "--ast" `elem` flags = print
+              | otherwise            = T.putStrLn . pretty
     command _ = do
       liftIO $ putStrLn "unknown command"
       return True
 
-    input :: String -> StateT Repl IO Bool
+    input :: String -> StateT ReplState IO Bool
     input line = do
       case parse expr mempty (T.pack line) of
         Left e -> liftIO $ print e
-        Right e -> liftIO $ do
-          -- print e
-          T.putStrLn . pretty . toExpr $ eval env e
+        Right e -> do
+          env <- rsEnv <$> get
+          flags <- rsFlags <$> get
+          liftIO $ do
+            when ("--ast" `elem` flags) (print e)
+            T.putStrLn . pretty . toExpr $ eval env e
       return True
