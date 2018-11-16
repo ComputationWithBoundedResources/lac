@@ -1,6 +1,6 @@
 name:                lac
 version:             0.1.0.0
-github:              "githubuser/lac"
+github:              "ComputationWithBoundedResources/lac"
 license:             BSD3
 author:              "David Obwaller"
 maintainer:          "david.obwaller@uibk.ac.at"
