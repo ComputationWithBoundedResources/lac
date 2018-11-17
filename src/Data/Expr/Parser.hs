@@ -14,7 +14,7 @@ import           Data.Maybe          (mapMaybe)
 import           Data.Text           (Text)
 import qualified Data.Text           as T
 import           Text.Parsec
-import           Text.Parsec.Helpers (many1')
+import           Text.Parsec.Helpers (many1', parens)
 
 data CmpOp
   = CmpLt
@@ -121,7 +121,10 @@ app =
     (f :| xs) <- many1' p
     return (f, xs)
   where
-    p = (L <$> nat) <|> try (L <$> literal) <|> try (V <$> var)
+    p = parens expr
+        <|> (L <$> nat)
+        <|> try (L <$> literal)
+        <|> try (V <$> var)
 
 decl :: Stream s m Char => ParsecT s u m Decl
 decl =
