@@ -31,3 +31,6 @@ pair a b = do
   y <- b <* spaces
   char ')' >> spaces
   return (x, y)
+
+parens :: Stream s m Char => ParsecT s u m a -> ParsecT s u m a
+parens = between (char '(' >> spaces) (char ')' >> spaces)
