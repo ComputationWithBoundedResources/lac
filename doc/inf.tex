@@ -1,0 +1,19 @@
+\newcommand{\proves}{\vdash}
+\newcommand{\equal}{=}
+
+\section{Type Inference}
+\[
+  \infer[(\mathsf{con})]{\tau_0 \approx \tau_1}{E, e :: \tau_0 \rhd e :: \tau_1}
+\]
+\[
+  \infer[(\mathsf{app})]{E \rhd e_1 :: \alpha \rightarrow \tau; E \rhd e_2 :: \alpha}{E \rhd e_1\; e_2 :: \tau}
+\]
+\[
+  \infer[(\mathsf{abs})]{\tau \approx \alpha_1 \rightarrow \alpha_2; E, x :: \alpha_1 \rhd e :: \alpha_2}{E \rhd \lambda x. e :: \tau}
+\]
+\[
+  \infer[(\mathsf{let})]{E \rhd e_1 :: \alpha; E, x :: \alpha \rhd e_2 :: \tau}{E \rhd \mathsf{let}\; x = e_1\; \mathsf{in}\; e_2 :: \tau}
+\]
+\[
+  \infer[(\mathsf{ite})]{E \rhd e_1 :: \mathsf{Bool}; E \rhd e_2 :: \tau, E \rhd e_3 :: \tau}{E \rhd \mathsf{if}\; e_1\; \mathsf{then}\; e_2\; \mathsf{else}\; e_3 :: \tau}
+\]
