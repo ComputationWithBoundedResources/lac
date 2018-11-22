@@ -16,12 +16,6 @@ import qualified Data.Text           as T
 import           Text.Parsec
 import           Text.Parsec.Helpers (many1', parens)
 
-data CmpOp
-  = CmpLt
-  | CmpEq
-  | CmpGt
-  deriving (Show, Eq)
-
 cmpOp :: Stream s m Char => ParsecT s u m CmpOp
 cmpOp = op <* spaces
   where

@@ -16,6 +16,12 @@ data Literal
 toExpr :: Literal -> Expr
 toExpr = L
 
+data CmpOp
+  = CmpLt
+  | CmpEq
+  | CmpGt
+  deriving (Show, Eq)
+
 data Expr where
   -- true, false, nil, {x, y, z}
   L :: Literal -> Expr
