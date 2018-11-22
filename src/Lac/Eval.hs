@@ -27,7 +27,7 @@ eval env expr =
       case M.lookup f env of
         Just (EDecl ys e) -> eval env . foldr f e $ zip xs ys
           where
-            f (x, y) e = Let y x e
+            f = uncurry . flip $ Let
 
     e1 :<  e2 -> cmp lt e1 e2
     e1 :== e2 -> cmp eq e1 e2
