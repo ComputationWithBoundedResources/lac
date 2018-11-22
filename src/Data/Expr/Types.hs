@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs              #-}
+{-# LANGUAGE PatternSynonyms    #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
 module Data.Expr.Types where
@@ -26,9 +27,7 @@ data Expr where
   -- true, false, nil, {x, y, z}
   L :: Literal -> Expr
   V :: Text -> Expr
-  (:<) :: Expr -> Expr -> Expr
-  (:==) :: Expr -> Expr -> Expr
-  (:>) :: Expr -> Expr -> Expr
+  Cmp :: CmpOp -> Expr -> Expr -> Expr
   -- if e then e else e
   Ite :: Expr -> Expr -> Expr -> Expr
   -- let x = e in e
@@ -40,6 +39,10 @@ data Expr where
 
 deriving instance Show Expr
 deriving instance Eq Expr
+
+pattern (:<)  e1 e2 = Cmp CmpLt e1 e2
+pattern (:==) e1 e2 = Cmp CmpEq e1 e2
+pattern (:>)  e1 e2 = Cmp CmpGt e1 e2
 
 data Pattern
   = PNil
