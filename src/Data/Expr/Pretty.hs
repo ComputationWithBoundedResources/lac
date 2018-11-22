@@ -32,7 +32,7 @@ instance Pretty Expr where
 
   pretty (Ite p e1 e2) = "if " <> pretty p <> " then " <> pretty e1 <> " else " <> pretty e2
 
-  pretty (Fun f as) = pretty f <> " " <> T.intercalate " " (map pretty as)
+  pretty (App t ts) = pretty t <> " " <> T.intercalate " " (map pretty ts)
 
   pretty (Let x e1 e2) = "let " <> pretty x <> " = " <> pretty e1 <> " in " <> pretty e2
 

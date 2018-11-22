@@ -23,9 +23,9 @@ eval env expr =
         Just (EVal l)     -> l
         Just (EDecl [] e) -> eval env e
 
-    Fun f xs ->
+    App f ts ->
       case M.lookup f env of
-        Just (EDecl ys e) -> eval env . foldr f e $ zip xs ys
+        Just (EDecl ys e) -> eval env . foldr f e $ zip ts ys
           where
             f = uncurry . flip $ Let
 

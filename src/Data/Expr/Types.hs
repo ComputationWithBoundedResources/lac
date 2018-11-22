@@ -33,7 +33,7 @@ data Expr where
   -- let x = e in e
   Let :: Text -> Expr -> Expr -> Expr
   -- f(x1, ... xN)
-  Fun :: Text -> [Expr] -> Expr
+  App :: Text -> [Expr] -> Expr
   -- match x with | nil -> e | <x, x, x> -> e
   Match :: Expr -> NonEmpty (Pattern, Expr) -> Expr
 

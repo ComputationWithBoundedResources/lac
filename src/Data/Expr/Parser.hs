@@ -107,7 +107,7 @@ valueExpr =
         else
           let V f = x
           in
-          Fun f xs
+          App f xs
 
 app :: Stream s m Char => ParsecT s u m (Expr, [Expr])
 app =
