@@ -104,10 +104,7 @@ valueExpr =
     return $
       if null xs
         then x
-        else
-          let V f = x
-          in
-          App f xs
+        else foldl1 App (x:xs)
 
 app :: Stream s m Char => ParsecT s u m (Expr, [Expr])
 app =
@@ -118,7 +115,7 @@ app =
     p = parens expr
         <|> (L <$> nat)
         <|> try (L <$> literal)
-        <|> try (V <$> var)
+        <|> try (Var <$> var)
 
 decl :: Stream s m Char => ParsecT s u m Decl
 decl =
@@ -132,11 +129,11 @@ decl =
     hd =
       app >>=
         \case
-          (V f, xs) -> return (f, mapMaybe fromVar xs)
+          (Var f, xs) -> return (f, mapMaybe fromVar xs)
           _         -> parserZero
 
 fromVar :: Expr -> Maybe Text
-fromVar (V x) = Just x
+fromVar (Var x) = Just x
 fromVar _ = Nothing
 
 keyword :: Stream s m Char => String -> ParsecT s u m ()

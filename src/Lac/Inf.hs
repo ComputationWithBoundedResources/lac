@@ -1,20 +1,11 @@
 module Lac.Inf where
 
-import Control.Monad.State
+import           Data.Expr.Types
+
+import           Control.Monad.State
+import           Data.Text           (Text)
 
 -- type inference
-
-data Expr
-  = Let Int Expr Expr
-  | Ite Expr Expr Expr
-  | Abs Int Expr
-  | App Expr Expr
-  | Match Expr [Expr]
-  | CTrue
-  | CFalse
-  | CNat Int
-  | CTree
-  deriving (Eq, Show)
 
 data T f v
   = V v
@@ -23,7 +14,7 @@ data T f v
 
 type Type = T String Int
 
-type Env = [(T String Int, Type)]
+type Env = [(T String Text, Type)]
 
 fresh :: Monad m => StateT Int m Int
 fresh = do
@@ -44,12 +35,16 @@ tyTree a = F "Tree" [a]
 infer :: (Env, Expr, Type) -> State Int [(Type, Type)]
 infer (env, expr, tau) =
   case expr of
-    CTrue -> return [(tau, tyBool)]
-    CFalse -> return [(tau, tyBool)]
-    CNat _ -> return [(tau, tyNat)]
-    CTree -> do
+    L LNil -> fresh >>= \a -> return [(tau, tyTree (V a))]
+    L (LNode e1 e2 e3) -> do
       a <- fresh
-      return [(tau, tyTree (V a))]
+      xs <- infer (env, e1, tyTree (V a))
+      ys <- infer (env, e2, V a)
+      zs <- infer (env, e3, tyTree (V a))
+      return $ (tau, tyTree (V a)) : concat [xs, ys, zs]
+    L (LBool True) -> return [(tau, tyBool)]
+    L (LBool False) -> return [(tau, tyBool)]
+    L (LNat _) -> return [(tau, tyNat)]
     App e1 e2 -> do
       a <- fresh
       (++) <$> infer (env, e1, F "->" [V a, tau]) <*> infer (env, e2, V a)
@@ -70,5 +65,5 @@ infer (env, expr, tau) =
     Match e es -> do
       a1 <- fresh
       xs <- infer (env, e, tyTree (V a1))
-      ys <- concat <$> mapM (\e -> infer (env, e, tau)) es
+      ys <- concat <$> mapM (\(p, e) -> infer (env, e, tau)) es
       return $ xs ++ ys

@@ -28,11 +28,11 @@ instance Pretty Literal where
 
 instance Pretty Expr where
   pretty (L l) = pretty l
-  pretty (V x) = pretty x
+  pretty (Var x) = pretty x
 
   pretty (Ite p e1 e2) = "if " <> pretty p <> " then " <> pretty e1 <> " else " <> pretty e2
 
-  pretty (App t ts) = pretty t <> " " <> T.intercalate " " (map pretty ts)
+  pretty (App e1 e2) = "(" <> pretty e1 <> " " <> pretty e2 <> ")"
 
   pretty (Let x e1 e2) = "let " <> pretty x <> " = " <> pretty e1 <> " in " <> pretty e2
 
@@ -48,6 +48,8 @@ instance Pretty Expr where
   pretty (l :<  r) = pretty l <> " < " <> pretty r
   pretty (l :== r) = pretty l <> " = " <> pretty r
   pretty (l :>  r) = pretty l <> " > " <> pretty r
+
+  pretty (Abs x e) = "\\ " <> pretty x <> " -> (" <> pretty e <> ")"
 
 instance Pretty Decl where
   pretty (Decl n as e) =

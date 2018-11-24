@@ -10,7 +10,6 @@ import           Control.Monad.State    (StateT, get)
 import           Control.Monad.Trans    (liftIO)
 import           Data.Map               (Map)
 import qualified Data.Map               as M
-import           Data.Maybe             (mapMaybe)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.IO           as T
@@ -20,7 +19,7 @@ import           Text.Parsec            (many1, parse)
 
 data ReplState
   = ReplState {
-    rsEnv   :: Map Text Binding
+    rsEnv   :: Map Text Expr
   , rsFlags :: [String]
   }
   deriving (Eq, Show)
@@ -37,12 +36,16 @@ main = do
       Left e -> print e
       Right decls ->
         do
-          let env = M.fromList . map (\(Decl x xs e) -> (x, EDecl xs e)) $ decls
+          let env = M.fromList . map (\(Decl x xs e) -> (x, fromDecl xs e)) $ decls
           let rs = defaultReplState {
                 rsEnv = env
               , rsFlags = flags
               }
           repl rs
+
+fromDecl :: [Text] -> Expr -> Expr
+fromDecl (x:xs) e = Abs x (fromDecl xs e)
+fromDecl [] e = e
 
 repl :: ReplState -> IO ()
 repl s =
@@ -58,11 +61,10 @@ repl s =
         go :: [String] -> StateT ReplState IO Bool
         go flags =
           do
-            (mapMaybe select . M.toList . rsEnv) <$> get >>= mapM_ (liftIO . f)
+            (map select . M.toList . rsEnv) <$> get >>= mapM_ (liftIO . f)
             return True
           where
-            select (name, EDecl xs e) = Just $ Decl name xs e
-            select _                  = Nothing
+            select (name, e) = Decl name [] e
 
             f | "--ast" `elem` flags = print
               | otherwise            = T.putStrLn . pretty
@@ -79,5 +81,5 @@ repl s =
           flags <- rsFlags <$> get
           liftIO $ do
             when ("--ast" `elem` flags) (print e)
-            T.putStrLn . pretty . toExpr $ eval env e
+            T.putStrLn . pretty $ eval env e
       return True
