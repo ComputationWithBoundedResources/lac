@@ -4,6 +4,7 @@ module Main where
 
 import           Data.Expr
 import           Lac.Eval
+import           Lac.Inf
 
 import           Control.Monad          (forM_, void, when)
 import           Control.Monad.State    (StateT, get)
@@ -61,7 +62,11 @@ repl s =
         go :: [String] -> StateT ReplState IO Bool
         go flags =
           do
-            (map select . M.toList . rsEnv) <$> get >>= mapM_ (liftIO . f)
+            decls <- (map select . M.toList . rsEnv) <$> get
+            mapM_ (liftIO . f) decls
+            when ("--inf" `elem` flags) $
+              forM_ decls $ \(Decl _ _ e) ->
+                liftIO (print (inferType mempty e))
             return True
           where
             select (name, e) = Decl name [] e
@@ -81,5 +86,6 @@ repl s =
           flags <- rsFlags <$> get
           liftIO $ do
             when ("--ast" `elem` flags) (print e)
+            when ("--inf" `elem` flags) (print (inferType mempty e))
             T.putStrLn . pretty $ eval env e
       return True
