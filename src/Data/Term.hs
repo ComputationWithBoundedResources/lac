@@ -1,0 +1,6 @@
+module Data.Term (
+    module E
+  ) where
+
+import           Data.Term.Term  as E
+import           Data.Term.Unify as E
