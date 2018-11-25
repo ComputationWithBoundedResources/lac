@@ -2,11 +2,9 @@ module Lac.Eval where
 
 import           Data.Expr.Types
 
-import           Data.Expr.Pretty
 import qualified Data.List.NonEmpty as NE
 import           Data.Map           (Map)
 import qualified Data.Map           as M
-import           Data.Monoid        ((<>))
 import           Data.Text          (Text)
 import           Debug.Trace
 

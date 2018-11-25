@@ -5,7 +5,6 @@ import           Data.Term
 
 import           Control.Monad.State
 import           Data.List           (find)
-import           Data.Monoid
 import           Data.Text           (Text)
 
 -- type inference
