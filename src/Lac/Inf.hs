@@ -75,8 +75,9 @@ infer (env, expr, tau) =
       ys <- concat <$> mapM (\(_, e) -> infer (env, e, tau)) es
       return $ xs ++ ys
     Cmp _ e1 e2 -> do
-      xs <- infer (env, e1, tyNat)
-      ys <- infer (env, e2, tyNat)
+      a <- fresh
+      xs <- infer (env, e1, V a)
+      ys <- infer (env, e2, V a)
       return $ (tau, tyBool) : (xs ++ ys)
 
 inferType :: Env -> Expr -> ([(Type, Type)], Int)
