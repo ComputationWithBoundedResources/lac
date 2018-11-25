@@ -3,6 +3,7 @@
 module Main where
 
 import           Data.Expr
+import           Data.Term
 import           Lac.Eval
 import           Lac.Inf
 
@@ -66,7 +67,7 @@ repl s =
             mapM_ (liftIO . f) decls
             when ("--inf" `elem` flags) $
               forM_ decls $ \(Decl _ _ e) ->
-                liftIO (print (inferType mempty e))
+                liftIO (info e)
             return True
           where
             select (name, e) = Decl name [] e
@@ -86,6 +87,19 @@ repl s =
           flags <- rsFlags <$> get
           liftIO $ do
             when ("--ast" `elem` flags) (print e)
-            when ("--inf" `elem` flags) (print (inferType mempty e))
+            when ("--inf" `elem` flags) (info e)
             T.putStrLn . pretty $ eval env e
       return True
+
+    info e =
+      do
+        let (eqs, _) = inferType mempty e
+        putStrLn "Equations:"
+        mapM_ (T.putStrLn . ppEqn . g) eqs
+        putStrLn "MGU:"
+        case unify eqs of
+          Left e -> print e
+          Right mgu ->
+            mapM_ (T.putStrLn . ppEqn . g) mgu
+      where
+        g (t, u) = (mapFun T.pack . mapVar (T.pack . show) $ t, mapFun T.pack . mapVar (T.pack . show) $ u)
