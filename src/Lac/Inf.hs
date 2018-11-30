@@ -29,8 +29,14 @@ tyNat = F "Nat" []
 tyTree :: Type -> Type
 tyTree a = F "Tree" [a]
 
-infer :: (Env, Expr, Type) -> State Int [(Type, Type)]
-infer (env, expr, tau) =
+class Typable a where
+  infer :: (Env, a, Type) -> State Int [(Type, Type)]
+
+instance Typable Expr where
+  infer = inferExprType
+
+inferExprType :: (Env, Expr, Type) -> State Int [(Type, Type)]
+inferExprType (env, expr, tau) =
   case expr of
     L LNil -> fresh >>= \a -> return [(tau, tyTree (V a))]
     L (LNode e1 e2 e3) -> do
@@ -80,5 +86,5 @@ infer (env, expr, tau) =
       ys <- infer (env, e2, V a)
       return $ (tau, tyBool) : (xs ++ ys)
 
-inferType :: Env -> Expr -> ([(Type, Type)], Int)
+inferType :: Typable a => Env -> a -> ([(Type, Type)], Int)
 inferType env expr = runState (infer (env, expr, V 0)) 0
