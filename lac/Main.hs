@@ -1,4 +1,5 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
@@ -10,8 +11,10 @@ import           Lac.Inf
 import           Control.Monad          (forM_, void, when)
 import           Control.Monad.State    (StateT, get)
 import           Control.Monad.Trans    (liftIO)
+import           Data.List              (lookup)
 import           Data.Map               (Map)
 import qualified Data.Map               as M
+import           Data.Monoid            ((<>))
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.IO           as T
@@ -64,10 +67,15 @@ repl s =
         go flags =
           do
             decls <- (map select . M.toList . rsEnv) <$> get
-            mapM_ (liftIO . f) decls
-            when ("--inf" `elem` flags) $
+            forM_ decls $ \(Decl n _ e) ->
+              liftIO $ do
+                T.putStr $ n <> " : "
+                showType e
+                T.putStr $ n <> " = "
+                f e
+            when ("--debug" `elem` flags) $
               forM_ decls $ \(Decl _ _ e) ->
-                liftIO (info e)
+                liftIO (debug e)
             return True
           where
             select (name, e) = Decl name [] e
@@ -87,11 +95,11 @@ repl s =
           flags <- rsFlags <$> get
           liftIO $ do
             when ("--ast" `elem` flags) (print e)
-            when ("--inf" `elem` flags) (info e)
+            when ("--debug" `elem` flags) (debug e)
             T.putStrLn . pretty $ eval env e
       return True
 
-    info e =
+    debug e =
       do
         let (eqs, _) = inferType mempty e
         putStrLn "Equations:"
@@ -103,3 +111,17 @@ repl s =
             mapM_ (T.putStrLn . ppEqn . g) mgu
       where
         g (t, u) = (mapFun T.pack . mapVar (T.pack . show) $ t, mapFun T.pack . mapVar (T.pack . show) $ u)
+
+    showType expr =
+      case unify eqs of
+        Right mgu
+          | Just ty <- lookup (V 0) mgu ->
+              let f = mapFun T.pack
+                  g = mapVar (\i -> T.pack ("a" <> show i))
+              in
+              T.putStrLn (ppTerm . f . g $ ty)
+          | otherwise ->
+              error "this should not happen"
+        Left err -> print err
+      where
+        (eqs, _) = inferType mempty expr
