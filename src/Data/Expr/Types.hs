@@ -59,3 +59,7 @@ data Pattern
 data Decl
   = Decl Text [Text] Expr
   deriving (Eq, Show)
+
+fromDecl :: [Text] -> Expr -> Expr
+fromDecl (x:xs) e = Abs x (fromDecl xs e)
+fromDecl []     e = e

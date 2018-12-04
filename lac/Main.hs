@@ -48,10 +48,6 @@ main = do
               }
           repl rs
 
-fromDecl :: [Text] -> Expr -> Expr
-fromDecl (x:xs) e = Abs x (fromDecl xs e)
-fromDecl [] e = e
-
 repl :: ReplState -> IO ()
 repl s =
   void $ Repl.repl "> " s $
