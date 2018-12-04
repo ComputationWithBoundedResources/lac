@@ -9,7 +9,7 @@ import           Lac.Eval
 import           Lac.Inf
 
 import           Control.Monad          (forM_, void, when)
-import           Control.Monad.State    (StateT, get)
+import           Control.Monad.State    (StateT, evalState, get)
 import           Control.Monad.Trans    (liftIO)
 import           Data.List              (lookup)
 import           Data.Map               (Map)
@@ -63,10 +63,24 @@ repl s =
         go flags =
           do
             decls <- (map select . M.toList . rsEnv) <$> get
+
+            let program = Program decls
+            let env = mempty
+            let decls' = evalState (mkProgEnv env decls) 0
+            let env' = extractEnv env decls'
+            let (eqs, _) = inferType env program
+            let maybeMGU = unify eqs
+
             forM_ decls $ \(Decl n _ e) ->
               liftIO $ do
                 T.putStr $ n <> " : "
-                showType e
+                case maybeMGU of
+                  Right mgu -> do
+                    let ty = lookup (V n) env' >>= (\a -> lookup a mgu)
+                    case ty of
+                      Just ty -> T.putStrLn (ppTerm' ty)
+                      _       -> return ()
+                  _ -> return ()
                 T.putStr $ n <> " = "
                 f e
             when ("--debug" `elem` flags) $
@@ -102,22 +116,16 @@ repl s =
         mapM_ (T.putStrLn . ppEqn . g) eqs
         putStrLn "MGU:"
         case unify eqs of
-          Left e -> print e
-          Right mgu ->
-            mapM_ (T.putStrLn . ppEqn . g) mgu
+          Left e    -> print e
+          Right mgu -> mapM_ (T.putStrLn . ppEqn . g) mgu
       where
         g (t, u) = (mapFun T.pack . mapVar (T.pack . show) $ t, mapFun T.pack . mapVar (T.pack . show) $ u)
 
-    showType expr =
-      case unify eqs of
-        Right mgu
-          | Just ty <- lookup (V 0) mgu ->
-              let f = mapFun T.pack
-                  g = mapVar (\i -> T.pack ("a" <> show i))
-              in
-              T.putStrLn (ppTerm . f . g $ ty)
-          | otherwise ->
-              error "this should not happen"
-        Left err -> print err
-      where
-        (eqs, _) = inferType mempty expr
+convertTerm :: T String Int -> T Text Text
+convertTerm = f . g
+  where
+    f = mapFun T.pack
+    g = mapVar (\i -> T.pack ("a" <> show i))
+
+ppTerm' :: T String Int -> Text
+ppTerm' = ppTerm . convertTerm
