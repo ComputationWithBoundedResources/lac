@@ -75,11 +75,21 @@ inferExprType (env, expr, tau) =
       ys <- infer (env, e2, tau)
       zs <- infer (env, e3, tau)
       return $ concat [xs, ys, zs]
-    Match e es -> do
-      a1 <- fresh
-      xs <- infer (env, e, tyTree (V a1))
-      ys <- concat <$> mapM (\(_, e) -> infer (env, e, tau)) es
-      return $ xs ++ ys
+    Match e es ->
+      do
+        a <- fresh
+        let ty = tyTree (V a)
+        xs <- infer (env, e, ty)
+        ys <- concat <$> mapM (f a ty) es
+        return $ xs ++ ys
+      where
+        f a ty (p, e) =
+          case p of
+            PNil -> infer (env, e, tau)
+            PNode l x r ->
+              let env' = (V l, ty) : (V x, V a) : (V r, ty) : env
+              in
+              infer (env', e, tau)
     Cmp _ e1 e2 -> do
       a <- fresh
       xs <- infer (env, e1, V a)
