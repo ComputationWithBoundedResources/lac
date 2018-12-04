@@ -1,8 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Lac.Inf where
 
 import           Data.Expr.Types
 import           Data.Term
 
+import           Control.Monad       (replicateM)
 import           Control.Monad.State
 import           Data.List           (find)
 import           Data.Text           (Text)
@@ -95,6 +98,28 @@ inferExprType (env, expr, tau) =
       xs <- infer (env, e1, V a)
       ys <- infer (env, e2, V a)
       return $ (tau, tyBool) : (xs ++ ys)
+
+instance Typable Program where
+  infer = inferProgType
+
+mkProgEnv :: Env -> [Decl] -> State Int [((T String Text, Type), Expr)]
+mkProgEnv env decls =
+  do
+    as <- replicateM (length decls) fresh
+    return $ zipWith f decls as
+  where
+    f decl@(Decl name xs e) a = ((V name, V a), fromDecl xs e)
+
+extractEnv :: Env -> [((T String Text, Type), Expr)] -> Env
+extractEnv env decls' = map fst decls' ++ env
+
+inferProgType :: (Env, Program, Type) -> State Int [(Type, Type)]
+inferProgType (env, Program decls, tau) =
+  do
+    decls' <- mkProgEnv env decls
+    let env' = extractEnv env decls'
+    constraints <- concat <$> mapM (\((_, a), e) -> infer (env', e, a)) decls'
+    return constraints
 
 inferType :: Typable a => Env -> a -> ([(Type, Type)], Int)
 inferType env expr = runState (infer (env, expr, V 0)) 0
