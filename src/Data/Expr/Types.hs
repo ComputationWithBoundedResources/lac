@@ -63,3 +63,7 @@ data Decl
 fromDecl :: [Text] -> Expr -> Expr
 fromDecl (x:xs) e = Abs x (fromDecl xs e)
 fromDecl []     e = e
+
+data Program
+  = Program [Decl]
+  deriving (Eq, Show)
