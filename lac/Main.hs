@@ -120,12 +120,3 @@ repl s =
           Right mgu -> mapM_ (T.putStrLn . ppEqn . g) mgu
       where
         g (t, u) = (mapFun T.pack . mapVar (T.pack . show) $ t, mapFun T.pack . mapVar (T.pack . show) $ u)
-
-convertTerm :: T String Int -> T Text Text
-convertTerm = f . g
-  where
-    f = mapFun T.pack
-    g = mapVar (\i -> T.pack ("a" <> show i))
-
-ppTerm' :: T String Int -> Text
-ppTerm' = ppTerm . convertTerm
