@@ -14,7 +14,7 @@ import qualified Data.Text      as T
 
 ppTerm :: T Text Text -> Text
 ppTerm (V x)    = x
-ppTerm (F "->" [t, u]) = ppTerm t <> " -> " <> ppTerm u
+ppTerm (F "->" [t, u]) = "(" <> ppTerm t <> " -> " <> ppTerm u <> ")"
 ppTerm (F f ts) = f <> "(" <> (T.intercalate ", " . map ppTerm $ ts) <> ")"
 
 ppTerm' :: T String Int -> Text
