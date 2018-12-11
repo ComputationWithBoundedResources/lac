@@ -88,7 +88,7 @@ debug e =
     mapM_ (T.putStrLn . ppEqn . g) eqs
     putStrLn "MGU:"
     case unify eqs of
-      Left e    -> print e
+      Left err  -> print err
       Right mgu -> mapM_ (T.putStrLn . ppEqn . g) mgu
   where
     g (t, u) = (f t, f u)
@@ -141,8 +141,7 @@ commands =
                 T.putStr $ n <> " : "
                 case maybeMGU of
                   Right mgu -> do
-                    let ty = lookup (V n) env' >>= (\a -> lookup a mgu)
-                    case ty of
+                    case lookup (V n) env' >>= (\a -> lookup a mgu) of
                       Just ty -> T.putStrLn (ppTerm' ty)
                       _       -> return ()
                   _ -> return ()
