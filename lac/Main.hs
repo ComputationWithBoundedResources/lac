@@ -91,7 +91,9 @@ debug e =
       Left e    -> print e
       Right mgu -> mapM_ (T.putStrLn . ppEqn . g) mgu
   where
-    g (t, u) = (mapFun T.pack . mapVar (T.pack . show) $ t, mapFun T.pack . mapVar (T.pack . show) $ u)
+    g (t, u) = (f t, f u)
+      where
+        f = mapFun T.pack . mapVar (T.pack . show)
 
 data ReplErr
   = ReplErr Text
