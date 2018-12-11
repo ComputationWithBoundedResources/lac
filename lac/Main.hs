@@ -1,9 +1,10 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Main where
 
-import           Data.Expr
+import           Data.Expr              hiding (match)
 import           Data.Term
 import           Lac.Eval
 import           Lac.Inf
@@ -11,7 +12,7 @@ import           Lac.Inf
 import           Control.Monad          (forM_, void, when)
 import           Control.Monad.State    (StateT, evalState, get)
 import           Control.Monad.Trans    (liftIO)
-import           Data.List              (lookup)
+import           Data.List              (isPrefixOf, lookup)
 import           Data.Map               (Map)
 import qualified Data.Map               as M
 import           Data.Monoid            ((<>))
@@ -56,8 +57,63 @@ repl s =
       line      -> input line
   where
     command :: String -> StateT ReplState IO Bool
-    command "quit" = return False
-    command "decls" = rsFlags <$> get >>= go
+    command i =
+      case match commands i of
+        Right ReplCmd{..} -> replCmdFunc mempty
+        Left e            -> liftIO (print e) >> return True
+
+    input :: String -> StateT ReplState IO Bool
+    input line = do
+      case parse expr mempty (T.pack line) of
+        Left e -> liftIO $ print e
+        Right e -> do
+          env <- rsEnv <$> get
+          flags <- rsFlags <$> get
+          liftIO $ do
+            when ("--ast" `elem` flags) (print e)
+            when ("--debug" `elem` flags) (debug e)
+            T.putStrLn . pretty $ eval env e
+      return True
+
+debug :: Typable a => a -> IO ()
+debug e =
+  do
+    let (eqs, _) = inferType mempty e
+    putStrLn "Equations:"
+    mapM_ (T.putStrLn . ppEqn . g) eqs
+    putStrLn "MGU:"
+    case unify eqs of
+      Left e    -> print e
+      Right mgu -> mapM_ (T.putStrLn . ppEqn . g) mgu
+  where
+    g (t, u) = (mapFun T.pack . mapVar (T.pack . show) $ t, mapFun T.pack . mapVar (T.pack . show) $ u)
+
+data ReplErr
+  = ReplErr Text
+  deriving (Eq, Show)
+
+data ReplCmd
+  = ReplCmd {
+    replCmdFunc :: [String] -> StateT ReplState IO Bool
+  , replCmdDesc :: Text -> Text
+  }
+
+match :: [(String, ReplCmd)] -> String -> Either ReplErr ReplCmd
+match cs i =
+  case filter (\(n, _) -> i `isPrefixOf` n) cs of
+    [(_,c)]  -> Right c
+    []       -> Left (ReplErr "no match")
+    xs@(_:_) -> Left (ReplErr $ "ambiguous match: " <> T.intercalate ", " (map (T.pack . fst) xs))
+
+commands :: [(String, ReplCmd)]
+commands =
+    [ ("quit",  ReplCmd cmdQuit  mempty)
+    , ("decls", ReplCmd cmdDecls mempty)
+    ]
+  where
+    cmdQuit _ = return False
+
+    cmdDecls _ = rsFlags <$> get >>= go
       where
         go :: [String] -> StateT ReplState IO Bool
         go flags =
@@ -92,31 +148,3 @@ repl s =
 
             f | "--ast" `elem` flags = print
               | otherwise            = T.putStrLn . pretty
-    command _ = do
-      liftIO $ putStrLn "unknown command"
-      return True
-
-    input :: String -> StateT ReplState IO Bool
-    input line = do
-      case parse expr mempty (T.pack line) of
-        Left e -> liftIO $ print e
-        Right e -> do
-          env <- rsEnv <$> get
-          flags <- rsFlags <$> get
-          liftIO $ do
-            when ("--ast" `elem` flags) (print e)
-            when ("--debug" `elem` flags) (debug e)
-            T.putStrLn . pretty $ eval env e
-      return True
-
-    debug e =
-      do
-        let (eqs, _) = inferType mempty e
-        putStrLn "Equations:"
-        mapM_ (T.putStrLn . ppEqn . g) eqs
-        putStrLn "MGU:"
-        case unify eqs of
-          Left e    -> print e
-          Right mgu -> mapM_ (T.putStrLn . ppEqn . g) mgu
-      where
-        g (t, u) = (mapFun T.pack . mapVar (T.pack . show) $ t, mapFun T.pack . mapVar (T.pack . show) $ u)
