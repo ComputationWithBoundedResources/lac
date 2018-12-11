@@ -57,6 +57,11 @@ repl s =
       line      -> input line
   where
     command :: String -> StateT ReplState IO Bool
+    command i | i `isPrefixOf` "help" = do
+      forM_ commands $ \(n, ReplCmd{..}) ->
+        liftIO $
+          T.putStrLn $ ":" <> T.pack n <> " - " <> replCmdDesc (T.pack n)
+      return True
     command i =
       case match commands i of
         Right ReplCmd{..} -> replCmdFunc mempty
@@ -107,12 +112,14 @@ match cs i =
 
 commands :: [(String, ReplCmd)]
 commands =
-    [ ("quit",  ReplCmd cmdQuit  mempty)
-    , ("decls", ReplCmd cmdDecls mempty)
+    [ ("quit",  ReplCmd cmdQuit  descQuit)
+    , ("decls", ReplCmd cmdDecls descDecls)
     ]
   where
+    descQuit _ = "quit program"
     cmdQuit _ = return False
 
+    descDecls _ = "show loaded declarations"
     cmdDecls _ = rsFlags <$> get >>= go
       where
         go :: [String] -> StateT ReplState IO Bool
