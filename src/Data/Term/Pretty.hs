@@ -13,9 +13,16 @@ import           Data.Text      (Text)
 import qualified Data.Text      as T
 
 ppTerm :: T Text Text -> Text
-ppTerm (V x)    = x
-ppTerm (F "->" [t, u]) = "(" <> ppTerm t <> " -> " <> ppTerm u <> ")"
-ppTerm (F f ts) = f <> "(" <> (T.intercalate ", " . map ppTerm $ ts) <> ")"
+ppTerm = go False
+  where
+    go _ (V x) = x
+    go l (F "->" [t, u]) = brace l inner
+      where inner = go True t <> " -> " <> go False u
+    go _ (F f []) = f
+    go _ (F f ts) = f <> "(" <> (T.intercalate ", " . map (go False) $ ts) <> ")"
+
+    brace False x = x
+    brace True  x = "(" <> x <> ")"
 
 ppTerm' :: T String Int -> Text
 ppTerm' = ppTerm . convertTerm
