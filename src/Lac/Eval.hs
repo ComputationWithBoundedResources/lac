@@ -12,7 +12,6 @@ import qualified Data.Map           as M
 import           Data.Monoid        ((<>))
 import           Data.Text          (Text)
 import qualified Data.Text          as T
-import Debug.Trace
 
 data Value
   = VClosure Text Expr Env

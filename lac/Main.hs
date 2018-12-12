@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Data.Expr              hiding (match)
+import           Data.Expr
 import           Data.Expr.Types        as Expr (fromDecl)
 import           Data.Term
 import           Lac.Eval
