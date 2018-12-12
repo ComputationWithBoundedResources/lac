@@ -42,6 +42,35 @@ data Expr where
   -- \x -> e
   Abs :: Text -> Expr -> Expr
 
+sub :: Expr -> [Expr]
+sub e =
+  e :
+  case e of
+    Var x        -> []
+    L l          -> []
+    Cmp _ e1 e2  -> sub e1 ++ sub e2
+    Ite e1 e2 e3 -> sub e1 ++ sub e2
+    Let x e1 e2  -> Var x : sub e1 ++ sub e2
+    App e1 e2    -> sub e1 ++ sub e2
+    Abs x e      -> Var x : sub e
+    Match e1 cs  -> sub e1 ++ concatMap (\(p, e) -> g p ++ sub e) cs
+      where
+        g PNil          = []
+        g (PNode x y z) = map Var [x, y, z]
+
+var :: Expr -> Set Text
+var = S.fromList . mapMaybe f . sub
+  where
+    f (Var x) = Just x
+    f _       = Nothing
+
+bvar :: Expr -> Set Text
+bvar = S.fromList . mapMaybe f . sub
+  where
+    f (Let x _ _) = Just x
+    f (Abs x _)   = Just x
+    f _           = Nothing
+
 deriving instance Show Expr
 deriving instance Eq Expr
 
