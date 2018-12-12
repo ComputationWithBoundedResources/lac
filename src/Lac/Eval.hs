@@ -122,4 +122,7 @@ eval global env =
 cmp :: Value -> Value -> Ordering
 cmp (VNat n)  (VNat m)  = compare n m
 cmp (VBool a) (VBool b) = compare a b
+cmp (VTree VNil) (VTree VNil) = EQ
+cmp (VTree VNil) (VTree _) = LT
+cmp (VTree _) (VTree VNil) = GT
 cmp _ _ = error "cmp: values cannot be compared"
