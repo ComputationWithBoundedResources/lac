@@ -26,7 +26,7 @@ import           Text.Parsec            (many1, parse)
 
 fromDecl :: [Text] -> Expr -> Value
 fromDecl (x:xs) e = VClosure x (Expr.fromDecl xs e) nullEnv
-fromDecl []     e = eval nullEnv e
+fromDecl []     e = eval nullEnv nullEnv e
 
 data ReplState
   = ReplState {
@@ -82,7 +82,7 @@ repl s =
           liftIO $ do
             when ("--ast" `elem` flags) (print e)
             when ("--debug" `elem` flags) (debug e)
-            T.putStrLn . pretty . toExpr $ eval env e
+            T.putStrLn . pretty . toExpr $ eval env env e
       return True
 
 debug :: Typable a => a -> IO ()

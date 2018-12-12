@@ -48,8 +48,8 @@ type Env = Map Text Value
 nullEnv :: Env
 nullEnv = M.empty
 
-eval :: Env -> Expr -> Value
-eval env =
+eval :: Env -> Env -> Expr -> Value
+eval global env =
   \case
     L (LBool b) -> VBool b
 
@@ -57,14 +57,14 @@ eval env =
 
     L LNil -> VTree VNil
     L (LNode l x r) ->
-      let VTree l' = eval env l
-          VTree r' = eval env r
-          x' = eval env x
+      let VTree l' = rec env l
+          VTree r' = rec env r
+          x' = rec env x
       in
       VTree (VNode l' x' r')
 
     Var x ->
-      case M.lookup x (traceShowId env) of
+      case M.lookup x env of
         Just v -> v
         Nothing -> error $ "`" <> T.unpack x <> "` is not in scope"
 
@@ -72,50 +72,52 @@ eval env =
       VClosure x e env
 
     App e1 e2 ->
-      let t = eval env e1
-          u = eval env e2
+      let t = rec env e1
+          u = rec env e2
       in
       case t of
         VClosure x e s ->
-          let env' = M.insert x u s
+          let env' = global `M.union` M.insert x u s
           in
-          eval env' e
+          rec env' e
         _ -> error "expected LHS to be abstraction"
 
     Let x e1 e2 ->
-      eval env (App (Abs x e2) e1)
+      rec env (App (Abs x e2) e1)
 
     Ite e1 e2 e3 ->
-      let VBool p = eval env e1
-          u = eval env e2
-          v = eval env e3
+      let VBool p = rec env e1
+          u = rec env e2
+          v = rec env e3
       in
       if p then u else v
 
     Cmp op e1 e2 ->
-      let t = eval env e1
-          u = eval env e2
+      let t = rec env e1
+          u = rec env e2
           c = cmp t u
           ok = [(CmpLt, LT), (CmpEq, EQ), (CmpGt, GT)]
       in
       VBool $ (op, c) `elem` ok
 
     Match e1 cs ->
-      let v = eval env e1
+      let v = rec env e1
       in
       match v (NE.toList cs)
 
   where
+    rec = eval global
+
     match :: Value -> [(Pattern, Expr)] -> Value
     match e [] = error $ "match: " <> T.unpack (pretty . toExpr $ e) -- TODO: run-time exception
-    match (VTree VNil) ((PNil, e) : _) = eval env e
+    match (VTree VNil) ((PNil, e) : _) = rec env e
     match (VTree (VNode l x r)) ((PNode x1 x2 x3, e) : _) =
       let env' = M.insert x1 (VTree l)
                . M.insert x2 x
                . M.insert x3 (VTree r)
                $ env
       in
-      eval env' e
+      rec env' e
     match l (_ : xs) = match l xs
 
 cmp :: Value -> Value -> Ordering
