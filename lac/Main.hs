@@ -5,6 +5,7 @@
 module Main where
 
 import           Data.Expr              hiding (match)
+import           Data.Expr.Types        as Expr (fromDecl)
 import           Data.Term
 import           Lac.Eval
 import           Lac.Inf
@@ -23,9 +24,13 @@ import           System.Environment.Ext
 import qualified System.Repl            as Repl
 import           Text.Parsec            (many1, parse)
 
+fromDecl :: [Text] -> Expr -> Value
+fromDecl (x:xs) e = VClosure x (Expr.fromDecl xs e) nullEnv
+fromDecl []     e = eval nullEnv e
+
 data ReplState
   = ReplState {
-    rsEnv   :: Map Text Expr
+    rsEnv   :: Map Text Value
   , rsFlags :: [String]
   }
   deriving (Eq, Show)
@@ -42,7 +47,7 @@ main = do
       Left e -> print e
       Right decls ->
         do
-          let env = M.fromList . map (\(Decl x xs e) -> (x, fromDecl xs e)) $ decls
+          let env = M.fromList . map (\(Decl x xs e) -> (x, Main.fromDecl xs e)) $ decls
           let rs = defaultReplState {
                 rsEnv = env
               , rsFlags = flags
@@ -77,7 +82,7 @@ repl s =
           liftIO $ do
             when ("--ast" `elem` flags) (print e)
             when ("--debug" `elem` flags) (debug e)
-            T.putStrLn . pretty $ eval env e
+            T.putStrLn . pretty . toExpr $ eval env e
       return True
 
 debug :: Typable a => a -> IO ()
@@ -127,7 +132,9 @@ commands =
         go :: [String] -> StateT ReplState IO Bool
         go flags =
           do
-            decls <- (map select . M.toList . rsEnv) <$> get
+            -- TODO: fix this
+            --decls <- (map select . toExpr . M.toList . rsEnv) <$> get
+            decls <- undefined
 
             let program = Program decls
             let env = mempty

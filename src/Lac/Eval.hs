@@ -1,91 +1,124 @@
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Lac.Eval where
 
+import           Data.Expr.Pretty
 import           Data.Expr.Types
 
 import qualified Data.List.NonEmpty as NE
 import           Data.Map           (Map)
 import qualified Data.Map           as M
+import           Data.Monoid        ((<>))
 import           Data.Text          (Text)
-import           Debug.Trace
+import qualified Data.Text          as T
+import Debug.Trace
 
-eval :: Map Text Expr -> Expr -> Expr
-eval env expr =
-  case expr of
-    L (LNode e1 e2 e3) -> L $ LNode (eval env e1) (eval env e2) (eval env e3)
-    L l -> L l
+data Value
+  = VClosure Text Expr Env
+  | VNat Int
+  | VBool Bool
+  | VTree TreeValue
+  deriving (Eq, Show)
+
+data TreeValue
+  = VNil
+  | VNode TreeValue Value TreeValue
+  deriving (Eq, Show)
+
+class ToExpr a where
+  toExpr :: a -> Expr
+
+instance ToExpr TreeValue where
+  toExpr =
+    \case
+      VNil        -> L LNil
+      VNode l x r -> L (LNode (toExpr l) (toExpr x) (toExpr r))
+
+instance ToExpr Value where
+  toExpr =
+    \case
+      VNat n         -> L (LNat n)
+      VBool a        -> L (LBool a)
+      VTree t        -> toExpr t
+      VClosure x e _ -> Abs x e -- TODO: env
+
+type Env = Map Text Value
+
+nullEnv :: Env
+nullEnv = M.empty
+
+eval :: Env -> Expr -> Value
+eval env =
+  \case
+    L (LBool b) -> VBool b
+
+    L (LNat n) -> VNat n
+
+    L LNil -> VTree VNil
+    L (LNode l x r) ->
+      let VTree l' = eval env l
+          VTree r' = eval env r
+          x' = eval env x
+      in
+      VTree (VNode l' x' r')
 
     Var x ->
-      case M.lookup x env of
-        Just e -> e
-        Nothing -> expr
+      case M.lookup x (traceShowId env) of
+        Just v -> v
+        Nothing -> error $ "`" <> T.unpack x <> "` is not in scope"
+
+    Abs x e ->
+      VClosure x e env
 
     App e1 e2 ->
-      case eval env e1 of
-        Abs x e -> eval env $ subst x e2 e
-        _       -> expr
+      let t = eval env e1
+          u = eval env e2
+      in
+      case t of
+        VClosure x e s ->
+          let env' = M.insert x u s
+          in
+          eval env' e
+        _ -> error "expected LHS to be abstraction"
 
-    e1 :<  e2 -> cmp lt e1 e2
-    e1 :== e2 -> cmp eq e1 e2
-    e1 :>  e2 -> cmp gt e1 e2
+    Let x e1 e2 ->
+      eval env (App (Abs x e2) e1)
 
     Ite e1 e2 e3 ->
-      case eval env e1 of
-        L (LBool True)  -> eval env e2
-        L (LBool False) -> eval env e3
-        _ -> error "e1 evaluates to non-Boolean value"
+      let VBool p = eval env e1
+          u = eval env e2
+          v = eval env e3
+      in
+      if p then u else v
 
-    Let x e1 e2 -> eval (M.insert x (eval env e1) env) e2
+    Cmp op e1 e2 ->
+      let t = eval env e1
+          u = eval env e2
+          c = cmp t u
+          ok = [(CmpLt, LT), (CmpEq, EQ), (CmpGt, GT)]
+      in
+      VBool $ (op, c) `elem` ok
 
-    Match e cs -> match (eval env e) (NE.toList cs)
+    Match e1 cs ->
+      let v = eval env e1
+      in
+      match v (NE.toList cs)
 
-    Abs _ _ -> expr
-
-    _ -> traceShow expr undefined
   where
-    match :: Expr -> [(Pattern, Expr)] -> Expr
-    match _ [] = error "match" -- TODO: run-time exception
-    match (L LNil) ((PNil, e) : _) = eval env e
-    match (L (LNode e1 e2 e3)) ((PNode x1 x2 x3, e) : _) =
-      let env' = M.insert x1 (eval env $ e1)
-               . M.insert x2 (eval env $ e2)
-               . M.insert x3 (eval env $ e3)
+    match :: Value -> [(Pattern, Expr)] -> Value
+    match e [] = error $ "match: " <> T.unpack (pretty . toExpr $ e) -- TODO: run-time exception
+    match (VTree VNil) ((PNil, e) : _) = eval env e
+    match (VTree (VNode l x r)) ((PNode x1 x2 x3, e) : _) =
+      let env' = M.insert x1 (VTree l)
+               . M.insert x2 x
+               . M.insert x3 (VTree r)
                $ env
       in
       eval env' e
     match l (_ : xs) = match l xs
 
-    subst :: Text -> Expr -> Expr -> Expr
-    subst x e (Var y) | x == y    = e
-                      | otherwise = Var y
-    subst x e1 e@(Abs y e2) | x == y    = e
-                            | otherwise = Abs y (subst x e1 e2)
-    subst x e (App e1 e2) = App (subst x e e1) (subst x e e2)
-    subst x e (Let y e1 e2) = Let y (subst x e e1) e2'
-      where e2' | x == y    = e2
-                | otherwise = subst x e e2
-    subst x e (Ite e1 e2 e3) = Ite (subst x e e1) (subst x e e2) (subst x e e3)
-    subst x e (Cmp op l r) = Cmp op (subst x e l) (subst x e r)
-    subst x e (Match e1 es) = Match (subst x e e1) (fmap (\(a, b) -> (a, subst x e b)) es)
-    subst x e lit@(L l) =
-      case l of
-        LNode e1 e2 e3 -> L $ LNode (subst x e e1) (subst x e e2) (subst x e e3)
-        _ -> lit
-
-    lt (LBool False) (LBool True) = True
-    lt (LBool _)     (LBool _)    = False
-    lt (LNat x) (LNat y) = x < y
-
-    ne x y = lt x y || lt y x
-
-    eq LNil          LNil          = True
-    eq LNil          (LNode _ _ _) = False
-    eq (LNode _ _ _) LNil          = False
-    eq x y = not (ne x y)
-
-    gt x y = lt y x
-
-    cmp op e1 e2 =
-      let (L x) = eval env e1
-          (L y) = eval env e2
-      in
-      L $ LBool (op x y)
+cmp :: Value -> Value -> Ordering
+cmp (VNat n)  (VNat m)  = compare n m
+cmp (VBool a) (VBool b) = compare a b
+cmp _ _ = error "cmp: values cannot be compared"

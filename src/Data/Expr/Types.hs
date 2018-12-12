@@ -4,18 +4,21 @@
 
 module Data.Expr.Types where
 
-import           Data.List.NonEmpty
+import           Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NE
+import           Data.Maybe         (mapMaybe)
+import           Data.Monoid        (mconcat, (<>))
+import           Data.Set           (Set)
+import qualified Data.Set           as S
 import           Data.Text          (Text)
+import qualified Data.Text          as T
 
 data Literal
   = LNil
   | LNode Expr Expr Expr
-  | LBool Bool -- LTrue/LFalse?
+  | LBool Bool
   | LNat Int
   deriving (Eq, Show)
-
-toExpr :: Literal -> Expr
-toExpr = L
 
 data CmpOp
   = CmpLt

@@ -4,7 +4,7 @@
 
 module Data.Expr.Parser where
 
-import           Data.Expr.Types
+import           Data.Expr.Types     hiding (var)
 
 import           Control.Applicative ((<*))
 import           Control.Monad       (void, when)
