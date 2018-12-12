@@ -108,7 +108,7 @@ eval global env =
     rec = eval global
 
     match :: Value -> [(Pattern, Expr)] -> Value
-    match e [] = error $ "match: " <> T.unpack (pretty . toExpr $ e) -- TODO: run-time exception
+    match e [] = error $ "match: " <> T.unpack (pretty . toExpr $ e)
     match (VTree VNil) ((PNil, e) : _) = rec env e
     match (VTree (VNode l x r)) ((PNode x1 x2 x3, e) : _) =
       let env' = M.insert x1 (VTree l)
@@ -120,9 +120,9 @@ eval global env =
     match l (_ : xs) = match l xs
 
 cmp :: Value -> Value -> Ordering
-cmp (VNat n)  (VNat m)  = compare n m
-cmp (VBool a) (VBool b) = compare a b
+cmp (VNat n)     (VNat m)     = compare n m
+cmp (VBool a)    (VBool b)    = compare a b
 cmp (VTree VNil) (VTree VNil) = EQ
-cmp (VTree VNil) (VTree _) = LT
-cmp (VTree _) (VTree VNil) = GT
-cmp _ _ = error "cmp: values cannot be compared"
+cmp (VTree VNil) (VTree _)    = LT
+cmp (VTree _)    (VTree VNil) = GT
+cmp _            _            = error "cmp: values cannot be compared"
