@@ -132,9 +132,7 @@ commands =
         go :: [String] -> StateT ReplState IO Bool
         go flags =
           do
-            -- TODO: fix this
-            --decls <- (map select . toExpr . M.toList . rsEnv) <$> get
-            decls <- undefined
+            decls <- (map select . M.toList . rsEnv) <$> get
 
             let program = Program decls
             let env = mempty
@@ -159,7 +157,7 @@ commands =
                 liftIO (debug e)
             return True
           where
-            select (name, e) = Decl name [] e
+            select (name, e) = Decl name [] (toExpr e)
 
             f | "--ast" `elem` flags = print
               | otherwise            = T.putStrLn . pretty
