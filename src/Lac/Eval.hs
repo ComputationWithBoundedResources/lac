@@ -94,10 +94,14 @@ eval global env =
     Cmp op e1 e2 ->
       let t = rec env e1
           u = rec env e2
-          c = cmp t u
-          ok = [(CmpLt, LT), (CmpEq, EQ), (CmpGt, GT)]
       in
-      VBool $ (op, c) `elem` ok
+      if op == CmpEq
+        then VBool (t == u)
+        else
+          let ok = [(CmpLt, LT), (CmpGt, GT)]
+              c  = cmp t u
+          in
+          VBool $ (op, c) `elem` ok
 
     Match e1 cs ->
       let v = rec env e1
@@ -120,9 +124,7 @@ eval global env =
     match l (_ : xs) = match l xs
 
 cmp :: Value -> Value -> Ordering
-cmp (VNat n)     (VNat m)     = compare n m
-cmp (VBool a)    (VBool b)    = compare a b
-cmp (VTree VNil) (VTree VNil) = EQ
-cmp (VTree VNil) (VTree _)    = LT
-cmp (VTree _)    (VTree VNil) = GT
-cmp _            _            = error "cmp: values cannot be compared"
+cmp (VNat n)  (VNat m)  = compare n m
+cmp (VBool a) (VBool b) = compare a b
+cmp (VTree t) (VTree u) = error "cmp: tree values cannot be compared"
+cmp _         _         = error "cmp: values cannot be compared (type mismatch)"
