@@ -106,7 +106,8 @@ data ReplErr
 
 data ReplCmd
   = ReplCmd {
-    replCmdFunc :: [String] -> StateT ReplState IO Bool
+    replCmdName :: String
+  , replCmdFunc :: [String] -> StateT ReplState IO Bool
   , replCmdDesc :: Text -> Text
   }
 
@@ -118,16 +119,15 @@ match cs i =
     xs@(_:_) -> Left (ReplErr $ "ambiguous match: " <> T.intercalate ", " (map (T.pack . fst) xs))
 
 commands :: [(String, ReplCmd)]
-commands =
-    [ ("quit",  ReplCmd cmdQuit  descQuit)
-    , ("decls", ReplCmd cmdDecls descDecls)
-    ]
-  where
-    descQuit _ = "quit program"
-    cmdQuit _ = return False
+commands = map (\cmd@ReplCmd{..} -> (replCmdName, cmd)) [cmdQuit, cmdDecls]
 
-    descDecls _ = "show loaded declarations"
-    cmdDecls _ = rsFlags <$> get >>= go
+cmdQuit :: ReplCmd
+cmdQuit = ReplCmd "quit" (const $ return False) (const "quit program")
+
+cmdDecls :: ReplCmd
+cmdDecls = ReplCmd "decls" cmd (const "show loaded declarations")
+  where
+    cmd _ = rsFlags <$> get >>= go
       where
         go :: [String] -> StateT ReplState IO Bool
         go flags =
