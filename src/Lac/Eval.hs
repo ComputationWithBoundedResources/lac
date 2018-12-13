@@ -31,14 +31,14 @@ class ToExpr a where
 instance ToExpr TreeValue where
   toExpr =
     \case
-      VNil        -> L LNil
-      VNode l x r -> L (LNode (toExpr l) (toExpr x) (toExpr r))
+      VNil        -> Lit LNil
+      VNode l x r -> Lit (LNode (toExpr l) (toExpr x) (toExpr r))
 
 instance ToExpr Value where
   toExpr =
     \case
-      VNat n         -> L (LNat n)
-      VBool a        -> L (LBool a)
+      VNat n         -> Lit (LNat n)
+      VBool a        -> Lit (LBool a)
       VTree t        -> toExpr t
       VClosure x e _ -> Abs x e -- TODO: env
 
@@ -50,12 +50,12 @@ nullEnv = M.empty
 eval :: Env -> Env -> Expr -> Value
 eval global env =
   \case
-    L (LBool b) -> VBool b
+    Lit (LBool b) -> VBool b
 
-    L (LNat n) -> VNat n
+    Lit (LNat n) -> VNat n
 
-    L LNil -> VTree VNil
-    L (LNode l x r) ->
+    Lit LNil -> VTree VNil
+    Lit (LNode l x r) ->
       let VTree l' = rec env l
           VTree r' = rec env r
           x' = rec env x

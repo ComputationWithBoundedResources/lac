@@ -113,8 +113,8 @@ app =
     return (f, xs)
   where
     p = parens expr
-        <|> (L <$> nat)
-        <|> try (L <$> literal)
+        <|> (Lit <$> nat)
+        <|> try (Lit <$> literal)
         <|> try (Var <$> var)
 
 decl :: Stream s m Char => ParsecT s u m Decl

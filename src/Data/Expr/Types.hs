@@ -28,7 +28,7 @@ data CmpOp
 
 data Expr where
   -- true, false, nil, {x, y, z}
-  L :: Literal -> Expr
+  Lit :: Literal -> Expr
   Var :: Text -> Expr
   Cmp :: CmpOp -> Expr -> Expr -> Expr
   -- if e then e else e
@@ -47,7 +47,7 @@ sub e =
   e :
   case e of
     Var x        -> []
-    L l          -> []
+    Lit l        -> []
     Cmp _ e1 e2  -> sub e1 ++ sub e2
     Ite e1 e2 e3 -> sub e1 ++ sub e2
     Let x e1 e2  -> Var x : sub e1 ++ sub e2

@@ -41,16 +41,16 @@ instance Typable Expr where
 inferExprType :: (Env, Expr, Type) -> State Int [(Type, Type)]
 inferExprType (env, expr, tau) =
   case expr of
-    L LNil -> fresh >>= \a -> return [(tau, tyTree (V a))]
-    L (LNode e1 e2 e3) -> do
+    Lit LNil -> fresh >>= \a -> return [(tau, tyTree (V a))]
+    Lit (LNode e1 e2 e3) -> do
       a <- fresh
       xs <- infer (env, e1, tyTree (V a))
       ys <- infer (env, e2, V a)
       zs <- infer (env, e3, tyTree (V a))
       return $ (tau, tyTree (V a)) : concat [xs, ys, zs]
-    L (LBool True) -> return [(tau, tyBool)]
-    L (LBool False) -> return [(tau, tyBool)]
-    L (LNat _) -> return [(tau, tyNat)]
+    Lit (LBool True) -> return [(tau, tyBool)]
+    Lit (LBool False) -> return [(tau, tyBool)]
+    Lit (LNat _) -> return [(tau, tyNat)]
     Var x ->
       let p ((V y), _ ) = x == y
           p _           = False

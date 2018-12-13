@@ -27,7 +27,8 @@ instance Pretty Literal where
   pretty (LNode x y z) = "{" <> T.intercalate ", " (map pretty [x, y, z]) <> "}"
 
 instance Pretty Expr where
-  pretty (L l) = pretty l
+  pretty (Lit l) = pretty l
+
   pretty (Var x) = pretty x
 
   pretty (Ite p e1 e2) = "if " <> pretty p <> " then " <> pretty e1 <> " else " <> pretty e2
