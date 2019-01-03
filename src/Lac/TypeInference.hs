@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lac.Inf where
+module Lac.TypeInference where
 
 import           Data.Expr.Types
 import           Data.Term

@@ -8,7 +8,7 @@ import           Data.Expr
 import           Data.Expr.Types        as Expr (fromDecl)
 import           Data.Term
 import           Lac.Eval
-import           Lac.Inf
+import           Lac.TypeInference
 
 import           Control.Monad          (forM_, void, when)
 import           Control.Monad.State    (StateT, evalState, get)
