@@ -16,6 +16,9 @@ import qualified Data.Text           as T
 import           Text.Parsec
 import           Text.Parsec.Helpers (many1', parens)
 
+prog :: Stream s m Char => ParsecT s u m [Decl]
+prog = many1 decl
+
 cmpOp :: Stream s m Char => ParsecT s u m CmpOp
 cmpOp = op <* spaces
   where

@@ -22,7 +22,7 @@ import qualified Data.Text              as T
 import qualified Data.Text.IO           as T
 import           System.Environment.Ext
 import qualified System.Repl            as Repl
-import           Text.Parsec            (many1, parse)
+import           Text.Parsec            (parse)
 
 fromDecl :: [Text] -> Expr -> Value
 fromDecl (x:xs) e = VClosure x (Expr.fromDecl xs e) nullEnv
@@ -42,7 +42,7 @@ main :: IO ()
 main = do
   (flags, args) <- partitionArgs <$> getArgs
   forM_ args $ \arg -> do
-    r <- parse (many1 decl) arg <$> T.readFile arg
+    r <- parse prog arg <$> T.readFile arg
     case r of
       Left e -> print e
       Right decls ->
