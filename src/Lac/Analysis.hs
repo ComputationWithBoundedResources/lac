@@ -1,37 +1,19 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Lac.Analysis where
 
-import Control.Monad.Except
-import Control.Monad.Writer
+import           Data.Expr          hiding (expr)
+import           Lac.Analysis.Types
 
-data Error
-  = Error
-  deriving (Eq, Show)
-
-data Constraint
-  = CEq Expr Expr
-  | CLe Expr Expr
-  deriving (Eq, Show)
-
-data Expr
-  = EConst Int
-  | ESum [Expr]
-  | EProd [Expr]
-  deriving (Eq, Show)
-
--- | Constraint-generating computation
-newtype Gen a = Gen {
-    unGen :: ExceptT Error (WriterT [Constraint] IO) a
-  }
-  deriving (
-    Functor
-  , Applicative
-  , Monad
-  , MonadWriter [Constraint]
-  , MonadError Error
-  , MonadIO
-  )
-
-runGen :: Gen r -> IO (Either Error r, [Constraint])
-runGen = runWriterT . runExceptT . unGen
+analyzeExpr :: Expr -> IO (Either Error (), [Constraint])
+analyzeExpr expr = runGen $
+  case expr of
+    Abs _ _ -> throwError $ NotImplemented "abstraction"
+    Lit _ -> throwError $ NotImplemented "literal"
+    Cmp _ _ _ -> throwError $ NotImplemented "comparison"
+    Ite _ _ _ -> throwError $ NotImplemented "if-then-else"
+    Let _ _ _ -> throwError $ NotImplemented "let"
+    App _ _ -> throwError $ NotImplemented "application"
+    Match _ _ -> throwError $ NotImplemented "match"
+    Var _ -> throwError $ NotImplemented "variable"
