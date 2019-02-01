@@ -31,6 +31,14 @@ dependencies:
 
 library:
   source-dirs: src
+  other-extensions:
+  - FlexibleContexts
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - LambdaCase
+  - OverloadedStrings
+  - PatternSynonyms
+  - StandaloneDeriving
 
 executables:
   lac:
