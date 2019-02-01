@@ -1,6 +1,7 @@
 module Data.Term.Term where
 
-import Data.Bifunctor
+import           Data.Bifoldable
+import           Data.Bifunctor
 
 data T f v
   = V v
@@ -16,3 +17,7 @@ mapVar = second
 
 mapFun :: (f -> g) -> T f v -> T g v
 mapFun = first
+
+instance Bifoldable T where
+  bifoldMap _ g (V x)    = g x
+  bifoldMap f g (F t ts) = f t <> mconcat (map (bifoldMap f g) ts)
