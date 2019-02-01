@@ -21,3 +21,8 @@ mapFun = first
 instance Bifoldable T where
   bifoldMap _ g (V x)    = g x
   bifoldMap f g (F t ts) = f t <> mconcat (map (bifoldMap f g) ts)
+
+var :: T f v -> [v]
+var = bifoldMap (const []) g
+  where
+    g x = [x]
