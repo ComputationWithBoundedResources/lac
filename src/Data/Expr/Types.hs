@@ -4,14 +4,16 @@
 
 module Data.Expr.Types where
 
-import           Data.List.NonEmpty (NonEmpty)
-import qualified Data.List.NonEmpty as NE
-import           Data.Maybe         (mapMaybe)
-import           Data.Monoid        (mconcat, (<>))
-import           Data.Set           (Set)
-import qualified Data.Set           as S
-import           Data.Text          (Text)
-import qualified Data.Text          as T
+import           Control.Monad.State.Ext
+
+import           Data.List.NonEmpty      (NonEmpty)
+import qualified Data.List.NonEmpty      as NE
+import           Data.Maybe              (mapMaybe)
+import           Data.Monoid             (mconcat, (<>))
+import           Data.Set                (Set)
+import qualified Data.Set                as S
+import           Data.Text               (Text)
+import qualified Data.Text               as T
 
 data Literal
   = LNil
@@ -99,3 +101,35 @@ fromDecl []     e = e
 data Program
   = Program [Decl]
   deriving (Eq, Show)
+
+isLit :: Expr -> Bool
+isLit (Lit _) = True
+isLit _       = False
+
+isTree :: Expr -> Bool
+isTree (Lit LNil)          = True
+isTree (Lit (LNode _ _ _)) = True
+isTree _                   = False
+
+letNF :: Expr -> Expr
+letNF = fst . flip runState 0 . go
+  where
+    go e =
+      case e of
+        Ite p e1 e2
+          | isLit p -> return e
+          | otherwise -> do
+              x <- fresh'
+              return $
+                Let x p (Ite (Var x) e1 e2)
+        Match e cs
+          | isTree e -> return e
+          | otherwise -> do
+              x <- fresh'
+              return $
+                Let x e (Match (Var x) cs)
+        _ -> return e
+      where
+        fresh' = decorate <$> fresh
+
+        decorate = T.pack . ("$" ++) . show
