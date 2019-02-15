@@ -51,7 +51,7 @@ sub e =
     Var x        -> []
     Lit l        -> []
     Cmp _ e1 e2  -> sub e1 ++ sub e2
-    Ite e1 e2 e3 -> sub e1 ++ sub e2
+    Ite e1 e2 e3 -> sub e1 ++ sub e2 ++ sub e3
     Let x e1 e2  -> Var x : sub e1 ++ sub e2
     App e1 e2    -> sub e1 ++ sub e2
     Abs x e      -> Var x : sub e
