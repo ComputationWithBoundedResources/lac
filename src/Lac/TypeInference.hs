@@ -5,23 +5,16 @@ module Lac.TypeInference where
 import           Data.Expr.Types
 import           Data.Term
 
-import           Control.Monad       (replicateM)
-import           Control.Monad.State
-import           Data.List           (find)
-import           Data.Text           (Text)
+import           Control.Monad           (replicateM)
+import           Control.Monad.State.Ext
+import           Data.List               (find)
+import           Data.Text               (Text)
 
 -- type inference
 
 type Type = T String Int
 
 type Env = [(T String Text, Type)]
-
-fresh :: Monad m => StateT Int m Int
-fresh = do
-  i <- get
-  let i' = i + 1
-  put i'
-  return i'
 
 tyBool :: Type
 tyBool = F "Bool" []
