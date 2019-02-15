@@ -47,7 +47,7 @@ instance Pretty Expr where
       pat (PNode x y z) = "{" <> pretty x <> ", " <> pretty y <> ", " <> pretty z <> "}"
 
   pretty (l :<  r) = pretty l <> " < " <> pretty r
-  pretty (l :== r) = pretty l <> " = " <> pretty r
+  pretty (l :== r) = pretty l <> " == " <> pretty r
   pretty (l :>  r) = pretty l <> " > " <> pretty r
 
   pretty (Abs x e) = "\\ " <> pretty x <> " -> (" <> pretty e <> ")"
