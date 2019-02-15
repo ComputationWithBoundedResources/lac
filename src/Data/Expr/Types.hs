@@ -16,34 +16,48 @@ import           Data.Text               (Text)
 import qualified Data.Text               as T
 
 data Literal
-  = LNil
-  | LNode Expr Expr Expr
-  | LBool Bool
-  | LNat Int
+  = LNil                 -- ^ @nil@
+  | LNode Expr Expr Expr -- ^ @{x, y, z}@
+  | LBool Bool           -- ^ @true@, @false@
+  | LNat Int             -- ^ @0@, @1@, @42@, ...
   deriving (Eq, Show)
 
 data CmpOp
-  = CmpLt
-  | CmpEq
-  | CmpGt
+  = CmpLt -- ^ @<@
+  | CmpEq -- ^ @==@
+  | CmpGt -- ^ @>@
   deriving (Show, Eq)
 
 data Expr where
-  -- true, false, nil, {x, y, z}
+  -- | literal, see 'Literal'
   Lit :: Literal -> Expr
+  -- | @x@, @map@, @zipWith@, @x'@
   Var :: Text -> Expr
+  -- | comparison operator, see 'CmpOp'
   Cmp :: CmpOp -> Expr -> Expr -> Expr
-  -- if e then e else e
+  -- | @if e then e else e@
   Ite :: Expr -> Expr -> Expr -> Expr
-  -- let x = e in e
+  -- | @let x = e in e@
   Let :: Text -> Expr -> Expr -> Expr
-  -- f(x1, ... xN)
+  -- | @f(x1, ... xN)@
   App :: Expr -> Expr -> Expr
-  -- match x with | nil -> e | <x, x, x> -> e
+  -- |
+  -- @
+  -- match x with
+  --   | nil -> e
+  --   | {x, x, x} -> e
+  -- @
   Match :: Expr -> NonEmpty (Pattern, Expr) -> Expr
-  -- \x -> e
+  -- | @\\ x -> e@
   Abs :: Text -> Expr -> Expr
 
+-- | List sub-expressions
+--
+-- >>> -- if true then 1 else 2
+-- >>> map pretty . sub $ Ite (Lit (LBool True)) (Lit (LNat 1)) (Lit (LNat 2))
+-- ["if true then 1 else 2","true","1","2"]
+--
+-- Note: The original expression is included in the result.
 sub :: Expr -> [Expr]
 sub e =
   e :
