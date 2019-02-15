@@ -4,7 +4,7 @@ github:              "ComputationWithBoundedResources/lac"
 license:             BSD3
 author:              "David Obwaller"
 maintainer:          "david.obwaller@uibk.ac.at"
-copyright:           "2018 David Obwaller"
+copyright:           "2018, 2019 David Obwaller"
 
 extra-source-files:
 - README.md
