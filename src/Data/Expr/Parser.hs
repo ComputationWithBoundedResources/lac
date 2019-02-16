@@ -19,12 +19,15 @@ import           Text.Parsec.Helpers (many1', parens)
 prog :: Stream s m Char => ParsecT s u m [Decl]
 prog = many1 decl
 
+sEq :: String
 sEq = "="
+
+sCmpEq :: String
 sCmpEq = "=="
 
 eq :: Stream s m Char => ParsecT s u m String
 eq = do
-  string sEq
+  void $ string sEq
   notFollowedBy (string sEq)
   spaces
   return sEq
@@ -52,7 +55,7 @@ let_ :: Stream s m Char => ParsecT s u m Expr
 let_ = do
   keyword "let"
   x <- var
-  eq
+  void eq
   e1 <- expr
   keyword "in"
   e2 <- expr
@@ -137,7 +140,7 @@ decl :: Stream s m Char => ParsecT s u m Decl
 decl =
   do
     (name, args) <- hd
-    eq
+    void eq
     e <- expr
     string ";" >> spaces
     return $ Decl name args e
