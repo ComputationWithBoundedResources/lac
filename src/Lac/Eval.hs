@@ -15,23 +15,6 @@ import           Data.Monoid        ((<>))
 import           Data.Text          (Text)
 import qualified Data.Text          as T
 
-class ToExpr a where
-  toExpr :: a -> Expr
-
-instance ToExpr TreeValue where
-  toExpr =
-    \case
-      VNil        -> Lit LNil
-      VNode l x r -> Lit (LNode (toExpr l) (toExpr x) (toExpr r))
-
-instance ToExpr Value where
-  toExpr =
-    \case
-      VNat n         -> Lit (LNat n)
-      VBool a        -> Lit (LBool a)
-      VTree t        -> toExpr t
-      VClosure x e _ -> Abs x e -- TODO: env
-
 fromDecl :: [Text] -> Expr -> Value
 fromDecl (x:xs) e = VClosure x (Expr.fromDecl xs e) nullEnv
 fromDecl []     e = eval nullEnv nullEnv e
