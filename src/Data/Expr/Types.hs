@@ -104,10 +104,21 @@ data Pattern
   | PNode Text Text Text
   deriving (Eq, Show)
 
+-- | Function declaration
+--
+-- The identity function may be represented as follows:
+--
+-- @
+-- Decl "id" ["x"] (Var "x")
+-- @
 data Decl
   = Decl Text [Text] Expr
   deriving (Eq, Show)
 
+-- Convert declaration to expression (abstraction)
+--
+-- >>> Data.Expr.fromDecl ["x"] (Var "x")
+-- Abs "x" (Var "x")
 fromDecl :: [Text] -> Expr -> Expr
 fromDecl (x:xs) e = Abs x (fromDecl xs e)
 fromDecl []     e = e
