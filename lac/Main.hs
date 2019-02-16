@@ -24,16 +24,6 @@ import           System.Environment.Ext
 import qualified System.Repl            as Repl
 import           Text.Parsec            (parse)
 
-data ReplState
-  = ReplState {
-    rsEnv   :: Map Text Value
-  , rsFlags :: [String]
-  }
-  deriving (Eq, Show)
-
-defaultReplState :: ReplState
-defaultReplState = ReplState mempty mempty
-
 main :: IO ()
 main = do
   (flags, args) <- partitionArgs <$> getArgs
@@ -49,6 +39,16 @@ main = do
               , rsFlags = flags
               }
           repl rs
+
+data ReplState
+  = ReplState {
+    rsEnv   :: Map Text Value
+  , rsFlags :: [String]
+  }
+  deriving (Eq, Show)
+
+defaultReplState :: ReplState
+defaultReplState = ReplState mempty mempty
 
 repl :: ReplState -> IO ()
 repl s =
