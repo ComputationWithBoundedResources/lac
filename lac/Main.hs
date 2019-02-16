@@ -4,10 +4,10 @@
 
 module Main where
 
-import           Data.Expr
-import           Data.Expr.Types        as Expr (fromDecl)
+import           Data.Expr              hiding (fromDecl)
 import           Data.Term
 import           Lac.Eval
+import           Lac.Eval.Value
 import           Lac.TypeInference
 
 import           Control.Monad          (forM_, void, when)
@@ -23,10 +23,6 @@ import qualified Data.Text.IO           as T
 import           System.Environment.Ext
 import qualified System.Repl            as Repl
 import           Text.Parsec            (parse)
-
-fromDecl :: [Text] -> Expr -> Value
-fromDecl (x:xs) e = VClosure x (Expr.fromDecl xs e) nullEnv
-fromDecl []     e = eval nullEnv nullEnv e
 
 data ReplState
   = ReplState {
@@ -47,7 +43,7 @@ main = do
       Left e -> print e
       Right decls ->
         do
-          let env = M.fromList . map (\(Decl x xs e) -> (x, Main.fromDecl xs e)) $ decls
+          let env = M.fromList . map (\(Decl x xs e) -> (x, fromDecl xs e)) $ decls
           let rs = defaultReplState {
                 rsEnv = env
               , rsFlags = flags

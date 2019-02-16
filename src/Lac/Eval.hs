@@ -5,6 +5,8 @@ module Lac.Eval where
 
 import           Data.Expr.Pretty
 import           Data.Expr.Types
+import           Data.Expr.Types as Expr (fromDecl)
+import           Lac.Eval.Value
 
 import qualified Data.List.NonEmpty as NE
 import           Data.Map           (Map)
@@ -12,18 +14,6 @@ import qualified Data.Map           as M
 import           Data.Monoid        ((<>))
 import           Data.Text          (Text)
 import qualified Data.Text          as T
-
-data Value
-  = VClosure Text Expr Env
-  | VNat Int
-  | VBool Bool
-  | VTree TreeValue
-  deriving (Eq, Show)
-
-data TreeValue
-  = VNil
-  | VNode TreeValue Value TreeValue
-  deriving (Eq, Show)
 
 class ToExpr a where
   toExpr :: a -> Expr
@@ -42,10 +32,9 @@ instance ToExpr Value where
       VTree t        -> toExpr t
       VClosure x e _ -> Abs x e -- TODO: env
 
-type Env = Map Text Value
-
-nullEnv :: Env
-nullEnv = M.empty
+fromDecl :: [Text] -> Expr -> Value
+fromDecl (x:xs) e = VClosure x (Expr.fromDecl xs e) nullEnv
+fromDecl []     e = eval nullEnv nullEnv e
 
 eval :: Env -> Env -> Expr -> Value
 eval global env =
