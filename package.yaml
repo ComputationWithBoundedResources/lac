@@ -43,7 +43,7 @@ library:
 executables:
   lac:
     main:                Main.hs
-    source-dirs:         lac
+    source-dirs:         exe/lac
     ghc-options:
     - -threaded
     - -rtsopts
