@@ -9,7 +9,6 @@ import           Data.Expr.Types as Expr (fromDecl)
 import           Lac.Eval.Value
 
 import qualified Data.List.NonEmpty as NE
-import           Data.Map           (Map)
 import qualified Data.Map           as M
 import           Data.Monoid        ((<>))
 import           Data.Text          (Text)
