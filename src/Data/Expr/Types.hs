@@ -129,30 +129,57 @@ isLit :: Expr -> Bool
 isLit (Lit _) = True
 isLit _       = False
 
+isVar :: Expr -> Bool
+isVar (Var _) = True
+isVar _       = False
+
 isTree :: Expr -> Bool
 isTree (Lit LNil)          = True
 isTree (Lit (LNode _ _ _)) = True
 isTree _                   = False
 
-letNF :: Expr -> Expr
-letNF = fst . flip runState 0 . go
-  where
-    go e =
+-- TODO: add ghost type NonLetNF and LetNF?
+
+class LetNF a where
+  letNF :: Monad m => a -> StateT Int m a
+
+toLetNF :: LetNF a => a -> a
+toLetNF = fst . flip runState 0 . letNF
+
+instance LetNF Expr where
+  letNF e =
       case e of
-        Ite p e1 e2
-          | isLit p -> return e
-          | otherwise -> do
+        Ite p e1 e2 -> do
+          e1' <- letNF e1
+          e2' <- letNF e2
+          if isVar p
+            then return $ Ite p e1' e2'
+            else do
               x <- fresh'
-              return $
-                Let x p (Ite (Var x) e1 e2)
-        Match e cs
-          | isTree e -> return e
-          | otherwise -> do
-              x <- fresh'
-              return $
-                Let x e (Match (Var x) cs)
+              p' <- letNF p
+              return $ Let x p' (Ite (Var x) e1' e2')
+        Match x cs ->
+          do
+            cs' <- mapM g cs
+            if isVar x
+              then return $ Match x cs'
+              else do
+                y <- fresh'
+                x' <- letNF x
+                return $ Let y x' (Match (Var y) cs')
+          where
+            g (lhs, rhs) = letNF rhs >>= \rhs' -> return (lhs, rhs')
+        Lit l ->
+          Lit <$> letNF l
+        -- TODO: rewrite application to normal form
         _ -> return e
       where
         fresh' = decorate <$> fresh
 
         decorate = T.pack . ("$" ++) . show
+
+instance LetNF Literal where
+  letNF l =
+    case l of
+      LNode e1 e2 e3 -> LNode <$> letNF e1 <*> letNF e2 <*> letNF e3
+      _              -> return l
