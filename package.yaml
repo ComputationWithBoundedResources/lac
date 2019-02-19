@@ -50,6 +50,11 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - lac
+  lnf:
+    main:         Main.hs
+    source-dirs:  exe/lnf
+    dependencies:
+    - lac
 
 tests:
   lac-test:
