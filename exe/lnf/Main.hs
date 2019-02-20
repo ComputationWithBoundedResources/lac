@@ -6,7 +6,6 @@ import qualified Data.Text.IO       as T
 import           System.Environment
 import           System.Exit
 import           Text.Parsec        (parse)
-import Debug.Trace
 
 main :: IO ()
 main =
