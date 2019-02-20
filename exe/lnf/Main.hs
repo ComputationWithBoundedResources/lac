@@ -26,8 +26,6 @@ process path =
         mapM_ (T.putStrLn . ppDecl . letNF') decls
 
   where
-    ppDecl (Decl x xs e) = pretty e
-
     letNF' (Decl x xs e) =
       let e' = (toLetNF e)
       in

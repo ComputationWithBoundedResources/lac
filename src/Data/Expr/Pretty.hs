@@ -2,6 +2,7 @@
 
 module Data.Expr.Pretty (
     Pretty(..)
+  , ppDecl
   ) where
 
 import           Data.Expr.Types
@@ -58,3 +59,9 @@ instance Pretty Decl where
     where
       args | null as   = ""
            | otherwise = " " <> T.intercalate " " as
+
+ppDecl :: Decl -> Text
+ppDecl (Decl x xs e) = x <> args <> " = " <> pretty e
+  where
+    args | null xs   = ""
+         | otherwise = " " <> T.intercalate " " xs
