@@ -30,8 +30,7 @@ main = do
   forM_ args $ \arg -> do
     r <- readProg arg
     case r of
-      -- Left e -> print e
-      Left _ -> putStrLn "no parse"
+      Left e -> print e
       Right Prog{..} ->
         do
           let rs = defaultReplState {
