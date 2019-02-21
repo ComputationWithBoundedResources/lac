@@ -1,12 +1,16 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lac.Eval where
+module Lac.Eval (
+    module E
+  , Lac.Eval.fromDecl
+  , eval
+  ) where
 
 import           Data.Expr.Pretty
 import           Data.Expr.Types
-import           Data.Expr.Types as Expr (fromDecl)
-import           Lac.Eval.Value
+import           Data.Expr.Types    as Expr (fromDecl)
+import           Lac.Eval.Value     as E
 
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map           as M

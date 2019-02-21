@@ -1,11 +1,13 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Main where
 
 import           Data.Expr
+import           Lac
 
 import qualified Data.Text.IO       as T
 import           System.Environment
 import           System.Exit
-import           Text.Parsec        (parse)
 
 main :: IO ()
 main =
@@ -16,13 +18,13 @@ main =
 process :: FilePath -> IO ()
 process path =
   do
-    r <- parse prog path <$> T.readFile path
+    r <- readProg path
     case r of
       Left _ -> exitFailure
-      Right decls -> do
+      Right Prog{..} -> do
         --traceShowM decls
         --mapM_ (T.putStrLn . ppDecl) decls
-        mapM_ (T.putStrLn . ppDecl . letNF') decls
+        mapM_ (T.putStrLn . ppDecl . letNF') progDecls
 
   where
     letNF' (Decl x xs e) =

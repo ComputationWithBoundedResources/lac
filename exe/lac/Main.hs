@@ -6,8 +6,8 @@ module Main where
 
 import           Data.Expr              hiding (fromDecl)
 import           Data.Term
+import           Lac
 import           Lac.Eval
-import           Lac.Eval.Value
 import           Lac.TypeInference
 
 import           Control.Monad          (forM_, void, when)
@@ -28,14 +28,14 @@ main :: IO ()
 main = do
   (flags, args) <- partitionArgs <$> getArgs
   forM_ args $ \arg -> do
-    r <- parse prog arg <$> T.readFile arg
+    r <- readProg arg
     case r of
-      Left e -> print e
-      Right decls ->
+      -- Left e -> print e
+      Left _ -> putStrLn "no parse"
+      Right Prog{..} ->
         do
-          let env = M.fromList . map (\(Decl x xs e) -> (x, fromDecl xs e)) $ decls
           let rs = defaultReplState {
-                rsEnv = env
+                rsEnv = progEnv
               , rsFlags = flags
               }
           repl rs
