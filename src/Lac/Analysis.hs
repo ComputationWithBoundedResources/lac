@@ -6,6 +6,7 @@ module Lac.Analysis where
 
 import           Control.Monad.State.Strict.Ext
 import           Data.Expr                      hiding (expr)
+import           Data.Term.Pretty
 import           Lac.Analysis.Types
 import           Lac.TypeInference
 
@@ -13,9 +14,31 @@ import           Data.List.NonEmpty             (NonEmpty ((:|)))
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
+-- * Proof tree
+
+-- | An intermediate representation of a proof tree that can later be converted to LaTex code.
+data ProofTree
+  = ProofTree Text [ProofTree]
+  deriving (Eq, Show)
+
+class Latex a where
+  latex :: a -> Text
+
+instance Latex ProofTree where
+  latex (ProofTree concl premises)
+    | null premises = concl
+    | otherwise     = "\\infer{" <> concl <> "}{" <> T.intercalate " & " (map latex premises) <> "}"
+
+concl `provedBy` ts = ProofTree concl ts
+
+assume s = ProofTree s []
+
+-- * Rules
+
 type Rule a = Ctx -> Expr -> Ctx -> Gen a
 
-dispatch :: Rule ()
+-- | Dispatch rule
+dispatch :: Rule ProofTree
 dispatch ctx expr ctx' = do
   gen <- case expr of
     Abs _ _   -> throwError $ NotImplemented "abstraction"
@@ -28,29 +51,53 @@ dispatch ctx expr ctx' = do
     Var _     -> return genVar
   gen ctx expr ctx'
 
-genVar :: Rule ()
+genVar :: Rule ProofTree
 -- TODO: compare contexts
-genVar _ (Var _) _ = return ()
+genVar ctx expr@(Var x) ctxR = return $
+  mkConcl ctx expr ctxR `provedBy` [assume $ "`" <> x <> "` is a variable"]
 genVar _ _ _ = throwError $ NotApplicable "variable"
 
-genLit :: Rule ()
+genLit :: Rule ProofTree
 -- TODO: apply weakening
-genLit ctx (Lit LNil) ctxR = return ()
+genLit ctx expr@(Lit LNil) ctxR = return $
+  mkConcl ctx expr ctxR `provedBy` [assume "TODO"]
 genLit _ _ _ = throwError $ NotApplicable "literal"
 
-genMatch :: Rule ()
-genMatch ctx (Match (Var x) ((PNil, e1) :| [(PNode x1 x2 x3, e2)])) ctxR =
+genMatch :: Rule ProofTree
+genMatch ctx expr@(Match (Var x) ((PNil, e1) :| [(PNode x1 x2 x3, e2)])) ctxR =
   do
     (ty, ctx'@Ctx{..}) <- splitCtx x ctx
     -- TODO: check type
     liftIO $ print ty
-    dispatch ctx' e1 ctxR
+    proof1 <- dispatch ctx' e1 ctxR
     -- TODO: use fresh type variable instead of abstract type here?
     ctx'' <- augmentCtx [ (x1, AnTy (tyTree tyAbs) ())
                         , (x2, AnTy tyAbs          ())
                         , (x3, AnTy (tyTree tyAbs) ())
                         ] ctx
-    dispatch ctx'' e2 ctxR
-    return ()
+    proof2 <- dispatch ctx'' e2 ctxR
+    return $ mkConcl ctx expr ctxR `provedBy` [proof1, proof2]
 genMatch _ _ _ =
   throwError $ NotApplicable "match"
+
+mkConcl :: Ctx -> Expr -> Ctx -> Text
+mkConcl ctxL expr ctxR =
+  T.unwords
+    [ ppCtx ctxL
+    , "\\vdash"
+    , pretty expr
+    , ": "
+    , ppCtx ctxR
+    ]
+
+ppCtx :: Ctx -> Text
+ppCtx Ctx{..} =
+  if null ctxMembers
+    then "\\varnothing"
+    else T.intercalate ", " $ map f ctxMembers
+  where
+    f (x, ty) = x <> ": " <> ppAnTy ty
+
+    -- TODO: format type annotation
+    ppAnTy :: AnTy -> Text
+    ppAnTy (AnTy ty _) = ppTerm' ty
