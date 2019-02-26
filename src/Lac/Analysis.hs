@@ -13,63 +13,44 @@ import           Data.List.NonEmpty             (NonEmpty ((:|)))
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
-data Ctx
-  = Ctx {
-    ctxName    :: Text
-  , ctxMembers :: [(Text, AnTy)]
-  }
-  deriving (Eq, Show)
+type Rule a = Ctx -> Expr -> Ctx -> Gen a
 
-nullCtx :: Text -> Ctx
-nullCtx name = Ctx name mempty
-
-data AnTy
-  = AnTy {
-    anTyType       :: Type
-  , anTyAnnotation :: ()
-  }
-  deriving (Eq, Show)
-
-dispatch :: Ctx -> Expr -> Ctx -> Gen ()
+dispatch :: Rule ()
 dispatch ctx expr ctx' = do
   gen <- case expr of
     Abs _ _   -> throwError $ NotImplemented "abstraction"
-    Lit _     -> throwError $ NotImplemented "literal"
+    Lit _     -> return genLit
     Cmp _ _ _ -> throwError $ NotImplemented "comparison"
     Ite _ _ _ -> throwError $ NotImplemented "if-then-else"
     Let _ _ _ -> throwError $ NotImplemented "let"
     App _ _   -> throwError $ NotImplemented "application"
     Match _ _ -> return genMatch
-    Var _     -> throwError $ NotImplemented "variable"
+    Var _     -> return genVar
   gen ctx expr ctx'
 
-type Rule a = Ctx -> Expr -> Ctx -> Gen a
+genVar :: Rule ()
+-- TODO: compare contexts
+genVar _ (Var _) _ = return ()
+genVar _ _ _ = throwError $ NotApplicable "variable"
+
+genLit :: Rule ()
+-- TODO: apply weakening
+genLit ctx (Lit LNil) ctxR = return ()
+genLit _ _ _ = throwError $ NotApplicable "literal"
 
 genMatch :: Rule ()
-genMatch ctx (Match (Var x) ((PNil, e1) :| [(PNode x1 x2 x3, e2)])) ctx' =
+genMatch ctx (Match (Var x) ((PNil, e1) :| [(PNode x1 x2 x3, e2)])) ctxR =
   do
-    (ty, ctx') <- splitCtx x ctx
+    (ty, ctx'@Ctx{..}) <- splitCtx x ctx
+    -- TODO: check type
     liftIO $ print ty
+    dispatch ctx' e1 ctxR
+    -- TODO: use fresh type variable instead of abstract type here?
+    ctx'' <- augmentCtx [ (x1, AnTy (tyTree tyAbs) ())
+                        , (x2, AnTy tyAbs          ())
+                        , (x3, AnTy (tyTree tyAbs) ())
+                        ] ctx
+    dispatch ctx'' e2 ctxR
     return ()
 genMatch _ _ _ =
   throwError $ NotApplicable "match"
-
-splitCtx :: Text -> Ctx -> Gen (AnTy, Ctx)
-splitCtx x ctx@Ctx{..} =
-  case lookup x ctxMembers of
-    Just ty -> let ctx' = ctx { ctxMembers = delete' x ctxMembers }
-               in
-               return (ty, ctx')
-    Nothing -> throwError $ AssertionFailed $ "variable `" <> x <> "` does not appear in context"
-
-delete' :: Eq a => a -> [(a, b)] -> [(a, b)]
-delete' _ [] = []
-delete' k ((k1, v1) : xs)
-  | k == k1   = delete' k xs
-  | otherwise = (k1, v1) : delete' k xs
-
-freshCtx :: Gen Ctx
-freshCtx = do
-  i <- fresh
-  let name = T.pack $ "C_{" <> show i <> "}"
-  return $ nullCtx name
