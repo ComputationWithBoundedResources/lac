@@ -77,7 +77,6 @@ genMatch ctx expr@(Match (Var x) ((PNil, e1) :| [(PNode x1 x2 x3, e2)])) ctxR =
   do
     (ty, ctx'@Ctx{..}) <- splitCtx x ctx
     -- TODO: check type
-    liftIO $ print ty
     proof1 <- dispatch ctx' e1 ctxR
     -- TODO: use fresh type variable instead of abstract type here?
     ctx'' <- augmentCtx [ (x1, AnTy (tyTree tyAbs) ())
