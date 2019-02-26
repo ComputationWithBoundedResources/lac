@@ -110,3 +110,27 @@ ppCtx Ctx{..} =
     -- TODO: format type annotation
     ppAnTy :: AnTy -> Text
     ppAnTy (AnTy ty _) = ppTerm' ty
+
+writeProof :: FilePath -> Ctx -> Expr -> IO ()
+writeProof path ctx expr =
+  let q' = nullCtx "Q'"
+      f = dispatch ctx expr q'
+  in
+  runGen f >>=
+    \(e, cs) ->
+      case e of
+        Left e -> print e
+        Right p ->
+          let content = concat [
+                  "\\documentclass[a4paper,10pt]{article}"
+                , "\\usepackage{amssymb}"
+                , "\\usepackage{proof}"
+                , "\\usepackage{lscape}"
+                , "\\begin{document}"
+                , "\\begin{landscape}"
+                , T.unpack (latex p)
+                , "\\end{landscape}"
+                , "\\end{document}"
+                ]
+          in
+          writeFile path content
