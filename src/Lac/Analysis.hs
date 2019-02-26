@@ -61,8 +61,15 @@ genVar _ _ _ = throwError $ NotApplicable "variable"
 
 genLit :: Rule ProofTree
 -- TODO: apply weakening
-genLit ctx expr@(Lit LNil) ctxR = return $
-  mkConcl ctx expr ctxR `provedBy` [assume "TODO"]
+genLit ctx@Ctx{..} expr@(Lit LNil) ctxR =
+  case ctxMembers of
+    [] -> return $ mkConcl ctx expr ctxR `provedBy` [assume "TODO"]
+    -- apply weakening
+    (x, _) : xs -> do
+      -- TODO: constraints
+      let ctx' = ctx { ctxMembers = xs }
+      proof <- dispatch ctx' expr ctxR
+      return $ mkConcl ctx expr ctxR `provedBy` [proof]
 genLit _ _ _ = throwError $ NotApplicable "literal"
 
 genMatch :: Rule ProofTree
