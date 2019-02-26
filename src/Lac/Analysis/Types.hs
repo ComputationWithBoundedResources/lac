@@ -19,6 +19,7 @@ import           Data.Text                  (Text)
 data Error
   = NotImplemented Text
   | NotApplicable Text
+  | AssertionFailed Text
   deriving (Eq, Show)
 
 data Constraint = Constraint
