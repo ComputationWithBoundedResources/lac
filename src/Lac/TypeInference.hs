@@ -25,6 +25,9 @@ tyNat = F "Nat" []
 tyTree :: Type -> Type
 tyTree a = F "Tree" [a]
 
+tyAbs :: Type
+tyAbs = F "B" []
+
 class Typable a where
   infer :: (Env, a, Type) -> State Int [(Type, Type)]
 
