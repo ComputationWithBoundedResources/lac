@@ -53,8 +53,10 @@ dispatch ctx expr ctx' = do
 
 genVar :: Rule ProofTree
 -- TODO: compare contexts
-genVar ctx expr@(Var x) ctxR = return $
-  mkConcl ctx expr ctxR `provedBy` [assume $ "`" <> x <> "` is a variable"]
+genVar ctx expr@(Var x) ctxR =
+  do
+    splitCtx x ctx
+    return $ mkConcl ctx expr ctxR `provedBy` [assume $ "`" <> x <> "` is a variable"]
 genVar _ _ _ = throwError $ NotApplicable "variable"
 
 genLit :: Rule ProofTree
