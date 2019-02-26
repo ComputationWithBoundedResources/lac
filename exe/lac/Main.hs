@@ -4,25 +4,25 @@
 
 module Main where
 
-import           Data.Expr              hiding (fromDecl)
+import           Data.Expr                  hiding (fromDecl)
 import           Data.Term
 import           Lac
 import           Lac.Eval
 import           Lac.TypeInference
 
-import           Control.Monad          (forM_, void, when)
-import           Control.Monad.State    (StateT, evalState, get)
-import           Control.Monad.Trans    (liftIO)
-import           Data.List              (isPrefixOf, lookup)
-import           Data.Map               (Map)
-import qualified Data.Map               as M
-import           Data.Monoid            ((<>))
-import           Data.Text              (Text)
-import qualified Data.Text              as T
-import qualified Data.Text.IO           as T
+import           Control.Monad              (forM_, void, when)
+import           Control.Monad.State.Strict (StateT, evalState, get)
+import           Control.Monad.Trans        (liftIO)
+import           Data.List                  (isPrefixOf, lookup)
+import           Data.Map                   (Map)
+import qualified Data.Map                   as M
+import           Data.Monoid                ((<>))
+import           Data.Text                  (Text)
+import qualified Data.Text                  as T
+import qualified Data.Text.IO               as T
 import           System.Environment.Ext
-import qualified System.Repl            as Repl
-import           Text.Parsec            (parse)
+import qualified System.Repl                as Repl
+import           Text.Parsec                (parse)
 
 main :: IO ()
 main = do

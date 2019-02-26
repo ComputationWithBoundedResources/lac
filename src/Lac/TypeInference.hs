@@ -5,10 +5,10 @@ module Lac.TypeInference where
 import           Data.Expr.Types
 import           Data.Term
 
-import           Control.Monad           (replicateM)
-import           Control.Monad.State.Ext
-import           Data.List               (find)
-import           Data.Text               (Text)
+import           Control.Monad                  (replicateM)
+import           Control.Monad.State.Strict.Ext
+import           Data.List                      (find)
+import           Data.Text                      (Text)
 
 -- type inference
 

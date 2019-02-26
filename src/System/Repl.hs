@@ -1,10 +1,10 @@
 module System.Repl where
 
-import           Control.Exception   (try)
-import           Control.Monad       (when)
-import           Control.Monad.State
-import           System.IO           (hFlush, stdout)
-import           System.IO.Error     (ioeGetErrorString, isEOFError)
+import           Control.Exception          (try)
+import           Control.Monad              (when)
+import           Control.Monad.State.Strict
+import           System.IO                  (hFlush, stdout)
+import           System.IO.Error            (ioeGetErrorString, isEOFError)
 
 repl :: String -> s -> (String -> StateT s IO Bool) -> IO s
 repl prompt s f = snd <$> runStateT go s

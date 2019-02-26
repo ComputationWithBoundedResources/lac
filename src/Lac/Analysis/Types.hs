@@ -3,9 +3,8 @@
 module Lac.Analysis.Types (
     Error(..)
   , Constraint(..)
-  , CExpr(..)
 
-  , Gen(..)
+  , Gen (..)
   , runGen
   , tell
   , throwError
@@ -13,36 +12,32 @@ module Lac.Analysis.Types (
   where
 
 import           Control.Monad.Except
+import           Control.Monad.State
 import           Control.Monad.Writer
-import           Data.Text            (Text)
+import           Data.Text                  (Text)
 
 data Error
   = NotImplemented Text
+  | NotApplicable Text
   deriving (Eq, Show)
 
-data Constraint
-  = CEq CExpr CExpr
-  | CLe CExpr CExpr
+data Constraint = Constraint
   deriving (Eq, Show)
 
-data CExpr
-  = EConst Int
-  | ESum [CExpr]
-  | EProd [CExpr]
-  deriving (Eq, Show)
-
--- | Constraint-generating computation
 newtype Gen a = Gen {
-    unGen :: ExceptT Error (WriterT [Constraint] IO) a
+    unGen :: ExceptT Error (StateT Int (WriterT [Constraint] IO)) a
   }
   deriving (
     Functor
   , Applicative
   , Monad
-  , MonadWriter [Constraint]
   , MonadError Error
+  , MonadState Int
+  , MonadWriter [Constraint]
   , MonadIO
   )
 
 runGen :: Gen r -> IO (Either Error r, [Constraint])
-runGen = runWriterT . runExceptT . unGen
+runGen = fmap f . runWriterT . flip runStateT 0 . runExceptT . unGen
+  where
+    f ((e, _), cs) = (e, cs)
