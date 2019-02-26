@@ -44,7 +44,7 @@ dispatch ctx expr ctx' = do
     Abs _ _   -> throwError $ NotImplemented "abstraction"
     Lit _     -> return genLit
     Cmp _ _ _ -> throwError $ NotImplemented "comparison"
-    Ite _ _ _ -> throwError $ NotImplemented "if-then-else"
+    Ite _ _ _ -> return genIte
     Let _ _ _ -> throwError $ NotImplemented "let"
     App _ _   -> throwError $ NotImplemented "application"
     Match _ _ -> return genMatch
@@ -88,6 +88,16 @@ genMatch ctx expr@(Match (Var x) ((PNil, e1) :| [(PNode x1 x2 x3, e2)])) ctxR =
     return $ mkConcl ctx expr ctxR `provedBy` [proof1, proof2]
 genMatch _ _ _ =
   throwError $ NotApplicable "match"
+
+genIte :: Rule ProofTree
+genIte ctx expr@(Ite (Var x) e1 e2) ctxR =
+  do
+    (_, ctx') <- splitCtx x ctx
+    -- TODO: check type
+    proof1 <- dispatch ctx' e1 ctxR
+    proof2 <- dispatch ctx' e2 ctxR
+    return $
+      mkConcl ctx expr ctxR `provedBy` [proof1, proof2]
 
 mkConcl :: Ctx -> Expr -> Ctx -> Text
 mkConcl ctxL expr ctxR =
