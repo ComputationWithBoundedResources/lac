@@ -27,6 +27,7 @@ dependencies:
 - containers
 - mtl
 - parsec
+- process
 - text
 
 library:
@@ -53,6 +54,11 @@ executables:
   lnf:
     main:         Main.hs
     source-dirs:  exe/lnf
+    dependencies:
+    - lac
+  proof:
+    main:         Main.hs
+    source-dirs:  exe/proof
     dependencies:
     - lac
 
