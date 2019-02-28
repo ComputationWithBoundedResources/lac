@@ -45,7 +45,6 @@ genVar ctx expr@(Var x) ctxR =
 genVar _ _ _ = throwError $ NotApplicable "variable"
 
 genLit :: Rule ProofTree
--- TODO: apply weakening
 genLit ctx@Ctx{..} expr@(Lit LNil) ctxR =
   case ctxMembers of
     [] -> return $ mkConcl ctx expr ctxR `provedBy` [assume "TODO"]
