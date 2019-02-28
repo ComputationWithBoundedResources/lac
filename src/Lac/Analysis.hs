@@ -84,8 +84,11 @@ genIte ctx expr@(Ite (Var x) e1 e2) ctxR =
     -- TODO: check type
     proof1 <- dispatch ctx' e1 ctxR
     proof2 <- dispatch ctx' e2 ctxR
+
+    e1' <- nameExpr e1
+    e2' <- nameExpr e2
     return $
-      mkConcl ctx expr ctxR `provedBy` [proof1, proof2]
+      mkConcl ctx (Ite (Var x) e1' e2') ctxR `provedBy` [proof1, proof2]
 
 mkConcl :: Ctx -> Expr -> Ctx -> Text
 mkConcl ctxL expr ctxR =
