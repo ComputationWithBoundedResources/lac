@@ -39,7 +39,7 @@ genVar :: Rule ProofTree
 genVar ctx expr@(Var x) ctxR =
   do
     splitCtx x ctx
-    return $ mkConcl ctx expr ctxR `provedBy` [assume $ "`" <> x <> "` is a variable"]
+    return $ mkConcl ctx expr ctxR `provedBy` [assume $ x <> " \\mbox{ is a variable}"]
 genVar _ _ _ = throwError $ NotApplicable "variable"
 
 genLit :: Rule ProofTree
