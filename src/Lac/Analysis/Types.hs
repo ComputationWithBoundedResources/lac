@@ -9,6 +9,7 @@ module Lac.Analysis.Types (
   , AnTy(..)
 
   , Error(..)
+  , Output(..)
   , Constraint(..)
   , Gen (..)
   , runGen
@@ -92,8 +93,13 @@ data Error
 data Constraint = Constraint
   deriving (Eq, Show)
 
+data Output
+  = OutConstr Constraint
+  | OutEq Text Text
+  deriving (Eq, Show)
+
 newtype Gen a = Gen {
-    unGen :: ExceptT Error (StateT Int (WriterT [Constraint] IO)) a
+    unGen :: ExceptT Error (StateT Int (WriterT [Output] IO)) a
   }
   deriving (
     Functor
@@ -101,11 +107,11 @@ newtype Gen a = Gen {
   , Monad
   , MonadError Error
   , MonadState Int
-  , MonadWriter [Constraint]
+  , MonadWriter [Output]
   , MonadIO
   )
 
-runGen :: Gen r -> IO (Either Error r, [Constraint])
+runGen :: Gen r -> IO (Either Error r, [Output])
 runGen = fmap f . runWriterT . flip runStateT 0 . runExceptT . unGen
   where
     f ((e, _), cs) = (e, cs)

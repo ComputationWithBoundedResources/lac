@@ -13,6 +13,7 @@ import           Lac.TypeInference
 import           Latex
 
 import           Data.List.NonEmpty             (NonEmpty ((:|)))
+import           Data.Maybe                     (mapMaybe)
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
@@ -56,7 +57,7 @@ genLit ctx@Ctx{..} expr@(Lit LNil) ctxR =
 genLit _ _ _ = throwError $ NotApplicable "literal"
 
 genMatch :: Rule ProofTree
-genMatch ctx expr@(Match (Var x) ((PNil, e1) :| [(PNode x1 x2 x3, e2)])) ctxR =
+genMatch ctx expr@(Match (Var x) ((PNil, e1) :| [(pNode@(PNode x1 x2 x3), e2)])) ctxR =
   do
     (ty, ctx'@Ctx{..}) <- splitCtx x ctx
     -- TODO: check type
@@ -67,7 +68,11 @@ genMatch ctx expr@(Match (Var x) ((PNil, e1) :| [(PNode x1 x2 x3, e2)])) ctxR =
                         , (x3, AnTy (tyTree tyAbs) ())
                         ] ctx
     proof2 <- dispatch ctx'' e2 ctxR
-    return $ mkConcl ctx expr ctxR `provedBy` [proof1, proof2]
+
+    e1' <- nameExpr e1
+    e2' <- nameExpr e2
+    let expr' = Match (Var x) ((PNil, e1') :| [(pNode, e2')])
+    return $ mkConcl ctx expr' ctxR `provedBy` [proof1, proof2]
 genMatch _ _ _ =
   throwError $ NotApplicable "match"
 
@@ -98,16 +103,46 @@ writeProof path ctx expr =
   in
   runGen f >>=
     \(e, cs) ->
+      let eqs = mapMaybe (\case OutEq a b -> Just (a, b); _ -> Nothing) cs
+      in
       case e of
         Left e -> print e
         Right p ->
           let content = concat [
-                  "\\documentclass[12pt]{standalone}"
+                  "\\documentclass[12pt,preview]{standalone}"
                 , "\\usepackage{amssymb}"
+                , "\\usepackage{amsmath}"
                 , "\\usepackage{proof}"
                 , "\\begin{document}"
                 , T.unpack (latex p)
+                , "\n\n\n"
+                , T.unpack eqAry
                 , "\\end{document}"
                 ]
+              eqAry
+                | null eqs = ""
+                | otherwise =
+                    T.concat [
+                        "\\begin{align*}\n"
+                      , T.intercalate "\\\\\n" (map (\(a, b) -> a <> " &= " <> b) eqs)
+                      , "\\end{align*}\n"
+                      ]
           in
-          writeFile path content
+          do writeFile path content
+             print eqs
+
+nameExpr :: Expr -> Gen Expr
+nameExpr expr
+  | isSimpleExpr expr = return expr
+  | otherwise = do
+      x <- freshVar "e"
+      tell $ [OutEq x (latex expr)]
+      return (Var x)
+
+isSimpleExpr :: Expr -> Bool
+isSimpleExpr = const False
+
+freshVar :: Text -> Gen Text
+freshVar prefix = do
+  i <- fresh
+  return $ prefix <> "_{" <> T.pack (show i) <> "}"
