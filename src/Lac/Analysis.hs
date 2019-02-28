@@ -157,10 +157,10 @@ depth (Lit l) =
 
     LNat _ -> 0
 depth (Cmp _ e1 e2) = 1 + maximum [depth e1, depth e2]
-depth (Ite x e1 e2) = 1 + maximum [depth x, depth e1, depth e2]
+depth (Ite x e1 e2) = 2 + maximum [depth x, depth e1, depth e2]
 depth (Let _ e1 e2) = 1 + maximum [depth e1, depth e2]
 depth (App e1 e2) = 1 + maximum [depth e1, depth e2]
-depth (Match t cs) = 1 + depth t + maximum (map (\(_, e) -> depth e) . NE.toList $ cs)
+depth (Match t cs) = 2 + depth t + maximum (map (\(_, e) -> depth e) . NE.toList $ cs)
 depth (Abs _ e) = 1 + depth e
 
 freshVar :: Text -> Gen Text
