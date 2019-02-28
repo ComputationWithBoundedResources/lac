@@ -7,6 +7,7 @@ module Data.Expr.Types where
 import           Control.Monad.State.Strict.Ext
 
 import           Data.List.NonEmpty             (NonEmpty)
+import qualified Data.List.NonEmpty             as NE
 import           Data.Maybe                     (mapMaybe)
 import           Data.Set                       (Set)
 import qualified Data.Set                       as S
@@ -137,6 +138,28 @@ isTree :: Expr -> Bool
 isTree (Lit LNil)          = True
 isTree (Lit (LNode _ _ _)) = True
 isTree _                   = False
+
+isSimple :: Expr -> Bool
+isSimple = (<= 1) . depth
+
+depth :: Expr -> Int
+depth (Var _) = 0
+depth (Lit l) =
+  case l of
+    LNil -> 0
+    LNode e1 e2 e3 -> 1 + maximum [depth e1, depth e2, depth e3]
+
+    LBool _ -> 0
+
+    LNat _ -> 0
+depth (Cmp _ e1 e2) = 1 + maximum [depth e1, depth e2]
+depth (Ite x e1 e2) = 2 + maximum [depth x, depth e1, depth e2]
+depth (Let _ e1 e2) = 1 + maximum [depth e1, depth e2]
+depth (App e1 e2) = 1 + maximum [depth e1, depth e2]
+depth (Match t cs) = 2 + depth t + maximum (map (\(_, e) -> depth e) . NE.toList $ cs)
+depth (Abs _ e) = 1 + depth e
+
+-- * Let normal form
 
 -- TODO: add ghost type NonLetNF and LetNF?
 

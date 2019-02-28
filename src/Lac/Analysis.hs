@@ -136,31 +136,11 @@ writeProof path ctx expr =
 
 nameExpr :: Expr -> Gen Expr
 nameExpr expr
-  | isSimpleExpr expr = return expr
+  | isSimple expr = return expr
   | otherwise = do
       x <- freshVar "e"
       tell $ [OutEq x (latex expr)]
       return (Var x)
-
-isSimpleExpr :: Expr -> Bool
-isSimpleExpr = (<= 1) . depth
-
-depth :: Expr -> Int
-depth (Var _) = 0
-depth (Lit l) =
-  case l of
-    LNil -> 0
-    LNode e1 e2 e3 -> 1 + maximum [depth e1, depth e2, depth e3]
-
-    LBool _ -> 0
-
-    LNat _ -> 0
-depth (Cmp _ e1 e2) = 1 + maximum [depth e1, depth e2]
-depth (Ite x e1 e2) = 2 + maximum [depth x, depth e1, depth e2]
-depth (Let _ e1 e2) = 1 + maximum [depth e1, depth e2]
-depth (App e1 e2) = 1 + maximum [depth e1, depth e2]
-depth (Match t cs) = 2 + depth t + maximum (map (\(_, e) -> depth e) . NE.toList $ cs)
-depth (Abs _ e) = 1 + depth e
 
 freshVar :: Text -> Gen Text
 freshVar prefix = do
