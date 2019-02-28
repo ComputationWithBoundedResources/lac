@@ -7,31 +7,14 @@ module Lac.Analysis where
 import           Control.Monad.State.Strict.Ext
 import           Data.Expr                      hiding (expr)
 import           Data.Term.Pretty
+import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Types
 import           Lac.TypeInference
+import           Latex
 
 import           Data.List.NonEmpty             (NonEmpty ((:|)))
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
-
--- * Proof tree
-
--- | An intermediate representation of a proof tree that can later be converted to LaTex code.
-data ProofTree
-  = ProofTree Text [ProofTree]
-  deriving (Eq, Show)
-
-class Latex a where
-  latex :: a -> Text
-
-instance Latex ProofTree where
-  latex (ProofTree concl premises)
-    | null premises = concl
-    | otherwise     = "\\infer{" <> concl <> "}{" <> T.intercalate " & " (map latex premises) <> "}"
-
-concl `provedBy` ts = ProofTree concl ts
-
-assume s = ProofTree s []
 
 -- * Rules
 
@@ -101,24 +84,12 @@ genIte ctx expr@(Ite (Var x) e1 e2) ctxR =
 mkConcl :: Ctx -> Expr -> Ctx -> Text
 mkConcl ctxL expr ctxR =
   T.unwords
-    [ ppCtx ctxL
+    [ latex ctxL
     , "\\vdash"
-    , pretty expr
+    , latex expr
     , ": "
-    , ppCtx ctxR
+    , latex ctxR
     ]
-
-ppCtx :: Ctx -> Text
-ppCtx Ctx{..} =
-  if null ctxMembers
-    then "\\varnothing"
-    else T.intercalate ", " $ map f ctxMembers
-  where
-    f (x, ty) = x <> ": " <> ppAnTy ty
-
-    -- TODO: format type annotation
-    ppAnTy :: AnTy -> Text
-    ppAnTy (AnTy ty _) = ppTerm' ty
 
 writeProof :: FilePath -> Ctx -> Expr -> IO ()
 writeProof path ctx expr =

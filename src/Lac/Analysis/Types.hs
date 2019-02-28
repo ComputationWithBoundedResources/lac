@@ -20,6 +20,7 @@ module Lac.Analysis.Types (
 import           Control.Monad.State.Strict.Ext
 import           Data.List.Helpers
 import           Lac.TypeInference
+import           Latex
 
 import           Control.Monad.Except
 import           Control.Monad.Writer
@@ -37,6 +38,18 @@ data Ctx
 
 nullCtx :: Text -> Ctx
 nullCtx name = Ctx name mempty
+
+instance Latex Ctx where
+  latex Ctx{..} =
+    if null ctxMembers
+      then "\\varnothing"
+      else T.intercalate ", " $ map f ctxMembers
+    where
+      f (x, ty) = x <> ": " <> ppAnTy ty
+
+      -- TODO: format type annotation
+      ppAnTy :: AnTy -> Text
+      ppAnTy (AnTy ty _) = latex ty
 
 data AnTy
   = AnTy {
