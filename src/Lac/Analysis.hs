@@ -102,14 +102,11 @@ writeProof path ctx expr =
         Left e -> print e
         Right p ->
           let content = concat [
-                  "\\documentclass[a4paper,10pt]{article}"
+                  "\\documentclass[12pt]{standalone}"
                 , "\\usepackage{amssymb}"
                 , "\\usepackage{proof}"
-                , "\\usepackage{lscape}"
                 , "\\begin{document}"
-                , "\\begin{landscape}"
                 , T.unpack (latex p)
-                , "\\end{landscape}"
                 , "\\end{document}"
                 ]
           in
