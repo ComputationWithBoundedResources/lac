@@ -16,7 +16,8 @@ instance Latex ProofTree where
     | null premises = concl
     | otherwise     = "\\infer{" <> concl <> "}{" <> T.intercalate " & " (map latex premises) <> "}"
 
+provedBy :: Text -> [ProofTree] -> ProofTree
 concl `provedBy` ts = ProofTree concl ts
 
+assume :: Text -> ProofTree
 assume s = ProofTree s []
-
