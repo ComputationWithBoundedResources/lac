@@ -6,15 +6,12 @@ module Lac.Analysis where
 
 import           Control.Monad.State.Strict.Ext
 import           Data.Expr                      hiding (expr)
-import           Data.Term.Pretty
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Types
 import           Lac.TypeInference
 import           Latex
 
 import           Data.List.NonEmpty             (NonEmpty ((:|)))
-import qualified Data.List.NonEmpty             as NE
-import           Data.Maybe                     (mapMaybe)
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
