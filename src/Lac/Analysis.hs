@@ -105,8 +105,8 @@ writeProof path ctx expr =
       f = dispatch ctx expr q'
   in
   runGen f >>=
-    \(e, cs) ->
-      let eqs = mapMaybe (\case OutEq a b -> Just (a, b); _ -> Nothing) cs
+    \(e, Output{..}) ->
+      let eqs = outEqs
       in
       case e of
         Left e -> print e
@@ -139,7 +139,7 @@ nameExpr expr
   | isSimple expr = return expr
   | otherwise = do
       x <- freshVar "e"
-      tell $ [OutEq x (latex expr)]
+      tell $ outEq x (latex expr)
       return (Var x)
 
 freshVar :: Text -> Gen Text

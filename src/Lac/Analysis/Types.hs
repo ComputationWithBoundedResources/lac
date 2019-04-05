@@ -9,7 +9,10 @@ module Lac.Analysis.Types (
   , AnTy(..)
 
   , Error(..)
+
   , Output(..)
+  , outEq
+
   , Constraint(..)
   , Gen (..)
   , runGen
@@ -94,12 +97,25 @@ data Constraint = Constraint
   deriving (Eq, Show)
 
 data Output
-  = OutConstr Constraint
-  | OutEq Text Text
+  = Output {
+      outConstraints :: [Constraint]
+    , outLog         :: [Text]
+    , outEqs         :: [(Text, Text)]
+  }
   deriving (Eq, Show)
 
+outEq :: Text -> Text -> Output
+outEq lhs rhs = Output mempty mempty [(lhs, rhs)]
+
+instance Semigroup Output where
+  Output xs1 ys1 zs1 <> Output xs2 ys2 zs2 =
+    Output (xs1 <> xs2) (ys1 <> ys2) (zs1 <> zs2)
+
+instance Monoid Output where
+  mempty = Output mempty mempty mempty
+
 newtype Gen a = Gen {
-    unGen :: ExceptT Error (StateT Int (WriterT [Output] IO)) a
+    unGen :: ExceptT Error (StateT Int (WriterT Output IO)) a
   }
   deriving (
     Functor
@@ -107,11 +123,11 @@ newtype Gen a = Gen {
   , Monad
   , MonadError Error
   , MonadState Int
-  , MonadWriter [Output]
+  , MonadWriter Output
   , MonadIO
   )
 
-runGen :: Gen r -> IO (Either Error r, [Output])
+runGen :: Gen r -> IO (Either Error r, Output)
 runGen = fmap f . runWriterT . flip runStateT 0 . runExceptT . unGen
   where
     f ((e, _), cs) = (e, cs)
