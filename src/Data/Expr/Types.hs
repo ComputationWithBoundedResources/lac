@@ -111,7 +111,7 @@ data Pattern
 -- Decl "id" ["x"] (Var "x")
 -- @
 data Decl
-  = Decl Text [Text] Expr
+  = Decl Text [Text] Expr -- TODO: Use `NonEmpty<Text>` for arguments?
   deriving (Eq, Show)
 
 -- Convert declaration to expression (abstraction)

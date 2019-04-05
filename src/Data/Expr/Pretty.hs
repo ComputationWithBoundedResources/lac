@@ -12,6 +12,7 @@ import           Data.Monoid        ((<>))
 import           Data.Text          (Text)
 import qualified Data.Text          as T
 
+-- TODO: move this class to own module?
 class Pretty t where
   pretty :: t -> Text
 
