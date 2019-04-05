@@ -12,7 +12,7 @@ nullEnv :: Env
 nullEnv = M.empty
 
 data Value
-  = VClosure Text Expr Env
+  = VClosure Text Expr Env -- ^ closure, i.e. an abstraction @\x.e@ with environment
   | VNat Int
   | VBool Bool
   | VTree TreeValue
