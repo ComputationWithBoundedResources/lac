@@ -9,6 +9,7 @@ import           Control.Monad                  (replicateM)
 import           Control.Monad.State.Strict.Ext
 import           Data.List                      (find)
 import           Data.Text                      (Text)
+import qualified Data.Text                      as T
 
 -- type inference
 
@@ -54,9 +55,13 @@ inferExprType (env, expr, tau) =
       case find p env of
         Just (_, ty) ->
           return [(tau, ty)]
+        Nothing ->
+          error . T.unpack $ "unbound variable: `" <> x <> "`"
+        {-
         Nothing -> do
           a <- fresh
           return [(tau, V a)]
+        -}
     App e1 e2 -> do
       a <- fresh
       (++) <$> infer (env, e1, F "->" [V a, tau]) <*> infer (env, e2, V a)
