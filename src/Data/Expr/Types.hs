@@ -4,15 +4,12 @@
 
 module Data.Expr.Types where
 
-import           Control.Monad.State.Strict.Ext
-
-import           Data.List.NonEmpty             (NonEmpty)
-import qualified Data.List.NonEmpty             as NE
-import           Data.Maybe                     (mapMaybe)
-import           Data.Set                       (Set)
-import qualified Data.Set                       as S
-import           Data.Text                      (Text)
-import qualified Data.Text                      as T
+import           Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NE
+import           Data.Maybe         (mapMaybe)
+import           Data.Set           (Set)
+import qualified Data.Set           as S
+import           Data.Text          (Text)
 
 data Literal
   = LNil                 -- ^ @nil@
