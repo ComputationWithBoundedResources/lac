@@ -6,21 +6,30 @@ import           Lac.Analysis.Types
 import           Lac.TypeInference
 
 import           Data.List.NonEmpty
+import           System.Environment
+import           System.Exit
 import           System.Process
+import           Text.Parsec
 
 main :: IO ()
-main = do
-  let e = Match (Var "t") cs
-        where
-          cs = (PNil, Lit LNil) :| [(PNode "cl" "c" "cr", e1)]
-          e1 = Ite (Var "x") (Var "TT") (Var "FF")
-  let q = (nullCtx "Q") { ctxMembers = [ ("t", AnTy (tyTree tyAbs) ())
-                                       , ("e1", AnTy tyBool ())
-                                       , ("x", AnTy tyBool ())
-                                       , ("TT", AnTy tyBool ())
-                                       , ("FF", AnTy tyBool ())
-                                       ]
-                        }
-  writeProof "out.tex" q e
-  system "pdflatex out"
-  return ()
+main =
+  do
+    args <- getArgs
+    case args of
+      [inPath, outPath] ->
+        do
+          contents <- readFile inPath
+          case parse expr inPath contents of
+            Left _ -> exitFailure
+            Right expr ->
+              do
+                -- TODO: populate environment
+                let ctx = nullCtx "Q"
+                writeProof outPath ctx expr
+                system $ "pdflatex " <> outPath
+                exitSuccess
+      _ ->
+        do
+          progName <- getProgName
+          putStrLn $ "Usage: " <> progName <> " input.txt output.tex"
+          exitFailure
