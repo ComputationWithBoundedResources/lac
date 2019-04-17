@@ -2,8 +2,8 @@ module Data.Expr.LetNF where
 
 import           Data.Expr.Types
 
-import Debug.Trace
 import           Control.Monad.State.Strict.Ext
+import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
 -- * Let normal form
@@ -45,34 +45,44 @@ instance LetNF Expr where
           do
             let es = unfoldl1 unApp e
 
-            rs <- forM es $ \e' ->
-              case e' of
-                Var y -> return (y, [])
-                _ ->
-                  do
-                    y' <- fresh'
-                    e'' <- letNF e'
-                    return (y', [(y', e'')])
+            rs <- mapM normalize es
 
             let xs = map fst rs
             let call = foldl1 App (map Var xs)
 
-            let lets = concatMap snd rs
-
-            let let_ = foldr f call lets
-                  where
-                    f (x, e1) e2 = Let x e1 e2
-
-            return let_
+            return $ mkLet (concatMap snd rs) call
         Var _ ->
           return e
         Cmp cmpOp lhs rhs ->
-          -- TODO
-          return e
-      where
-        fresh' = decorate <$> fresh
+          do
+            (lhs', ls1) <- normalize lhs
+            (rhs', ls2) <- normalize rhs
+            return $ mkLet (ls1 <> ls2) (Cmp cmpOp (Var lhs') (Var rhs'))
+        Let x e1 e2 ->
+          Let <$> pure x <*> letNF e1 <*> letNF e2
+        Abs x e ->
+          Abs <$> pure x <*> letNF e
 
-        decorate = T.pack . ("$" ++) . show
+fresh' :: Monad m => StateT Int m Text
+fresh' = decorate <$> fresh
+
+decorate :: Int -> Text
+decorate = T.pack . ("$" ++) . show
+
+normalize :: Monad m => Expr -> StateT Int m (Text, [(Text, Expr)])
+normalize e =
+  case e of
+    Var x -> return (x, [])
+    _ ->
+      do
+        x' <- fresh'
+        e' <- letNF e
+        return (x', [(x', e')])
+
+mkLet :: [(Text, Expr)] -> Expr -> Expr
+mkLet ls e = foldr f e ls
+  where
+    f (x, e1) e2 = Let x e1 e2
 
 unfoldl1 :: (a -> Maybe (a, a)) -> a -> [a]
 unfoldl1 f = go []
