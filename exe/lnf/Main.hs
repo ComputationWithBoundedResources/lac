@@ -20,10 +20,11 @@ process path =
   do
     r <- readProg path
     case r of
-      Left _ -> exitFailure
-      Right Prog{..} -> do
-        --traceShowM decls
-        --mapM_ (T.putStrLn . ppDecl) decls
+      Left e ->
+        do
+          print e
+          exitFailure
+      Right Prog{..} ->
         mapM_ (T.putStrLn . ppDecl . letNF') progDecls
 
   where
