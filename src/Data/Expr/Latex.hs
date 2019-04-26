@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Data.Expr.Latex where
 
 import           Data.Expr.Types
