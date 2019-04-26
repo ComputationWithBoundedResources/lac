@@ -23,7 +23,7 @@ splay a t = match t with
                                      | {al, a', ar} -> {{cl, c, al}, a', {ar, b, br}}
                            else if br == nil then {{cl, c, bl}, b, br}
                                 else match splay a br with
-                                     | {al, x, xa} -> {{{cl, c, bbl}, b, al}, x, xa};
+                                     | {al, x, xa} -> {{{cl, c, bl}, b, al}, x, xa};
 
 insert a t = if t == nil then {nil, a, nil}
              else match splay a t with
