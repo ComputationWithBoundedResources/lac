@@ -27,6 +27,7 @@ dependencies:
 - containers
 - mtl
 - parsec
+- pretty
 - process
 - text
 

@@ -3,56 +3,120 @@
 module Data.Expr.Pretty (
     Pretty(..)
   , ppDecl
+  , test -- TODO: remove
   ) where
 
 import           Data.Expr.Types
 
-import qualified Data.List.NonEmpty as NE
-import           Data.Monoid        ((<>))
-import           Data.Text          (Text)
-import qualified Data.Text          as T
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty        as NE
+import           Data.Monoid               ((<>))
+import           Data.Text                 (Text)
+import qualified Data.Text                 as T
+import qualified Text.PrettyPrint.HughesPJ as PP
 
 -- TODO: move this class to own module?
 class Pretty t where
   pretty :: t -> Text
+  pretty = T.pack . PP.render . doc
+
+  doc :: t -> PP.Doc
 
 instance Pretty Text where
-  pretty = id
+  doc = PP.text . T.unpack
 
 instance Pretty Literal where
-  pretty (LNat x) = (T.pack . show) x
+  doc (LNat x) = PP.text . show $ x
 
-  pretty (LBool True) = "true"
-  pretty (LBool False) = "false"
+  doc (LBool True) = PP.text "true"
+  doc (LBool False) = PP.text "false"
 
-  pretty LNil = "nil"
-  pretty (LNode x y z) = "{" <> T.intercalate ", " (map pretty [x, y, z]) <> "}"
+  doc LNil = PP.text "nil"
+  doc (LNode x y z) = PP.sep [
+      PP.text "{"
+    , doc x
+    , PP.text ","
+    , doc y
+    , PP.text ","
+    , doc z
+    , PP.text "}"
+    ]
+
+test =
+  Let
+    "x"
+    (Ite
+      (Match
+        nil
+        ((PNil, Var "e1") :| [(PNil, Var "e2")]))
+      (Lit (LNode (Lit LNil) (Lit LNil) (Lit LNil)))
+      (App nil nil))
+    (Var "x")
+  where
+    nil = Lit LNil
 
 instance Pretty Expr where
-  pretty (Lit l) = pretty l
+  doc (Lit l) = doc l
 
-  pretty (Var x) = pretty x
+  doc (Var x) = doc x
 
-  pretty (Ite p e1 e2) = "if " <> pretty p <> " then " <> pretty e1 <> " else " <> pretty e2
+  doc (Ite p e1 e2) =
+    PP.hang (PP.sep [PP.text "if", doc p]) 2 $
+      PP.vcat
+        [ PP.sep [PP.text "then", doc e1]
+        , PP.sep [PP.text "else", doc e2]
+        ]
 
-  pretty (App e1 e2) = "(" <> pretty e1 <> " " <> pretty e2 <> ")"
+  doc (App e1 e2) = PP.sep [PP.text "(", doc e1, doc e2, PP.text ")"]
 
-  pretty (Let x e1 e2) = "let " <> pretty x <> " = " <> pretty e1 <> " in " <> pretty e2
+  doc (Let x e1 e2) =
+    PP.hang
+      (PP.hsep
+        [ PP.text "let"
+        , doc x
+        , PP.text "="
+        , doc e1
+        , PP.text "in"
+        ])
+      2
+      (doc e2)
 
-  pretty (Match e cs) =
-      "match " <> pretty e <> " with " <> T.intercalate " " cases
+  doc (Match e cs) =
+      PP.hang
+        (PP.hsep
+          [ PP.text "match"
+          , doc e
+          , PP.text "with"
+          ])
+        2
+        (PP.vcat cases)
     where
       cases =
-        map (\(p, e) -> "| " <> pat p <> " -> " <> pretty e) (NE.toList cs)
+        map (\(p, e) -> PP.hsep
+                          [ PP.text "|"
+                          , pat p
+                          , PP.text "->"
+                          , doc e
+                          ]) (NE.toList cs)
 
-      pat PNil          = "nil"
-      pat (PNode x y z) = "{" <> pretty x <> ", " <> pretty y <> ", " <> pretty z <> "}"
+      pat PNil          = PP.text "nil"
+      pat (PNode x y z) = PP.sep
+                            [ PP.text "{"
+                            , doc x
+                            , PP.text ","
+                            , doc y
+                            , PP.text ","
+                            , doc z
+                            , PP.text "}"
+                            ]
 
+  {-
   pretty (l :<  r) = "(" <> pretty l <> " < " <> pretty r <> ")"
   pretty (l :== r) = "(" <> pretty l <> " == " <> pretty r <> ")"
   pretty (l :>  r) = "(" <> pretty l <> " > " <> pretty r <> ")"
 
   pretty (Abs x e) = "\\ " <> pretty x <> " -> (" <> pretty e <> ")"
+  -}
 
 instance Pretty Decl where
   pretty (Decl n as e) =
