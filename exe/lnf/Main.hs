@@ -5,14 +5,14 @@ module Main where
 import           Data.Expr
 import           Lac
 
-import qualified Data.Text.IO       as T
-import           System.Environment
+import qualified Data.Text.IO           as T
+import           System.Environment.Ext
 import           System.Exit
 
 main :: IO ()
 main =
   do
-    args <- getArgs
+    (_, args) <- partitionArgs <$> getArgs
     mapM_ process args
 
 process :: FilePath -> IO ()
