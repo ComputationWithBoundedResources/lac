@@ -16,13 +16,16 @@ class LetNF a where
 toLetNF :: LetNF a => a -> a
 toLetNF = fst . flip runState 0 . letNF
 
+isImm :: Expr -> Bool
+isImm e = isVar e || isLit e
+
 instance LetNF Expr where
   letNF e =
       case e of
         Ite p e1 e2 -> do
           e1' <- letNF e1
           e2' <- letNF e2
-          if isVar p
+          if isImm p
             then return $ Ite p e1' e2'
             else do
               x <- fresh'
@@ -31,7 +34,7 @@ instance LetNF Expr where
         Match x cs ->
           do
             cs' <- mapM g cs
-            if isVar x
+            if isImm x
               then return $ Match x cs'
               else do
                 y <- fresh'
