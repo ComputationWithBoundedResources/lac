@@ -110,13 +110,11 @@ instance Pretty Expr where
                             , PP.text "}"
                             ]
 
-  {-
-  pretty (l :<  r) = "(" <> pretty l <> " < " <> pretty r <> ")"
-  pretty (l :== r) = "(" <> pretty l <> " == " <> pretty r <> ")"
-  pretty (l :>  r) = "(" <> pretty l <> " > " <> pretty r <> ")"
+  doc (l :<  r) = PP.sep [PP.text "(", doc l, PP.text " < ", doc r, PP.text ")"]
+  doc (l :== r) = PP.sep [PP.text "(", doc l, PP.text " == ", doc r, PP.text ")"]
+  doc (l :>  r) = PP.sep [PP.text "(", doc l, PP.text " > ", doc r, PP.text ")"]
 
-  pretty (Abs x e) = "\\ " <> pretty x <> " -> (" <> pretty e <> ")"
-  -}
+  doc (Abs x e) = PP.sep [PP.text "\\ ", doc x, PP.text " -> (", doc e, PP.text ")"]
 
 instance Pretty Decl where
   pretty (Decl n as e) =
