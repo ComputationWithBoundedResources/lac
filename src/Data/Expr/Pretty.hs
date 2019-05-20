@@ -3,7 +3,6 @@
 module Data.Expr.Pretty (
     Pretty(..)
   , ppDecl
-  , test -- TODO: remove
   ) where
 
 import           Data.Expr.Types
@@ -43,19 +42,6 @@ instance Pretty Literal where
     , doc z
     , PP.text "}"
     ]
-
-test =
-  Let
-    "x"
-    (Ite
-      (Match
-        nil
-        ((PNil, Var "e1") :| [(PNil, Var "e2")]))
-      (Lit (LNode (Lit LNil) (Lit LNil) (Lit LNil)))
-      (App nil nil))
-    (Var "x")
-  where
-    nil = Lit LNil
 
 instance Pretty Expr where
   doc (Lit l) = doc l
