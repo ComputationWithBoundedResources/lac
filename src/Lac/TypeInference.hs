@@ -24,10 +24,8 @@ tyNat :: Type
 tyNat = F "Nat" []
 
 tyTree :: Type -> Type
-tyTree a = F "Tree" [a]
-
-tyAbs :: Type
-tyAbs = F "B" []
+--tyTree a = F "Tree" [a]
+tyTree = const (F "Tree" [tyNat])
 
 class Typable a where
   infer :: (Env, a, Type) -> State Int [(Type, Type)]

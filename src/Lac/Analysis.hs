@@ -60,9 +60,9 @@ genMatch ctx expr@(Match (Var x) ((PNil, e1) :| [(pNode@(PNode x1 x2 x3), e2)]))
     -- TODO: check type
     proof1 <- dispatch ctx' e1 ctxR
     -- TODO: use fresh type variable instead of abstract type here?
-    ctx'' <- augmentCtx [ (x1, AnTy (tyTree tyAbs) ())
-                        , (x2, AnTy tyAbs          ())
-                        , (x3, AnTy (tyTree tyAbs) ())
+    ctx'' <- augmentCtx [ (x1, AnTy (tyTree tyNat) ())
+                        , (x2, AnTy tyNat          ())
+                        , (x3, AnTy (tyTree tyNat) ())
                         ] ctx
     proof2 <- dispatch ctx'' e2 ctxR
 
