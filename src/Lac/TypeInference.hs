@@ -18,20 +18,6 @@ import qualified Data.Text                      as T
 
 -- type inference
 
-type Env = [(T String Text, Type)]
-
-tyBool :: Type
-tyBool = F "Bool" []
-
-tyNat :: Type
-tyNat = F "Nat" []
-
-tyTree :: Type
-tyTree = F "Tree" [tyNat]
-
-tyFun :: Type -> Type -> Type
-tyFun a b = F "->" [a, b]
-
 class Typable a where
   infer :: (Env, a, Type) -> State Int ([(Type, Type)], Typed)
 
