@@ -23,9 +23,8 @@ tyBool = F "Bool" []
 tyNat :: Type
 tyNat = F "Nat" []
 
-tyTree :: Type -> Type
---tyTree a = F "Tree" [a]
-tyTree = const (F "Tree" [tyNat])
+tyTree :: Type
+tyTree = F "Tree" [tyNat]
 
 class Typable a where
   infer :: (Env, a, Type) -> State Int [(Type, Type)]
@@ -36,13 +35,12 @@ instance Typable Expr where
 inferExprType :: (Env, Expr, Type) -> State Int [(Type, Type)]
 inferExprType (env, expr, tau) =
   case expr of
-    Lit LNil -> fresh >>= \a -> return [(tau, tyTree (V a))]
+    Lit LNil -> return [(tau, tyTree)]
     Lit (LNode e1 e2 e3) -> do
-      a <- fresh
-      xs <- infer (env, e1, tyTree (V a))
-      ys <- infer (env, e2, V a)
-      zs <- infer (env, e3, tyTree (V a))
-      return $ (tau, tyTree (V a)) : concat [xs, ys, zs]
+      xs <- infer (env, e1, tyTree)
+      ys <- infer (env, e2, tyNat)
+      zs <- infer (env, e3, tyTree)
+      return $ (tau, tyTree) : concat [xs, ys, zs]
     Lit (LBool True) -> return [(tau, tyBool)]
     Lit (LBool False) -> return [(tau, tyBool)]
     Lit (LNat _) -> return [(tau, tyNat)]
@@ -79,17 +77,15 @@ inferExprType (env, expr, tau) =
       return $ concat [xs, ys, zs]
     Match e es ->
       do
-        a <- fresh
-        let ty = tyTree (V a)
-        xs <- infer (env, e, ty)
-        ys <- concat <$> mapM (f a ty) es
+        xs <- infer (env, e, tyTree)
+        ys <- concat <$> mapM f es
         return $ xs ++ ys
       where
-        f a ty (p, e) =
+        f (p, e) =
           case p of
             PNil -> infer (env, e, tau)
             PNode l x r ->
-              let env' = (V l, ty) : (V x, V a) : (V r, ty) : env
+              let env' = (V l, tyTree) : (V x, tyNat) : (V r, tyTree) : env
               in
               infer (env', e, tau)
     Cmp _ e1 e2 -> do
