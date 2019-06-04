@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Lac.TypeInference where
@@ -11,6 +12,7 @@ import           Control.Monad                  (replicateM)
 import           Control.Monad.State.Strict.Ext
 import           Data.List                      (find)
 import qualified Data.List.NonEmpty             as NE
+import           Data.Maybe                     (fromJust, fromMaybe)
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
@@ -136,3 +138,35 @@ inferType env expr =
   let ((constraints, _typed), n) = runState (infer (env, expr, V 0)) 0
   in
   (constraints, n)
+
+typed :: Env -> Expr -> Maybe (Typed, Type)
+typed env expr =
+  let ((eqs, varExpr), _) = runState (inferExprType (env, expr, V 0)) 0
+  in
+  case unify eqs of
+    Left _      -> Nothing
+    Right subst ->
+      let typedExpr = applySubst subst varExpr
+      in
+      Just (typedExpr, fromJust (lookup (V 0) subst))
+
+applySubst :: [(Type, Type)] -> Typed -> Typed
+applySubst subst =
+  \case
+    TyLit (l, ty) -> TyLit (l, lookup' ty)
+    TyVar x -> TyVar x
+    TyCmp op (e1, ty1) (e2, ty2) -> TyCmp op (rec e1, lookup' ty1) (rec e2, lookup' ty2)
+    TyIte (e1, ty1) (e2, ty2) (e3, ty3) -> TyIte (rec e1, lookup' ty1) (rec e2, lookup' ty2) (rec e3, lookup' ty3)
+    TyLet x (e1, ty1) (e2, ty2) -> TyLet x (rec e1, lookup' ty1) (rec e2, lookup' ty2)
+    TyApp (e1, ty1) (e2, ty2) -> TyApp (rec e1, lookup' ty1) (rec e2, lookup' ty2)
+    TyMatch (e, t) cs -> TyMatch (rec e, lookup' t) (NE.map f cs)
+      where
+        f (p, (e, ty)) = (p, (rec e, lookup' ty))
+    TyAbs x (e, ty) -> TyAbs x (rec e, lookup' ty)
+  where
+    lookup' k =
+      case k of
+        V x    -> fromJust (lookup (V x) subst)
+                  -- fromMaybe k (lookup k subst)
+        F f ts -> F f (map lookup' ts)
+    rec = applySubst subst
