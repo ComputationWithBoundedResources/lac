@@ -6,9 +6,13 @@ module Lac.Analysis.Types (
     Ctx(..)
   , freshCtx
   , rootCtx
+  , insert
+  , insertCtx
+  , insertAstCtx
+  , insertVecCtx
   , augmentCtx
   , splitCtx
-  , AnTy(..)
+  , coeffCtx
 
   , Error(..)
 
@@ -19,6 +23,7 @@ module Lac.Analysis.Types (
   , Gen (..)
   , runGen
   , tell
+  , tellConstr
   , throwError
   )
   where
@@ -31,6 +36,7 @@ import           Latex
 
 import           Control.Monad.Except
 import           Control.Monad.Writer
+import           Data.List                      (intercalate)
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
@@ -40,23 +46,66 @@ data Ctx
   = Ctx {
     ctxId      :: Int
   , ctxName    :: Text
-  , ctxMembers :: [(Text, AnTy)] -- is this field needed?
+  , ctxMembers :: [(Text, Text)] -- is this field needed?
+  , ctxVec     :: [([Int], Text)]
+  , ctxAst     :: Maybe Text
   }
   deriving (Eq, Show)
 
+-- do not export `nullCtx`
+nullCtx :: Ctx
+nullCtx = Ctx 0 mempty mempty mempty mempty
+
 rootCtx :: Ctx
-rootCtx = Ctx (-1) "Γ_\\ast" mempty
+rootCtx = nullCtx { ctxId = -1
+                  , ctxName = "Γ_{root}"
+                  }
 
 freshCtx :: Gen Ctx
 freshCtx =
   do
-    idx <- get
-    put (idx + 1)
+    idx <- fresh
     return $
-      Ctx idx (mkNam idx) mempty
+      Ctx idx (mkNam idx) mempty mempty mempty
   where
     mkNam i | i < 10    = "Γ_" <> T.pack (show i)
             | otherwise = "Γ_{" <> T.pack (show i) <> "}"
+
+insert :: Text -> Ctx -> Gen Ctx
+insert x ctx = snd <$> insertCtx x ctx
+
+insertCtx :: Text -> Ctx -> Gen (Text, Ctx)
+insertCtx x ctx@Ctx{..} =
+  do
+    i <- fresh
+    let new = ctxName <> "_{" <> T.pack (show i) <> "}"
+    let ctx' = ctx { ctxMembers = (x, new) : ctxMembers }
+    q <- coeffCtx x ctx'
+    return (q, ctx')
+
+insertAstCtx :: Ctx -> Gen (Text, Ctx)
+insertAstCtx ctx@Ctx{..} =
+  do
+    -- TODO: fail if "asterisk" coefficient is already set
+    i <- fresh
+    let new = ctxName <> "_\\ast"
+    let ctx' = ctx { ctxAst = Just new }
+    return (new, ctx')
+
+insertVecCtx :: [Int] -> Ctx -> Gen (Text, Ctx)
+insertVecCtx vec ctx@Ctx{..} =
+  do
+    i <- fresh
+    let new = ctxName <> "_{(" <> T.pack (intercalate "," (map show vec)) <> ")}"
+    let ctx' = ctx { ctxVec = (vec, new) : ctxVec }
+    q <- vecCtx vec ctx'
+    return (q, ctx')
+
+vecCtx :: [Int] -> Ctx -> Gen Text
+vecCtx vec ctx@Ctx{..} =
+  case lookup vec ctxVec of
+    Nothing -> error $ "coefficient for vector " <> show vec <> " does not appear in context"
+    Just q -> return q
 
 instance Latex Ctx where
   latex Ctx{..} =
@@ -64,7 +113,7 @@ instance Latex Ctx where
       then "\\varnothing"
       else T.intercalate ", " $ map f ctxMembers
     where
-      f (x, ty) = x <> ": " <> ppAnTy ty
+      f (x, ty) = x <> ": TODO" -- <> ppAnTy ty
 
       -- TODO: format type annotation
       ppAnTy :: AnTy -> Text
@@ -77,7 +126,7 @@ data AnTy
   }
   deriving (Eq, Show)
 
-splitCtx :: Text -> Ctx -> Gen (AnTy, Ctx)
+splitCtx :: Text -> Ctx -> Gen (Text, Ctx)
 splitCtx x ctx@Ctx{..} =
   case lookup x ctxMembers of
     Just ty -> let ctx' = ctx { ctxMembers = delete' x ctxMembers }
@@ -85,7 +134,13 @@ splitCtx x ctx@Ctx{..} =
                return (ty, ctx')
     Nothing -> throwError $ AssertionFailed $ "variable `" <> x <> "` does not appear in context"
 
-augmentCtx :: [(Text, AnTy)] -> Ctx -> Gen Ctx
+coeffCtx :: Text -> Ctx -> Gen Text
+coeffCtx x ctx@Ctx{..} =
+  case lookup x ctxMembers of
+    Nothing -> error $ "variable `" <> T.unpack x <> "` not found in context"
+    Just x -> return x
+
+augmentCtx :: [(Text, Text)] -> Ctx -> Gen Ctx
 augmentCtx xs ctx@Ctx{..} =
   do
     name <- freshCtxName
@@ -108,7 +163,8 @@ data Error
   | AssertionFailed Text
   deriving (Eq, Show)
 
-data Constraint = Constraint
+data Constraint
+  = CEq Text Text
   deriving (Eq, Show)
 
 data Output
@@ -146,3 +202,10 @@ runGen :: Gen r -> IO (Either Error r, Output)
 runGen = fmap f . runWriterT . flip runStateT 0 . runExceptT . unGen
   where
     f ((e, _), cs) = (e, cs)
+
+tellConstr :: [Constraint] -> Gen ()
+tellConstr cs = tell
+  Output { outConstraints = cs
+         , outEqs = []
+         , outLog = []
+         }
