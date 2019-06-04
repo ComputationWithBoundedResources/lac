@@ -133,7 +133,7 @@ cmdDecls = ReplCmd "decls" cmd (const "show loaded declarations")
             let env = mempty
             let decls' = evalState (mkProgEnv env decls) 0
             let env' = extractEnv env decls'
-            let (eqs, _) = inferType env program
+            let (eqs, _) = inferProgType env program
             let maybeMGU = unify eqs
 
             forM_ decls $ \(Decl n _ e) ->

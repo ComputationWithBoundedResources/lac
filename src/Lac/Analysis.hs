@@ -7,6 +7,7 @@ module Lac.Analysis where
 import           Control.Monad.State.Strict.Ext
 import           Data.Expr                      hiding (expr)
 import           Data.Subst
+import qualified Data.Term                      as T
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Types
 import           Lac.TypeInference
