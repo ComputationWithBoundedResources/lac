@@ -1,4 +1,5 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Data.Expr.Typed where
 
@@ -14,6 +15,8 @@ data TyLiteral
   | TyLBool Bool
   | TyLNat Int
 
+deriving instance Show TyLiteral
+
 data Typed where
   TyLit :: (TyLiteral, Type) -> Typed
   TyVar :: Text -> Typed
@@ -24,4 +27,4 @@ data Typed where
   TyMatch :: (Typed, Type) -> NonEmpty (Pattern, (Typed, Type)) -> Typed
   TyAbs :: Text -> (Typed, Type) -> Typed
 
--- TODO: implement `Show` instance through `Expr`
+deriving instance Show Typed
