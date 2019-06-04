@@ -6,6 +6,7 @@ module Lac.Analysis where
 
 import           Control.Monad.State.Strict.Ext
 import           Data.Expr                      hiding (expr)
+import           Data.Subst
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Types
 import           Lac.TypeInference
@@ -17,11 +18,11 @@ import qualified Data.Text                      as T
 
 -- * Rules
 
-type Rule a = Ctx -> Expr -> Ctx -> Gen a
+type Rule a = Subst -> Ctx -> Expr -> Ctx -> Gen a
 
 -- | Dispatch rule
 dispatch :: Rule ProofTree
-dispatch ctx expr ctx' = do
+dispatch subst ctx expr ctx' = do
   gen <- case expr of
     Abs _ _   -> throwError $ NotImplemented "abstraction"
     Lit _     -> return genLit
@@ -31,55 +32,55 @@ dispatch ctx expr ctx' = do
     App _ _   -> throwError $ NotImplemented "application"
     Match _ _ -> return genMatch
     Var _     -> return genVar
-  gen ctx expr ctx'
+  gen subst ctx expr ctx'
 
 genVar :: Rule ProofTree
 -- TODO: compare contexts
-genVar ctx expr@(Var x) ctxR =
+genVar subst ctx expr@(Var x) ctxR =
   do
     splitCtx x ctx
     return $ mkConcl ctx expr ctxR `provedBy` [assume $ x <> " \\mbox{ is a variable}"]
-genVar _ _ _ = throwError $ NotApplicable "variable"
+genVar subst _ _ _ = throwError $ NotApplicable "variable"
 
 genLit :: Rule ProofTree
-genLit ctx@Ctx{..} expr@(Lit LNil) ctxR =
+genLit subst ctx@Ctx{..} expr@(Lit LNil) ctxR =
   case ctxMembers of
     [] -> return $ mkConcl ctx expr ctxR `provedBy` [assume "TODO"]
     -- apply weakening
     (x, _) : xs -> do
       -- TODO: constraints
       let ctx' = ctx { ctxMembers = xs }
-      proof <- dispatch ctx' expr ctxR
+      proof <- dispatch subst ctx' expr ctxR
       return $ mkConcl ctx expr ctxR `provedBy` [proof]
-genLit _ _ _ = throwError $ NotApplicable "literal"
+genLit subst _ _ _ = throwError $ NotApplicable "literal"
 
 genMatch :: Rule ProofTree
-genMatch ctx expr@(Match (Var x) ((PNil, e1) :| [(pNode@(PNode x1 x2 x3), e2)])) ctxR =
+genMatch subst ctx expr@(Match (Var x) ((PNil, e1) :| [(pNode@(PNode x1 x2 x3), e2)])) ctxR =
   do
     (ty, ctx'@Ctx{..}) <- splitCtx x ctx
     -- TODO: check type
-    proof1 <- dispatch ctx' e1 ctxR
+    proof1 <- dispatch subst ctx' e1 ctxR
     -- TODO: use fresh type variable instead of abstract type here?
     ctx'' <- augmentCtx [ (x1, AnTy (tyTree tyNat) ())
                         , (x2, AnTy tyNat          ())
                         , (x3, AnTy (tyTree tyNat) ())
                         ] ctx
-    proof2 <- dispatch ctx'' e2 ctxR
+    proof2 <- dispatch subst ctx'' e2 ctxR
 
     e1' <- nameExpr e1
     e2' <- nameExpr e2
     let expr' = Match (Var x) ((PNil, e1') :| [(pNode, e2')])
     return $ mkConcl ctx expr' ctxR `provedBy` [proof1, proof2]
-genMatch _ _ _ =
+genMatch subst _ _ _ =
   throwError $ NotApplicable "match"
 
 genIte :: Rule ProofTree
-genIte ctx expr@(Ite (Var x) e1 e2) ctxR =
+genIte subst ctx expr@(Ite (Var x) e1 e2) ctxR =
   do
     (_, ctx') <- splitCtx x ctx
     -- TODO: check type
-    proof1 <- dispatch ctx' e1 ctxR
-    proof2 <- dispatch ctx' e2 ctxR
+    proof1 <- dispatch subst ctx' e1 ctxR
+    proof2 <- dispatch subst ctx' e2 ctxR
 
     e1' <- nameExpr e1
     e2' <- nameExpr e2
@@ -96,10 +97,10 @@ mkConcl ctxL expr ctxR =
     , latex ctxR
     ]
 
-writeProof :: FilePath -> Ctx -> Expr -> IO ()
-writeProof path ctx expr =
+writeProof :: FilePath -> Subst -> Ctx -> Expr -> IO ()
+writeProof path subst ctx expr =
   let q' = nullCtx "Q'"
-      f = dispatch ctx expr q'
+      f = dispatch subst ctx expr q'
   in
   runGen f >>=
     \(e, Output{..}) ->

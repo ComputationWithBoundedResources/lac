@@ -3,6 +3,7 @@
 module Main where
 
 import           Data.Expr
+import           Data.Subst
 import           Lac.Analysis
 import           Lac.Analysis.Types
 import           Lac.TypeInference
@@ -25,9 +26,10 @@ main =
             Left _ -> exitFailure
             Right expr ->
               do
+                let subst = ()
                 -- TODO: populate environment
                 let ctx = nullCtx "Q"
-                writeProof outPath ctx expr
+                writeProof outPath subst ctx expr
                 system $ "pdflatex " <> outPath
                 exitSuccess
       _ ->
