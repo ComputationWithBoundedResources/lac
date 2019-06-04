@@ -53,14 +53,19 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - lac
-  lnf:
+  lac-lnf:
     main:         Main.hs
     source-dirs:  exe/lnf
     dependencies:
     - lac
-  proof:
+  lac-proof:
     main:         Main.hs
     source-dirs:  exe/proof
+    dependencies:
+    - lac
+  lac-demo:
+    main: Main.hs
+    source-dirs: exe/demo
     dependencies:
     - lac
 
