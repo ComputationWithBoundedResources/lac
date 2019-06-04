@@ -14,7 +14,6 @@ import           Data.Maybe          (mapMaybe)
 import           Data.Text           (Text)
 import qualified Data.Text           as T
 import           System.Environment  (getArgs)
-import           System.IO.Unsafe    (unsafePerformIO)
 import           Text.Parsec
 import           Text.Parsec.Helpers (many1', parens)
 
@@ -92,29 +91,15 @@ match =
 tree :: Stream s m Char => ParsecT s u m a -> b -> ((a, a, a) -> b) -> ParsecT s u m b
 tree p x g = (nil >> return x) <|> (g <$> node p)
 
-nodeDelimiters :: (String, String)
-{-# NOINLINE nodeDelimiters #-}
-nodeDelimiters =
-  let parens = ("(", ")")
-      braces = ("{", "}")
-  in
-  unsafePerformIO $ do
-    args <- getArgs
-    return $
-      if "--node-parens" `elem` args
-        then parens
-        else braces
-
 node :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (a, a, a)
 node p = do
-  let (left, right) = nodeDelimiters
-  string left >> spaces
+  string "(" >> spaces
   e1 <- p
   string "," >> spaces
   e2 <- p
   string "," >> spaces
   e3 <- p
-  string right >> spaces
+  string ")" >> spaces
   return (e1, e2, e3)
 
 nil :: Stream s m Char => ParsecT s u m ()
