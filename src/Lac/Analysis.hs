@@ -100,7 +100,7 @@ mkConcl ctxL expr ctxR =
 
 writeProof :: FilePath -> Subst -> Ctx -> Expr -> IO ()
 writeProof path subst ctx expr =
-  let q' = nullCtx "Q'"
+  let q' = rootCtx
       f = dispatch subst ctx expr q'
   in
   runGen f >>=

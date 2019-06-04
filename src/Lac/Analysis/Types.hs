@@ -4,7 +4,8 @@
 
 module Lac.Analysis.Types (
     Ctx(..)
-  , nullCtx
+  , freshCtx
+  , rootCtx
   , augmentCtx
   , splitCtx
   , AnTy(..)
@@ -37,13 +38,25 @@ import qualified Data.Text                      as T
 
 data Ctx
   = Ctx {
-    ctxName    :: Text
-  , ctxMembers :: [(Text, AnTy)]
+    ctxId      :: Int
+  , ctxName    :: Text
+  , ctxMembers :: [(Text, AnTy)] -- is this field needed?
   }
   deriving (Eq, Show)
 
-nullCtx :: Text -> Ctx
-nullCtx name = Ctx name mempty
+rootCtx :: Ctx
+rootCtx = Ctx (-1) "Γ_\\ast" mempty
+
+freshCtx :: Gen Ctx
+freshCtx =
+  do
+    idx <- get
+    put (idx + 1)
+    return $
+      Ctx idx (mkNam idx) mempty
+  where
+    mkNam i | i < 10    = "Γ_" <> T.pack (show i)
+            | otherwise = "Γ_{" <> T.pack (show i) <> "}"
 
 instance Latex Ctx where
   latex Ctx{..} =
