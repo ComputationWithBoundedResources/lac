@@ -4,6 +4,7 @@ module Lac.TypeInference where
 
 import           Data.Expr.Types
 import           Data.Term
+import           Data.Type
 
 import           Control.Monad                  (replicateM)
 import           Control.Monad.State.Strict.Ext
@@ -12,8 +13,6 @@ import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
 -- type inference
-
-type Type = T String Int
 
 type Env = [(T String Text, Type)]
 

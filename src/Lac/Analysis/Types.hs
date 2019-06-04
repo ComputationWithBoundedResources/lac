@@ -24,6 +24,7 @@ module Lac.Analysis.Types (
 
 import           Control.Monad.State.Strict.Ext
 import           Data.List.Helpers
+import           Data.Type
 import           Lac.TypeInference
 import           Latex
 
