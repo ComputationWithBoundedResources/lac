@@ -1,13 +1,17 @@
 {-# LANGUAGE GADTs              #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
 module Data.Expr.Typed where
 
 import           Data.Expr.Types    (CmpOp (..), Pattern (..))
+import           Data.Term.Pretty   (ppTerm')
 import           Data.Type
 
 import           Data.List.NonEmpty
-import           Data.Text
+import           Data.Text          (Text)
+import qualified Data.Text          as T
 
 data TyLiteral
   = TyLNil
@@ -28,3 +32,18 @@ data Typed where
   TyAbs :: Text -> (Typed, Type) -> Typed
 
 deriving instance Show Typed
+
+ppTyped :: (Typed, Type) -> Text
+ppTyped (expr, ty) = "(" <> go expr <> " : " <> ppTerm' ty <> ")"
+  where
+    go =
+      \case
+        TyLit (TyLNil, _) -> "nil"
+        -- TyLit (TyNode, _) -> ...
+        TyLit (TyLBool True, _) -> "true"
+        TyLit (TyLBool False, _) -> "false"
+        TyLit (TyLNat n, _) -> T.pack . show $ n
+
+        TyVar x -> T.pack . show $ x
+
+        TyApp e1 e2 -> "(" <> ppTyped e1 <> " " <> ppTyped e2 <> ")"

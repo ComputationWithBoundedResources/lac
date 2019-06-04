@@ -12,7 +12,7 @@ import           Control.Monad                  (replicateM)
 import           Control.Monad.State.Strict.Ext
 import           Data.List                      (find)
 import qualified Data.List.NonEmpty             as NE
-import           Data.Maybe                     (fromJust, fromMaybe)
+import           Data.Maybe                     (fromJust)
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
@@ -152,6 +152,9 @@ typed env expr =
       let typedExpr = applySubst subst varExpr
       in
       Just (typedExpr, fromJust (lookup (V 0) subst))
+
+typed' :: Env -> Expr -> (Typed, Type)
+typed' env = fromJust . typed env
 
 applySubst :: [(Type, Type)] -> Typed -> Typed
 applySubst subst =
