@@ -6,13 +6,6 @@ module Lac.Analysis.Types (
     Ctx(..)
   , freshCtx
   , rootCtx
-  , insert
-  , insertCtx
-  , insertAstCtx
-  , insertVecCtx
-  , augmentCtx
-  , splitCtx
-  , coeffCtx
 
   , Error(..)
 
@@ -44,17 +37,29 @@ import qualified Data.Text                      as T
 
 data Ctx
   = Ctx {
-    ctxId      :: Int
-  , ctxName    :: Text
-  , ctxMembers :: [(Text, Text)] -- is this field needed?
-  , ctxVec     :: [([Int], Text)]
-  , ctxAst     :: Maybe Text
+    ctxId           :: Int
+  , ctxName         :: Text
+  , ctxCoefficients :: [(Idx, Coeff)]
+  , ctxMembers      :: [(Text, Type)]
+  }
+  deriving (Eq, Show)
+
+data Idx
+  = IdIdx Text
+  | VecIdx [Int]
+  | AstIdx
+  deriving (Eq, Show)
+
+data Coeff
+  = Coeff {
+    coeffId   :: Int
+  , coeffName :: Text
   }
   deriving (Eq, Show)
 
 -- do not export `nullCtx`
 nullCtx :: Ctx
-nullCtx = Ctx 0 mempty mempty mempty mempty
+nullCtx = Ctx 0 mempty mempty mempty
 
 rootCtx :: Ctx
 rootCtx = nullCtx { ctxId = -1
@@ -66,46 +71,10 @@ freshCtx =
   do
     idx <- fresh
     return $
-      Ctx idx (mkNam idx) mempty mempty mempty
+      Ctx idx (mkNam idx) mempty mempty
   where
     mkNam i | i < 10    = "Γ_" <> T.pack (show i)
             | otherwise = "Γ_{" <> T.pack (show i) <> "}"
-
-insert :: Text -> Ctx -> Gen Ctx
-insert x ctx = snd <$> insertCtx x ctx
-
-insertCtx :: Text -> Ctx -> Gen (Text, Ctx)
-insertCtx x ctx@Ctx{..} =
-  do
-    i <- fresh
-    let new = ctxName <> "_{" <> T.pack (show i) <> "}"
-    let ctx' = ctx { ctxMembers = (x, new) : ctxMembers }
-    q <- coeffCtx x ctx'
-    return (q, ctx')
-
-insertAstCtx :: Ctx -> Gen (Text, Ctx)
-insertAstCtx ctx@Ctx{..} =
-  do
-    -- TODO: fail if "asterisk" coefficient is already set
-    i <- fresh
-    let new = ctxName <> "_\\ast"
-    let ctx' = ctx { ctxAst = Just new }
-    return (new, ctx')
-
-insertVecCtx :: [Int] -> Ctx -> Gen (Text, Ctx)
-insertVecCtx vec ctx@Ctx{..} =
-  do
-    i <- fresh
-    let new = ctxName <> "_{(" <> T.pack (intercalate "," (map show vec)) <> ")}"
-    let ctx' = ctx { ctxVec = (vec, new) : ctxVec }
-    q <- vecCtx vec ctx'
-    return (q, ctx')
-
-vecCtx :: [Int] -> Ctx -> Gen Text
-vecCtx vec ctx@Ctx{..} =
-  case lookup vec ctxVec of
-    Nothing -> error $ "coefficient for vector " <> show vec <> " does not appear in context"
-    Just q -> return q
 
 instance Latex Ctx where
   latex Ctx{..} =
@@ -125,30 +94,6 @@ data AnTy
   , anTyAnnotation :: ()
   }
   deriving (Eq, Show)
-
-splitCtx :: Text -> Ctx -> Gen (Text, Ctx)
-splitCtx x ctx@Ctx{..} =
-  case lookup x ctxMembers of
-    Just ty -> let ctx' = ctx { ctxMembers = delete' x ctxMembers }
-               in
-               return (ty, ctx')
-    Nothing -> throwError $ AssertionFailed $ "variable `" <> x <> "` does not appear in context"
-
-coeffCtx :: Text -> Ctx -> Gen Text
-coeffCtx x ctx@Ctx{..} =
-  case lookup x ctxMembers of
-    Nothing -> error $ "variable `" <> T.unpack x <> "` not found in context"
-    Just x -> return x
-
-augmentCtx :: [(Text, Text)] -> Ctx -> Gen Ctx
-augmentCtx xs ctx@Ctx{..} =
-  do
-    name <- freshCtxName
-    return $
-      ctx {
-        ctxName    = name
-      , ctxMembers = xs ++ ctxMembers
-      }
 
 freshCtxName :: Gen Text
 freshCtxName = do
