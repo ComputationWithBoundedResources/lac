@@ -4,6 +4,7 @@
 
 module Lac.Analysis.Types (
     Ctx(..)
+  , ctxName
   , freshCtx
   , rootCtx
 
@@ -22,14 +23,11 @@ module Lac.Analysis.Types (
   where
 
 import           Control.Monad.State.Strict.Ext
-import           Data.List.Helpers
 import           Data.Type
-import           Lac.TypeInference
 import           Latex
 
 import           Control.Monad.Except
 import           Control.Monad.Writer
-import           Data.List                      (intercalate)
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
@@ -37,12 +35,17 @@ import qualified Data.Text                      as T
 
 data Ctx
   = Ctx {
+    -- | Context identifier, i.e. 2 for context @Q_2@
     ctxId           :: Int
-  , ctxName         :: Text
+    -- | Coefficients in context
+    -- | Variables in context
   , ctxCoefficients :: [(Idx, Coeff)]
-  , ctxMembers      :: [(Text, Type)]
+  , ctxVariables    :: [(Text, Type)]
   }
   deriving (Eq, Show)
+
+ctxName :: Ctx -> Text
+ctxName Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "}"
 
 data Idx
   = IdIdx Text
@@ -52,35 +55,50 @@ data Idx
 
 data Coeff
   = Coeff {
-    coeffId   :: Int
-  , coeffName :: Text
+    coeffId :: Int
   }
   deriving (Eq, Show)
 
 -- do not export `nullCtx`
 nullCtx :: Ctx
-nullCtx = Ctx 0 mempty mempty mempty
+nullCtx = Ctx 0 mempty mempty
 
 rootCtx :: Ctx
-rootCtx = nullCtx { ctxId = -1
-                  , ctxName = "Γ_{root}"
-                  }
+rootCtx = nullCtx { ctxId = -1 }
 
 freshCtx :: Gen Ctx
-freshCtx =
+freshCtx = Ctx <$> fresh <*> pure mempty <*> pure mempty
+
+augmentCtx :: Int -> [(Text, Type)] -> Ctx -> Gen Ctx
+augmentCtx bound vars ctx =
   do
-    idx <- fresh
+    rankCoefficients <-
+      mapM
+        (\(x, _) -> fresh >>= \i -> return (IdIdx x, Coeff i))
+        vars
+    vecCoefficients <-
+      mapM
+        (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
+        (vectors bound (length vars + 1))
     return $
-      Ctx idx (mkNam idx) mempty mempty
+      ctx { ctxVariables = vars
+          , ctxCoefficients = rankCoefficients ++ vecCoefficients
+          }
+
+vectors :: Int -> Int -> [[Int]]
+vectors bound n = go n
   where
-    mkNam i | i < 10    = "Γ_" <> T.pack (show i)
-            | otherwise = "Γ_{" <> T.pack (show i) <> "}"
+    range = [0..bound]
+
+    go 0 = []
+    go 1 = map (\x -> [x]) range
+    go n = [i : xs | i <- range, xs <- go (n - 1)]
 
 instance Latex Ctx where
   latex Ctx{..} =
-    if null ctxMembers
+    if null ctxVariables
       then "\\varnothing"
-      else T.intercalate ", " $ map f ctxMembers
+      else T.intercalate ", " $ map f ctxVariables
     where
       f (x, ty) = x <> ": TODO" -- <> ppAnTy ty
 
@@ -94,11 +112,6 @@ data AnTy
   , anTyAnnotation :: ()
   }
   deriving (Eq, Show)
-
-freshCtxName :: Gen Text
-freshCtxName = do
-  i <- fresh
-  return (T.pack $ "C_{" <> show i <> "}")
 
 -- * Execution
 

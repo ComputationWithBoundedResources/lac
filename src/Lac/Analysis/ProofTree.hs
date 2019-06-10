@@ -2,9 +2,10 @@
 
 module Lac.Analysis.ProofTree where
 
+import           Latex
+
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Latex
 
 -- * Proof tree
 
