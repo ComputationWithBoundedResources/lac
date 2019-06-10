@@ -101,18 +101,7 @@ instance Latex Ctx where
       then "\\varnothing"
       else T.intercalate ", " $ map f ctxVariables
     where
-      f (x, ty) = x <> ": TODO" -- <> ppAnTy ty
-
-      -- TODO: format type annotation
-      ppAnTy :: AnTy -> Text
-      ppAnTy (AnTy ty _) = latex ty
-
-data AnTy
-  = AnTy {
-    anTyType       :: Type
-  , anTyAnnotation :: ()
-  }
-  deriving (Eq, Show)
+      f (x, ty) = x <> ": TODO"
 
 -- * Execution
 
