@@ -23,6 +23,7 @@ module Lac.Analysis.Types (
   where
 
 import           Control.Monad.State.Strict.Ext
+import           Data.Bound
 import           Data.Type
 import           Latex
 
@@ -69,7 +70,7 @@ rootCtx = nullCtx { ctxId = -1 }
 freshCtx :: Gen Ctx
 freshCtx = Ctx <$> fresh <*> pure mempty <*> pure mempty
 
-augmentCtx :: Int -> [(Text, Type)] -> Ctx -> Gen Ctx
+augmentCtx :: Bound -> [(Text, Type)] -> Ctx -> Gen Ctx
 augmentCtx bound vars ctx =
   do
     rankCoefficients <-
@@ -85,8 +86,8 @@ augmentCtx bound vars ctx =
           , ctxCoefficients = rankCoefficients ++ vecCoefficients
           }
 
-vectors :: Int -> Int -> [[Int]]
-vectors bound n = go n
+vectors :: Bound -> Int -> [[Int]]
+vectors (Bound bound) n = go n
   where
     range = [0..bound]
 
