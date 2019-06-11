@@ -12,7 +12,7 @@ import           Control.Monad      (forM)
 import           Data.Text          (Text)
 
 ruleNode :: Ctx -> Text -> Text -> Gen Ctx
-ruleNode ctx@Ctx{..} x1 x2 =
+ruleNode ctx x1 x2 =
   do
     ctx' <- returnCtx (Bound 1) 1 True
 

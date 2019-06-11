@@ -3,7 +3,7 @@
 {-# LANGUAGE RecordWildCards            #-}
 
 module Lac.Analysis.Types (
-    Ctx(..)
+    Ctx()
   , ctxName
   , freshCtx
   , rootCtx
@@ -36,6 +36,8 @@ import           Latex
 import           Control.Monad.Except
 import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer
+import           Data.Map.Strict                (Map)
+import qualified Data.Map.Strict                as M
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
@@ -47,8 +49,8 @@ data Ctx
     ctxId           :: Int
     -- | Coefficients in context
     -- | Variables in context
-  , ctxCoefficients :: [(Idx, Coeff)]
-  , ctxVariables    :: [(Text, Type)]
+  , ctxCoefficients :: Map Idx Coeff
+  , ctxVariables    :: Map Text Type
   }
   deriving (Eq, Show)
 
@@ -56,10 +58,10 @@ ctxName :: Ctx -> Text
 ctxName Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "}"
 
 data Idx
-  = IdIdx Text
+  = AstIdx
+  | IdIdx Text
   | VecIdx [Int]
-  | AstIdx
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 data Coeff
   = Coeff {
@@ -79,12 +81,12 @@ freshCtx = Ctx <$> fresh <*> pure mempty <*> pure mempty
 
 coeff :: Ctx -> Idx -> Gen Coeff
 coeff Ctx{..} idx =
-  case lookup idx ctxCoefficients of
+  case M.lookup idx ctxCoefficients of
     Just c -> return c
     Nothing -> throwError . AssertionFailed $ "coefficient for index " <> T.pack (show idx) <> " not found"
 
 coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
-coeffs Ctx{..} p = filter (p . fst) ctxCoefficients
+coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
 
 augmentCtx :: Bound -> [(Text, Type)] -> Bool -> Ctx -> Gen Ctx
 augmentCtx bound vars ast ctx =
@@ -102,8 +104,11 @@ augmentCtx bound vars ast ctx =
         (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
         (vectors bound (length vars + 1))
     return $
-      ctx { ctxVariables = vars
-          , ctxCoefficients = astCoefficient ++ rankCoefficients ++ vecCoefficients
+      ctx { ctxVariables = M.fromList vars
+          , ctxCoefficients =
+            M.fromList astCoefficient
+            `M.union` M.fromList rankCoefficients
+            `M.union` M.fromList vecCoefficients
           }
 
 returnCtx :: Bound -> Int -> Bool -> Gen Ctx
@@ -119,8 +124,10 @@ returnCtx bound nvars ast =
         (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
         (vectors bound (nvars + 1))
     return $
-      ctx { ctxVariables = []
-          , ctxCoefficients = astCoefficient ++ vecCoefficients
+      ctx { ctxVariables = mempty
+          , ctxCoefficients =
+              M.fromList astCoefficient
+            `M.union` M.fromList vecCoefficients
           }
 
 vectors :: Bound -> Int -> [[Int]]
@@ -136,7 +143,7 @@ instance Latex Ctx where
   latex Ctx{..} =
     if null ctxVariables
       then "\\varnothing"
-      else T.intercalate ", " $ map f ctxVariables
+      else T.intercalate ", " $ map f . M.toList $ ctxVariables
     where
       f (x, ty) = x <> ": TODO"
 
