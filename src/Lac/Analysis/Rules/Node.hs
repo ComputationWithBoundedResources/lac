@@ -28,12 +28,12 @@ ruleNode ctx x1 x2 =
     qabs <- forM qaabs $ \(VecIdx [a, _, b], _) -> coeff ctx' (VecIdx [a, b])
 
     tellConstr $
-      [ CEq q1 q2
-      , CEq q2 qx'
-      , CEq q100 q010
-      , CEq q010 qx'
+      [ CEq (CAtom q1) (CAtom q2)
+      , CEq (CAtom q2) (CAtom qx')
+      , CEq (CAtom q100) (CAtom q010)
+      , CEq (CAtom q010) (CAtom qx')
       ]
       ++
-      zipWith CEq (map snd qaabs) qabs
+      zipWith (\x y -> CEq (CAtom x) (CAtom y)) (map snd qaabs) qabs
 
     return ctx'

@@ -19,6 +19,8 @@ module Lac.Analysis.Types (
   , outEq
 
   , Constraint(..)
+  , CExpr(..)
+
   , Gen (..)
   , runGen
   , tell
@@ -168,7 +170,12 @@ data Error
   deriving (Eq, Show)
 
 data Constraint
-  = CEq Coeff Coeff
+  = CEq CExpr CExpr
+  deriving (Eq, Show)
+
+data CExpr
+  = CAtom Coeff
+  | CSum [CExpr]
   deriving (Eq, Show)
 
 data Output
