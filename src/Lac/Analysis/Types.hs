@@ -22,6 +22,7 @@ module Lac.Analysis.Types (
   , tell
   , tellConstr
   , throwError
+  , liftIO
   )
   where
 
@@ -31,6 +32,7 @@ import           Data.Type
 import           Latex
 
 import           Control.Monad.Except
+import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
