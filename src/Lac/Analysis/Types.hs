@@ -8,7 +8,9 @@ module Lac.Analysis.Types (
   , freshCtx
   , rootCtx
   , coeff
+  , coeffs
   , augmentCtx
+  , returnCtx
   , Idx(..)
 
   , Error(..)
@@ -81,6 +83,9 @@ coeff Ctx{..} idx =
     Just c -> return c
     Nothing -> throwError . AssertionFailed $ "coefficient for index " <> T.pack (show idx) <> " not found"
 
+coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
+coeffs Ctx{..} p = filter (p . fst) ctxCoefficients
+
 augmentCtx :: Bound -> [(Text, Type)] -> Bool -> Ctx -> Gen Ctx
 augmentCtx bound vars ast ctx =
   do
@@ -99,6 +104,23 @@ augmentCtx bound vars ast ctx =
     return $
       ctx { ctxVariables = vars
           , ctxCoefficients = astCoefficient ++ rankCoefficients ++ vecCoefficients
+          }
+
+returnCtx :: Bound -> Int -> Bool -> Gen Ctx
+returnCtx bound nvars ast =
+  do
+    ctx <- freshCtx
+    astCoefficient <-
+      if ast
+        then fresh >>= \i -> return [(AstIdx, Coeff i)]
+        else return []
+    vecCoefficients <-
+      mapM
+        (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
+        (vectors bound (nvars + 1))
+    return $
+      ctx { ctxVariables = []
+          , ctxCoefficients = astCoefficient ++ vecCoefficients
           }
 
 vectors :: Bound -> Int -> [[Int]]
