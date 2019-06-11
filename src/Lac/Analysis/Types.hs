@@ -7,6 +7,9 @@ module Lac.Analysis.Types (
   , ctxName
   , freshCtx
   , rootCtx
+  , coeff
+  , augmentCtx
+  , Idx(..)
 
   , Error(..)
 
@@ -70,9 +73,19 @@ rootCtx = nullCtx { ctxId = -1 }
 freshCtx :: Gen Ctx
 freshCtx = Ctx <$> fresh <*> pure mempty <*> pure mempty
 
-augmentCtx :: Bound -> [(Text, Type)] -> Ctx -> Gen Ctx
-augmentCtx bound vars ctx =
+coeff :: Ctx -> Idx -> Gen Coeff
+coeff Ctx{..} idx =
+  case lookup idx ctxCoefficients of
+    Just c -> return c
+    Nothing -> throwError . AssertionFailed $ "coefficient for index " <> T.pack (show idx) <> " not found"
+
+augmentCtx :: Bound -> [(Text, Type)] -> Bool -> Ctx -> Gen Ctx
+augmentCtx bound vars ast ctx =
   do
+    astCoefficient <-
+      if ast
+        then fresh >>= \i -> return [(AstIdx, Coeff i)]
+        else return []
     rankCoefficients <-
       mapM
         (\(x, _) -> fresh >>= \i -> return (IdIdx x, Coeff i))
@@ -83,7 +96,7 @@ augmentCtx bound vars ctx =
         (vectors bound (length vars + 1))
     return $
       ctx { ctxVariables = vars
-          , ctxCoefficients = rankCoefficients ++ vecCoefficients
+          , ctxCoefficients = astCoefficient ++ rankCoefficients ++ vecCoefficients
           }
 
 vectors :: Bound -> Int -> [[Int]]
@@ -112,7 +125,7 @@ data Error
   deriving (Eq, Show)
 
 data Constraint
-  = CEq Text Text
+  = CEq Coeff Coeff
   deriving (Eq, Show)
 
 data Output
