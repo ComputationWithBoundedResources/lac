@@ -12,6 +12,7 @@ module Lac.Analysis.Types (
   , augmentCtx
   , returnCtx
   , Idx(..)
+  , enumRankCoeffs
 
   , Error(..)
 
