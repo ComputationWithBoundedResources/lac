@@ -88,6 +88,18 @@ coeff Ctx{..} idx =
 coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
 coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
 
+enumRankCoeffs :: Ctx -> [(Idx, Coeff)]
+enumRankCoeffs Ctx{..} = filter (p . fst) . M.toList $ ctxCoefficients
+  where
+    p (IdIdx _) = True
+    p _         = False
+
+enumTreeVars :: Ctx -> [(Text, Type)]
+enumTreeVars Ctx{..} = filter (p . snd) . M.toList $ ctxVariables
+  where
+    p t | t == tyTree = True
+        | otherwise   = False
+
 augmentCtx :: Bound -> [(Text, Type)] -> Bool -> Ctx -> Gen Ctx
 augmentCtx bound vars ast ctx =
   do
