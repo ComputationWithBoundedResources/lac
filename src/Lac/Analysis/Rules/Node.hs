@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Lac.Analysis.Rules.Node where
@@ -7,10 +8,13 @@ import           Data.Expr.Typed
 import           Data.Type
 import           Lac.Analysis.Types
 
-ruleNode :: Ctx -> Typed -> Typed -> Gen Ctx
-ruleNode ctx@Ctx{..} (TyVar x1) (TyVar x2) =
+import           Control.Monad      (forM)
+import           Data.Text          (Text)
+
+ruleNode :: Ctx -> Text -> Text -> Gen Ctx
+ruleNode ctx@Ctx{..} x1 x2 =
   do
-    ctx' <- freshCtx >>= augmentCtx (Bound 2) [(x1, tyTree), (x2, tyTree)] True
+    ctx' <- returnCtx (Bound 1) 1 True
 
     q1 <- coeff ctx (IdIdx x1)
     q2 <- coeff ctx (IdIdx x2)
@@ -18,12 +22,18 @@ ruleNode ctx@Ctx{..} (TyVar x1) (TyVar x2) =
     q100 <- coeff ctx (VecIdx [1, 0, 0])
     q010 <- coeff ctx (VecIdx [0, 1, 0])
     -- q(a,a,b), q(a,b)
+    let qaabs = coeffs ctx $ \case
+                               VecIdx [a, a', b] | a == a' -> True
+                               _ -> False
+    qabs <- forM qaabs $ \(VecIdx [a, _, b], _) -> coeff ctx' (VecIdx [a, b])
 
-    tellConstr
+    tellConstr $
       [ CEq q1 q2
       , CEq q2 qx'
       , CEq q100 q010
-        -- TODO
+      , CEq q010 qx'
       ]
+      ++
+      zipWith CEq (map snd qaabs) qabs
 
     return ctx'
