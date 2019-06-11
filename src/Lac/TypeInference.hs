@@ -27,16 +27,16 @@ instance Typable Expr where
 inferExprType :: (Env, Expr, Type) -> State Int ([(Type, Type)], Typed)
 inferExprType (env, expr, tau) =
   case expr of
-    Lit LNil -> return ([(tau, tyTree)], TyLit (TyLNil, tau))
+    Lit LNil -> return ([(tau, tyTree)], TyLit TyLNil)
     Lit (LNode e1 e2 e3) -> do
       (xs, e1') <- infer (env, e1, tyTree)
       (ys, e2') <- infer (env, e2, tyNat)
       (zs, e3') <- infer (env, e3, tyTree)
       let eqs = (tau, tyTree) : concat [xs, ys, zs]
-      return (eqs, (TyLit (TyLNode (e1', tyTree) (e2', tyNat) (e3', tyTree), tau)))
-    Lit (LBool True) -> return ([(tau, tyBool)], TyLit (TyLBool True, tau))
-    Lit (LBool False) -> return ([(tau, tyBool)], TyLit (TyLBool False, tau))
-    Lit (LNat n) -> return ([(tau, tyNat)], TyLit (TyLNat n, tau))
+      return (eqs, (TyLit (TyLNode e1' e2' e3')))
+    Lit (LBool True) -> return ([(tau, tyBool)], TyLit (TyLBool True))
+    Lit (LBool False) -> return ([(tau, tyBool)], TyLit (TyLBool False))
+    Lit (LNat n) -> return ([(tau, tyNat)], TyLit (TyLNat n))
     Var x ->
       let p ((V y), _ ) = x == y
           p _           = False
@@ -145,7 +145,7 @@ typed' env = fromJust . typed env
 applySubst :: [(Type, Type)] -> Typed -> Typed
 applySubst subst =
   \case
-    TyLit (l, ty) -> TyLit (l, lookup' ty)
+    TyLit l -> TyLit l -- TODO: apply substitution to children (sub-trees)
     TyVar x -> TyVar x
     TyCmp op (e1, ty1) (e2, ty2) -> TyCmp op (rec e1, lookup' ty1) (rec e2, lookup' ty2)
     TyIte (e1, ty1) (e2, ty2) (e3, ty3) -> TyIte (rec e1, lookup' ty1) (rec e2, lookup' ty2) (rec e3, lookup' ty3)

@@ -15,14 +15,14 @@ import qualified Data.Text          as T
 
 data TyLiteral
   = TyLNil
-  | TyLNode (Typed, Type) (Typed, Type) (Typed, Type) -- we can assume types `Tree Nat`, `Nat`, `Tree Nat` here
+  | TyLNode Typed Typed Typed
   | TyLBool Bool
   | TyLNat Int
 
 deriving instance Show TyLiteral
 
 data Typed where
-  TyLit :: (TyLiteral, Type) -> Typed
+  TyLit :: TyLiteral -> Typed
   TyVar :: Text -> Typed
   TyCmp :: CmpOp -> (Typed, Type) -> (Typed, Type) -> Typed
   TyIte :: (Typed, Type) -> (Typed, Type) -> (Typed, Type) -> Typed
@@ -38,11 +38,11 @@ ppTyped (expr, ty) = "(" <> go expr <> " : " <> ppTerm' ty <> ")"
   where
     go =
       \case
-        TyLit (TyLNil, _) -> "nil"
+        TyLit TyLNil -> "nil"
         -- TyLit (TyNode, _) -> ...
-        TyLit (TyLBool True, _) -> "true"
-        TyLit (TyLBool False, _) -> "false"
-        TyLit (TyLNat n, _) -> T.pack . show $ n
+        TyLit (TyLBool True) -> "true"
+        TyLit (TyLBool False) -> "false"
+        TyLit (TyLNat n) -> T.pack . show $ n
 
         TyVar x -> T.pack . show $ x
 
