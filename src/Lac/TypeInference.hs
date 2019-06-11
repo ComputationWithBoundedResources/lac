@@ -145,7 +145,10 @@ typed' env = fromJust . typed env
 applySubst :: [(Type, Type)] -> Typed -> Typed
 applySubst subst =
   \case
-    TyLit l -> TyLit l -- TODO: apply substitution to children (sub-trees)
+    TyLit l ->
+      case l of
+        TyLNode e1 e2 e3 -> TyLit (TyLNode (rec e1) (rec e2) (rec e3))
+        _                -> TyLit l
     TyVar x -> TyVar x
     TyCmp op (e1, ty1) (e2, ty2) -> TyCmp op (rec e1, lookup' ty1) (rec e2, lookup' ty2)
     TyIte (e1, ty1) (e2, ty2) (e3, ty3) -> TyIte (rec e1, lookup' ty1) (rec e2, lookup' ty2) (rec e3, lookup' ty3)
