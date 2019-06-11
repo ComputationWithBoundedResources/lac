@@ -26,7 +26,7 @@ main =
             Right expr ->
               do
                 -- TODO: populate environment
-                let ctx = nullCtx "Q"
+                let ctx = rootCtx
                 writeProof outPath ctx expr
                 system $ "pdflatex " <> outPath
                 exitSuccess
