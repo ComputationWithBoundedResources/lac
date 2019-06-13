@@ -107,9 +107,15 @@ augmentCtx bound ctx@Ctx{..} xs =
         (trees xs)
 
     vecCoefficients <-
-      mapM
-        (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
-        (vectors bound (countTrees xs + 1))
+      let c = countTrees xs
+      in
+      if c > 0
+        then
+          mapM
+            (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
+            (vectors bound (c + 1))
+        else
+          return []
 
     return $
       ctx { ctxVariables = M.fromList xs `M.union` ctxVariables
