@@ -8,6 +8,7 @@ module Lac.Analysis.Types (
   , freshCtx
   , rootCtx
   , lengthCtx
+  , splitCtx
   , ppCtx
   , ppConstr
   , coeff
