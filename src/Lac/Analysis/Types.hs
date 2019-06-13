@@ -138,7 +138,7 @@ splitCtx bound ctx xs = go ctx xs []
         (Just ty, m) ->
           let ctx' = ctx { ctxVariables = m }
           in
-          go ctx xs ((x, ty) : acc)
+          go ctx' xs ((x, ty) : acc)
         _ -> throwError . AssertionFailed $ "splitCtx: variable " <> x <> " not found in context"
 
 ppCtx :: Ctx -> Text
