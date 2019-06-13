@@ -35,9 +35,10 @@ runExample f =
         putStrLn "-- FINAL CONTEXT --"
         putStrLn "--"
         T.putStrLn $ ppCtx ctx
+        putStrLn "constraints:"
         T.putStrLn $ T.intercalate "\n" (map ppConstr outConstraints)
-      Left _ ->
-        putStrLn "error"
+      Left e ->
+        print e
 
 -- node
 example1 =
