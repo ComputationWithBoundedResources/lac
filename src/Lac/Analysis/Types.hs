@@ -13,6 +13,7 @@ module Lac.Analysis.Types (
   , ppConstr
   , coeff
   , coeffs
+  , vecCoeffsRev
   , augmentCtx
   , returnCtx
   , Idx(..)
@@ -46,6 +47,7 @@ import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer
 import           Data.Map.Strict                (Map)
 import qualified Data.Map.Strict                as M
+import           Data.Maybe                     (mapMaybe)
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
@@ -174,6 +176,12 @@ coeff Ctx{..} idx =
 
 coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
 coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
+
+vecCoeffsRev :: Ctx -> ([Int] -> Bool) -> [(Idx, Coeff)]
+vecCoeffsRev Ctx{..} q = mapMaybe p . M.toList $ ctxCoefficients
+  where
+    p c@(VecIdx vec, _) | q (reverse vec) = Just c
+    p _                                   = Nothing
 
 enumRankCoeffs :: Ctx -> [(Idx, Coeff)]
 enumRankCoeffs Ctx{..} = filter (p . fst) . M.toList $ ctxCoefficients
