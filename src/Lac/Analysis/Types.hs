@@ -7,6 +7,9 @@ module Lac.Analysis.Types (
   , ctxName
   , freshCtx
   , rootCtx
+  , lengthCtx
+  , ppCtx
+  , ppConstr
   , coeff
   , coeffs
   , augmentCtx
@@ -33,6 +36,7 @@ module Lac.Analysis.Types (
 
 import           Control.Monad.State.Strict.Ext
 import           Data.Bound
+import           Data.Term.Pretty
 import           Data.Type
 import           Latex
 
@@ -82,6 +86,79 @@ rootCtx = nullCtx { ctxId = -1 }
 freshCtx :: Gen Ctx
 freshCtx = Ctx <$> fresh <*> pure mempty <*> pure mempty
 
+countTrees :: [(Text, Type)] -> Int
+countTrees = length . trees
+
+trees :: [(Text, Type)] -> [(Text, Type)]
+trees = filter (\(_, ty) -> ty == tyTree)
+
+lengthCtx :: Ctx -> Int
+lengthCtx = countTrees . M.toList . ctxVariables
+
+augmentCtx :: Bound -> Ctx -> [(Text, Type)] -> Gen Ctx
+augmentCtx bound ctx@Ctx{..} xs =
+  do
+    astCoefficient <- fresh >>= \i -> return (AstIdx, Coeff i)
+
+    rankCoefficients <-
+      mapM
+        (\(x, _) -> fresh >>= \i -> return (IdIdx x, Coeff i))
+        (trees xs)
+
+    vecCoefficients <-
+      mapM
+        (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
+        (vectors bound (countTrees xs + 1))
+
+    return $
+      ctx { ctxVariables = M.fromList xs `M.union` ctxVariables
+          , ctxCoefficients =
+              M.fromList [astCoefficient]
+                `M.union` M.fromList rankCoefficients
+                `M.union` M.fromList vecCoefficients
+          }
+
+splitCtx :: Bound -> Ctx -> [Text] -> Gen ([(Text, Type)], Ctx)
+splitCtx bound ctx xs = go ctx xs []
+  where
+    go :: Ctx -> [Text] -> [(Text, Type)] -> Gen ([(Text, Type)], Ctx)
+    go ctx@Ctx{..} [] acc =
+      do
+        ctx' <- augmentCtx bound ctx (M.toList ctxVariables)
+        return (reverse acc, ctx')
+    go ctx@Ctx{..} (x:xs) acc =
+      case M.updateLookupWithKey (const (const Nothing)) x ctxVariables of
+        (Just ty, m) ->
+          let ctx' = ctx { ctxVariables = m }
+          in
+          go ctx xs ((x, ty) : acc)
+        _ -> throwError . AssertionFailed $ "splitCtx: variable " <> x <> " not found in context"
+
+ppCtx :: Ctx -> Text
+ppCtx Ctx{..} =
+  "variables: "
+    <> T.intercalate ", " (map ppVar . M.toList $ ctxVariables)
+    <> "\n"
+    <> "coefficients:\n"
+    <> T.intercalate "\n" (map ppCoeff . M.toList $ ctxCoefficients)
+
+ppVar :: (Text, Type) -> Text
+ppVar (x, ty) = x <> " : " <> ppTerm' ty
+
+ppCoeff :: (Idx, Coeff) -> Text
+ppCoeff (idx, (Coeff i)) = T.pack (show i) <> ": " <> c
+  where
+    c = case idx of
+          IdIdx x    -> "q(" <> x <> ")"
+          VecIdx vec -> "q(" <> T.intercalate ", " (map (T.pack . show) vec) <> ")"
+          AstIdx     -> "q*"
+
+ppConstr :: Constraint -> Text
+ppConstr (CEq lhs rhs) = ppCExpr lhs <> " = " <> ppCExpr rhs
+  where
+    ppCExpr (CAtom (Coeff i)) = T.pack (show i)
+    ppCExpr (CSum es) = T.intercalate " + " (map ppCExpr es)
+
 coeff :: Ctx -> Idx -> Gen Coeff
 coeff Ctx{..} idx =
   case M.lookup idx ctxCoefficients of
@@ -102,29 +179,6 @@ enumTreeVars Ctx{..} = filter (p . snd) . M.toList $ ctxVariables
   where
     p t | t == tyTree = True
         | otherwise   = False
-
-augmentCtx :: Bound -> [(Text, Type)] -> Bool -> Ctx -> Gen Ctx
-augmentCtx bound vars ast ctx =
-  do
-    astCoefficient <-
-      if ast
-        then fresh >>= \i -> return [(AstIdx, Coeff i)]
-        else return []
-    rankCoefficients <-
-      mapM
-        (\(x, _) -> fresh >>= \i -> return (IdIdx x, Coeff i))
-        vars
-    vecCoefficients <-
-      mapM
-        (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
-        (vectors bound (length vars + 1))
-    return $
-      ctx { ctxVariables = M.fromList vars
-          , ctxCoefficients =
-            M.fromList astCoefficient
-            `M.union` M.fromList rankCoefficients
-            `M.union` M.fromList vecCoefficients
-          }
 
 returnCtx :: Bound -> Int -> Bool -> Gen Ctx
 returnCtx bound nvars ast =

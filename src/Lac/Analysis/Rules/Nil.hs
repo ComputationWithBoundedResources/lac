@@ -25,5 +25,6 @@ ruleNil ctx =
 
 test =
   runGen $ do
-    ctx <- augmentCtx (Bound 1) [("t", tyTree)] False rootCtx
-    ruleNil ctx
+    ctx <- freshCtx
+    ctx' <- augmentCtx (Bound 1) ctx [("t", tyTree)]
+    ruleNil ctx'
