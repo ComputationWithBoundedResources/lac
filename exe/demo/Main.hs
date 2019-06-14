@@ -59,3 +59,16 @@ example2 =
     ctx' <- augmentCtx u ctx [("t", tyTree)]
     liftIO $ T.putStrLn (ppCtx ctx')
     ruleMatch ctx' "t" (TyVar "e1") ("l", "x", "r") (TyLit (TyLNode (TyVar "l") (TyVar "x") (TyVar "r")))
+
+example3 =
+  let u = Bound 1
+  in
+  runExample $ do
+    ctx <- freshCtx
+    ctx' <- augmentCtx u ctx [("t1", tyTree), ("t2", tyTree)]
+    i1 <- idx 1 ctx'
+    i2 <- idx 2 ctx'
+    liftIO $ do
+      print i1
+      print i2
+    return ctx'
