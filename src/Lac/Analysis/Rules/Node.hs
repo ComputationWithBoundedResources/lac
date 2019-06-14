@@ -15,7 +15,7 @@ import           Data.Text          (Text)
 ruleNode :: Ctx -> Text -> Text -> Gen Ctx
 ruleNode ctx x1 x2 =
   do
-    ctx' <- returnCtx (Bound 1) 1 True
+    ctx' <- returnCtx (Bound 1)
 
     q1 <- coeff ctx (IdIdx x1)
     q2 <- coeff ctx (IdIdx x2)

@@ -14,7 +14,7 @@ import           Data.Text          (Text)
 ruleNil :: Ctx -> Gen Ctx
 ruleNil ctx =
   do
-    ctx' <- returnCtx (Bound 1) 1 False
+    ctx' <- returnCtx (Bound 1)
 
     forM_ (zip [1..] (enumRankCoeffs ctx)) $ \(i, (_, qc)) -> do
       let splits = [(x, i - x) | x <- [0..i]]

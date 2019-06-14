@@ -202,23 +202,20 @@ enumTreeVars Ctx{..} = filter (p . snd) . M.toList $ ctxVariables
     p t | t == tyTree = True
         | otherwise   = False
 
-returnCtx :: Bound -> Int -> Bool -> Gen Ctx
-returnCtx bound nvars ast =
+returnCtx :: Bound -> Gen Ctx
+returnCtx bound =
   do
     ctx <- freshCtx
-    astCoefficient <-
-      if ast
-        then fresh >>= \i -> return [(AstIdx, Coeff i)]
-        else return []
     vecCoefficients <-
       mapM
         (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
-        (vectors bound (nvars + 1))
+        (vectors bound 2)
+    i <- fresh
     return $
       ctx { ctxVariables = mempty
           , ctxCoefficients =
-              M.fromList astCoefficient
-            `M.union` M.fromList vecCoefficients
+              M.singleton AstIdx (Coeff i)
+              `M.union` M.fromList vecCoefficients
           }
 
 vectors :: Bound -> Int -> [[Int]]
