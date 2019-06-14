@@ -18,6 +18,7 @@ module Lac.Analysis.Types (
   , returnCtx
   , Idx(..)
   , enumRankCoeffs
+  , idx
 
   , Error(..)
 
@@ -176,6 +177,12 @@ coeff Ctx{..} idx =
 
 coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
 coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
+
+idx :: Int -> Ctx -> Gen Idx
+idx i Ctx{..} =
+  case drop (i - 1) (trees . M.toList $ ctxVariables) of
+    (x, _) : _ -> return $ IdIdx x
+    _          -> throwError . AssertionFailed $ "coefficient for index " <> T.pack (show i) <> " not found"
 
 vecCoeffsRev :: Ctx -> ([Int] -> Bool) -> [(Idx, Coeff)]
 vecCoeffsRev Ctx{..} q = mapMaybe p . M.toList $ ctxCoefficients
