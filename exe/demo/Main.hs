@@ -4,17 +4,13 @@
 module Main where
 
 import           Data.Bound
-import           Data.Expr          (Pattern (..))
 import           Data.Expr.Parser   (expr)
 import           Data.Expr.Typed
-import           Data.List.NonEmpty (NonEmpty (..))
-import           Data.Term          (T (..))
 import qualified Data.Text          as T
 import qualified Data.Text.IO       as T
 import           Data.Type
 import           Lac.Analysis.Rules
 import           Lac.Analysis.Types
-import           Lac.TypeInference
 
 import           Text.Parsec
 
@@ -25,16 +21,16 @@ main = go
 
 getExpr = (\(Right x) -> x) . parse expr "<stdin>" <$> getLine
 
-runExample :: Gen Ctx -> IO ()
+runExample :: Show a => Gen a -> IO ()
 runExample f =
   do
     (result, Output{..}) <- runGen f
     case result of
-      Right ctx -> do
+      Right retval -> do
         putStrLn "--"
-        putStrLn "-- FINAL CONTEXT --"
+        putStrLn "-- RETURN VALUE --"
         putStrLn "--"
-        T.putStrLn $ ppCtx ctx
+        print retval
         putStrLn "constraints:"
         T.putStrLn $ T.intercalate "\n" (map ppConstr outConstraints)
       Left e ->
