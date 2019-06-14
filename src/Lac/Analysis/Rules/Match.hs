@@ -10,6 +10,7 @@ ruleMatch :: Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen Ctx
 ruleMatch q x e1 (x1, x2, x3) e2 =
   do
     let u = Bound 1
+    let m = lengthCtx q - 1
 
     (_, p) <- splitCtx u q [x]
     liftIO $ do
@@ -35,5 +36,35 @@ ruleMatch q x e1 (x1, x2, x3) e2 =
                                               coeff q (VecIdx vec)
 
     forM (zip (map snd raaabs) qaabs) $ \(ri, qi) -> tellConstr [CEq (CAtom ri) (CAtom qi)]
+
+    -- p(vec{a}, c) = sum{a+b=c} q(vec{a}, a, b)
+    let pacs =
+          vecCoeffsRev p $
+            \case
+              (c:as) | equal as -> True
+              _                 -> False
+    forM pacs $ \(VecIdx xs, pac) ->
+      let a = head xs
+          c = last xs
+          qabs = vecCoeffsRev q $
+            \case
+              (b:a:as) | all (== a) as, a + b == c -> True
+              _                                    -> False
+      in
+      tellConstr [ CEq (CAtom pac) (CSum (map (CAtom . snd) qabs)) ]
+
+    -- r_{m+1} = r_{m+2} = q_{m+1}
+    i1 <- idx (m + 1) r'
+    rm1 <- coeff r' i1
+    i2 <- idx (m + 2) r'
+    rm2 <- coeff r' i2
+    i3 <- idx (m + 1) q
+    qm1 <- coeff q i3
+    tellConstr
+      [ CEq (CAtom rm1) (CAtom rm2)
+      , CEq (CAtom rm2) (CAtom qm1)
+      ]
+
+    -- TODO: r_{(\vec{0}, 1, 0, 0)} = r_{(\vec{0}, 0, 1, 0)} = q_{m+1}
 
     return q
