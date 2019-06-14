@@ -22,9 +22,3 @@ ruleNil ctx =
       tellConstr [CEq (CAtom qc) (CSum (map CAtom qab's))]
 
     return ctx'
-
-test =
-  runGen $ do
-    ctx <- freshCtx
-    ctx' <- augmentCtx (Bound 1) ctx [("t", tyTree)]
-    ruleNil ctx'
