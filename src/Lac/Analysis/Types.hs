@@ -199,12 +199,6 @@ enumRankCoeffs Ctx{..} = filter (p . fst) . M.toList $ ctxCoefficients
     p (IdIdx _) = True
     p _         = False
 
-enumTreeVars :: Ctx -> [(Text, Type)]
-enumTreeVars Ctx{..} = filter (p . snd) . M.toList $ ctxVariables
-  where
-    p t | t == tyTree = True
-        | otherwise   = False
-
 returnCtx :: Bound -> Gen Ctx
 returnCtx bound =
   do
