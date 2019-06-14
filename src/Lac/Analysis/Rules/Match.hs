@@ -2,12 +2,14 @@
 
 module Lac.Analysis.Rules.Match where
 
+import           Data.Expr.Types
 import           Lac.Analysis.Rules.Common
 
+import           Data.List.NonEmpty        (NonEmpty (..))
 import qualified Data.Text.IO              as T
 
-ruleMatch :: Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen Ctx
-ruleMatch q x e1 (x1, x2, x3) e2 =
+ruleMatch :: Rule -> Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen Ctx
+ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
   do
     let u = Bound 1
     let m = lengthCtx q - 1
@@ -83,4 +85,13 @@ ruleMatch q x e1 (x1, x2, x3) e2 =
           , CEq (CAtom r0010) (CAtom qm1)
           ]
 
-    return q
+    -- recursive calls
+    q1' <- dispatch p e1
+    q2' <- dispatch r' e2
+
+    -- equate "return" contexts
+    q' <- returnCtx u
+    eqReturnCtx q1' q2'
+    eqReturnCtx q2' q'
+
+    return q'

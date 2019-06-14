@@ -4,13 +4,7 @@
 
 module Lac.Analysis.Rules.Node where
 
-import           Data.Bound
-import           Data.Expr.Typed
-import           Data.Type
-import           Lac.Analysis.Types
-
-import           Control.Monad      (forM)
-import           Data.Text          (Text)
+import           Lac.Analysis.Rules.Common
 
 ruleNode :: Ctx -> Text -> Text -> Gen Ctx
 ruleNode ctx x1 x2 =

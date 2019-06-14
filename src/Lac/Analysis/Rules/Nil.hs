@@ -3,13 +3,7 @@
 
 module Lac.Analysis.Rules.Nil where
 
-import           Data.Bound
-import           Data.Expr.Typed
-import           Data.Type
-import           Lac.Analysis.Types
-
-import           Control.Monad      (forM, forM_)
-import           Data.Text          (Text)
+import           Lac.Analysis.Rules.Common
 
 ruleNil :: Ctx -> Gen Ctx
 ruleNil ctx =
