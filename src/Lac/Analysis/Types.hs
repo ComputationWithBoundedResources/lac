@@ -170,10 +170,13 @@ ppConstr (CEq lhs rhs) = ppCExpr lhs <> " = " <> ppCExpr rhs
     ppCExpr (CSum es) = T.intercalate " + " (map ppCExpr es)
 
 coeff :: Ctx -> Idx -> Gen Coeff
-coeff Ctx{..} idx =
-  case M.lookup idx ctxCoefficients of
+coeff ctx idx =
+  case coeff' ctx idx of
     Just c -> return c
     Nothing -> throwError . AssertionFailed $ "coefficient for index " <> T.pack (show idx) <> " not found"
+
+coeff' :: Ctx -> Idx -> Maybe Coeff
+coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
 
 coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
 coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
