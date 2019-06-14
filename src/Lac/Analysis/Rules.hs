@@ -8,6 +8,7 @@ module Lac.Analysis.Rules (
 import           Data.Expr.Typed
 import           Data.Expr.Types
 import           Lac.Analysis.Rules.Cmp   as E
+import           Lac.Analysis.Rules.Ite   as E
 import           Lac.Analysis.Rules.Match as E
 import           Lac.Analysis.Rules.Nil   as E
 import           Lac.Analysis.Rules.Node  as E
@@ -29,4 +30,6 @@ dispatch q e =
       ruleVar q x
     TyCmp _ (TyVar x1, _) (TyVar x2, _) ->
       ruleCmp q x1 x2
+    TyIte (TyVar x, _) (e1, _) (e2, _) ->
+      ruleIte dispatch q x e1 e2
     _ -> throwError (AssertionFailed "dispatch: rule unimplemented")
