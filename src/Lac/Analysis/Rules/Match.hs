@@ -25,17 +25,17 @@ ruleMatch q x e1 (x1, x2, x3) e2 =
 
     -- r(vec{a}, a, a, b) = q(vec{a}, a, b)
     let raaabs = vecCoeffsRev r' $
-                  \case
-                    (b:a1:a2:as) | a1 == a2, all (== a1) as -> True
-                    _ -> False
+          \case
+            (b:a1:a2:as) | a1 == a2, all (== a1) as -> True
+            _ -> False
     qaabs <- forM raaabs $ \(VecIdx xs, _) ->
-                                              let a = head xs
-                                                  b = last xs
-                                                  vec = replicate (length xs - 2) a ++ [b]
-                                              in
-                                              coeff q (VecIdx vec)
+              let a = head xs
+                  b = last xs
+                  vec = replicate (length xs - 2) a ++ [b]
+              in
+              coeff q (VecIdx vec)
 
-    forM (zip (map snd raaabs) qaabs) $ \(ri, qi) -> tellConstr [CEq (CAtom ri) (CAtom qi)]
+    forM_ (zip (map snd raaabs) qaabs) $ \(ri, qi) -> tellConstr [CEq (CAtom ri) (CAtom qi)]
 
     -- p(vec{a}, c) = sum{a+b=c} q(vec{a}, a, b)
     let pacs =
