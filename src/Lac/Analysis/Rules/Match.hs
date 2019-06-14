@@ -2,10 +2,8 @@
 
 module Lac.Analysis.Rules.Match where
 
-import           Data.Expr.Types
 import           Lac.Analysis.Rules.Common
 
-import           Data.List.NonEmpty        (NonEmpty (..))
 import qualified Data.Text.IO              as T
 
 ruleMatch :: Rule -> Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen Ctx

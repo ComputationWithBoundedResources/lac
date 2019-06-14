@@ -5,9 +5,7 @@ module Main where
 import           Data.Expr
 import           Lac.Analysis
 import           Lac.Analysis.Types
-import           Lac.TypeInference
 
-import           Data.List.NonEmpty
 import           System.Environment
 import           System.Exit
 import           System.Process
