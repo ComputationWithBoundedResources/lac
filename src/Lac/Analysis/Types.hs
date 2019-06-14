@@ -19,6 +19,7 @@ module Lac.Analysis.Types (
   , Idx(..)
   , enumRankCoeffs
   , idx
+  , eqReturnCtx
 
   , Error(..)
 
@@ -214,6 +215,15 @@ returnCtx bound =
               M.singleton AstIdx (Coeff i)
               `M.union` M.fromList vecCoefficients
           }
+
+eqReturnCtx :: Ctx -> Ctx -> Gen Bool
+eqReturnCtx q r =
+  case (coeff' q AstIdx, coeff' r AstIdx) of
+    (Just c, Just d) -> do
+      tellConstr [CEq (CAtom c) (CAtom d)]
+      return True
+    (Nothing, Nothing) -> return False
+    _ -> throwError $ AssertionFailed "eqReturnCtx: bad contexts"
 
 vectors :: Bound -> Int -> [[Int]]
 vectors (Bound bound) n = go n
