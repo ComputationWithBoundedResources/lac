@@ -12,3 +12,8 @@ postorder t q =
   match t with
     | nil -> q
     | (l, x, r) -> postorder l (postorder r (nil, x, q));
+
+left t =
+  match t with
+    | nil -> nil
+    | (l, x, r) -> left l;
