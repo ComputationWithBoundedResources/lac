@@ -34,13 +34,13 @@ instance Pretty Literal where
 
   doc LNil = PP.text "nil"
   doc (LNode x y z) = PP.sep [
-      PP.text "{"
+      PP.text "("
     , doc x
     , PP.text ","
     , doc y
     , PP.text ","
     , doc z
-    , PP.text "}"
+    , PP.text ")"
     ]
 
 instance Pretty Expr where
@@ -89,13 +89,13 @@ instance Pretty Expr where
 
       pat PNil          = PP.text "nil"
       pat (PNode x y z) = PP.sep
-                            [ PP.text "{"
+                            [ PP.text "("
                             , doc x
                             , PP.text ","
                             , doc y
                             , PP.text ","
                             , doc z
-                            , PP.text "}"
+                            , PP.text ")"
                             ]
 
   doc (l :<  r) = PP.sep [PP.text "(", doc l, PP.text " < ", doc r, PP.text ")"]
