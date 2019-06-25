@@ -43,7 +43,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
             \case
               (c:as) | equal as -> True
               _                 -> False
-    forM pacs $ \(VecIdx xs, pac) ->
+    forM_ pacs $ \(VecIdx xs, pac) ->
       let a = head xs
           c = last xs
           qabs = vecCoeffsRev q $
@@ -72,12 +72,12 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
             0:0:1:zs | all (== 0) zs -> True
             _                        -> False
     -- TODO: assert that lists r0100s and r0010s are of length 1
-    forM r0100s $ \(VecIdx _, r0100) ->
+    forM_ r0100s $ \(VecIdx _, r0100) ->
       let r0010s = vecCoeffsRev r' $
             \case 0:1:0:zs | all (== 0) zs -> True
                   _                        -> False
       in do
-      forM r0010s $ \(VecIdx _, r0010) ->
+      forM_ r0010s $ \(VecIdx _, r0010) ->
         tellConstr
           [ CEq (CAtom r0100) (CAtom r0010)
           , CEq (CAtom r0010) (CAtom qm1)
