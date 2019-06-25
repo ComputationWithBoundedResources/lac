@@ -64,7 +64,7 @@ inferExprType (env, expr, tau) =
       let env' = (V x, V a1) : env
       let ty = V a2
       (xs, e') <- infer (env', e, ty)
-      return ((tau, F "->" [V a1, ty]) : xs, TyAbs x (e', ty))
+      return ((tau, F "->" [V a1, ty]) : xs, TyAbs (x, V a1) (e', ty))
     Let x e1 e2 -> do
       a <- fresh
       let env' = (V x, V a) : env
@@ -157,7 +157,7 @@ applySubst subst =
     TyMatch (e, t) cs -> TyMatch (rec e, lookup' t) (NE.map f cs)
       where
         f (p, (e, ty)) = (p, (rec e, lookup' ty))
-    TyAbs x (e, ty) -> TyAbs x (rec e, lookup' ty)
+    TyAbs (x, ty1) (e, ty2) -> TyAbs (x, lookup' ty1) (rec e, lookup' ty2)
   where
     lookup' k =
       case k of
