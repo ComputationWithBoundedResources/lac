@@ -4,16 +4,21 @@
 
 module Main where
 
+import           Data.Bound
 import           Data.Expr                  hiding (fromDecl)
+import           Data.Expr.Typed
 import           Data.Term
+import           Data.Type
 import           Lac
+import           Lac.Analysis.Rules
+import           Lac.Analysis.Types         (augmentCtx, rootCtx, runGen)
 import           Lac.Eval
 import           Lac.TypeInference
 
 import           Control.Monad              (forM_, void, when)
-import           Control.Monad.State.Strict (StateT, evalState, get)
+import           Control.Monad.State.Strict (StateT, get)
 import           Control.Monad.Trans        (liftIO)
-import           Data.List                  (isPrefixOf, lookup)
+import           Data.List                  (isPrefixOf)
 import           Data.Map                   (Map)
 import qualified Data.Map                   as M
 import           Data.Monoid                ((<>))
@@ -76,24 +81,8 @@ repl s =
           flags <- rsFlags <$> get
           liftIO $ do
             when ("--ast" `elem` flags) (print e)
-            when ("--debug" `elem` flags) (debug e)
             T.putStrLn . pretty . toExpr $ eval env env e
       return True
-
-debug :: Typable a => a -> IO ()
-debug e =
-  do
-    let (eqs, _) = inferType mempty e
-    putStrLn "Equations:"
-    mapM_ (T.putStrLn . ppEqn . g) eqs
-    putStrLn "MGU:"
-    case unify eqs of
-      Left err  -> print err
-      Right mgu -> mapM_ (T.putStrLn . ppEqn . g) mgu
-  where
-    g (t, u) = (f t, f u)
-      where
-        f = mapFun T.pack . mapVar (T.pack . show)
 
 data ReplErr
   = ReplErr Text
@@ -114,7 +103,7 @@ match cs i =
     xs@(_:_) -> Left (ReplErr $ "ambiguous match: " <> T.intercalate ", " (map (T.pack . fst) xs))
 
 commands :: [(String, ReplCmd)]
-commands = map (\cmd@ReplCmd{..} -> (replCmdName, cmd)) [cmdQuit, cmdDecls]
+commands = map (\cmd@ReplCmd{..} -> (replCmdName, cmd)) [cmdQuit, cmdDecls, cmdCheck]
 
 cmdQuit :: ReplCmd
 cmdQuit = ReplCmd "quit" (const $ return False) (const "quit program")
@@ -127,32 +116,44 @@ cmdDecls = ReplCmd "decls" cmd (const "show loaded declarations")
         go :: [String] -> StateT ReplState IO Bool
         go flags =
           do
-            decls <- (map select . M.toList . rsEnv) <$> get
-
-            let program = Program decls
-            let env = mempty
-            let decls' = evalState (mkProgEnv env decls) 0
-            let env' = extractEnv env decls'
-            let (eqs, _) = inferProgType env program
-            let maybeMGU = unify eqs
-
-            forM_ decls $ \(Decl n _ e) ->
-              liftIO $ do
-                T.putStr $ n <> " : "
-                case maybeMGU of
-                  Right mgu -> do
-                    case lookup (V n) env' >>= (\a -> lookup a mgu) of
-                      Just ty -> T.putStrLn (ppTerm' ty)
-                      _       -> return ()
-                  _ -> return ()
-                T.putStr $ n <> " = "
-                f e
-            when ("--debug" `elem` flags) $
-              forM_ decls $ \(Decl _ _ e) ->
-                liftIO (debug e)
+            decls <- getTypedProgram
+            forM_ decls $ \(f, _, (e, ty)) ->
+              liftIO $ T.putStrLn $ f <> " : " <> ppTerm' ty
             return True
-          where
-            select (name, e) = Decl name [] (toExpr e)
 
-            f | "--ast" `elem` flags = print
-              | otherwise            = T.putStrLn . pretty
+splitDecl :: Typed -> ([(Text, Type)], Typed)
+splitDecl e = go [] e
+  where
+    go acc (TyAbs (x, tx) (e, te)) =
+      let acc' = (x, tx) : acc
+      in
+      case e of
+        TyAbs _ _ -> go acc' e
+        _         -> (reverse acc', e)
+    go _ _ = error "decl"
+
+cmdCheck :: ReplCmd
+cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
+  where
+    cmd :: [String] -> StateT ReplState IO Bool
+    cmd _ =
+      do
+        decls <- getTypedProgram
+        forM_ decls $ \(f, _, (e, ty)) -> do
+          -- TODO: add declarations to context
+          liftIO $ do
+            ctx' <- runGen $ do
+              let (xs, e') = splitDecl e
+              q <- augmentCtx (Bound 1) rootCtx xs
+              dispatch q e'
+            print ctx'
+        return True
+
+getTypedProgram :: StateT ReplState IO [(Text, [Text], (Typed, Type))]
+getTypedProgram =
+  do
+    decls <- (map select . M.toList . rsEnv) <$> get
+    let program = Program decls
+    return $ inferProgType program
+  where
+    select (name, e) = Decl name [] (toExpr e)

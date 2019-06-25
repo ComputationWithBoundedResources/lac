@@ -5,6 +5,7 @@ module Lac.TypeInference where
 
 import           Data.Expr.Typed
 import           Data.Expr.Types
+import           Data.List.Ext                  (for)
 import           Data.Term
 import           Data.Type
 
@@ -100,27 +101,44 @@ inferExprType (env, expr, tau) =
       let eqs = (tau, tyBool) : (xs ++ ys)
       return (eqs, TyCmp op (e1', V a) (e1', V a))
 
-mkProgEnv :: Env -> [Decl] -> State Int [((T String Text, Type), Expr)]
+mkProgEnv :: Env -> [Decl] -> State Int [((T String Text, Type), (Text, [Text], Expr))]
 mkProgEnv env decls =
   do
     as <- replicateM (length decls) fresh
     return $ zipWith f decls as
   where
-    f decl@(Decl name xs e) a = ((V name, V a), fromDecl xs e)
+    f decl@(Decl name xs e) a = ((V name, V a), (name, xs, fromDecl xs e))
 
-extractEnv :: Env -> [((T String Text, Type), Expr)] -> Env
+extractEnv :: Env -> [((T String Text, Type), a)] -> Env
 extractEnv env decls' = map fst decls' ++ env
 
-inferProgType' :: (Env, Program, Type) -> State Int [(Type, Type)]
-inferProgType' (env, Program decls, tau) =
+inferProgType' :: Program -> State Int [(Text, [Text], (Typed, Type))]
+inferProgType' (Program decls) =
   do
+    let env = mempty
     decls' <- mkProgEnv env decls
     let env' = extractEnv env decls'
-    let obtainConstraints = concat . map fst
-    obtainConstraints <$> mapM (\((_, a), e) -> infer (env', e, a)) decls'
 
-inferProgType :: Env -> Program -> ([(Type, Type)], Int)
-inferProgType env prog = runState (inferProgType' (env, prog, V 0)) 0
+    -- obtain equality constraints on type variables
+    results <-
+      forM decls' $ \((_, a), (f, xs, e)) -> do
+        (cs, t) <- infer (env', e, a)
+        return (cs, (f, xs, (t, a)))
+    let eqs = concat . map fst $ results
+
+    -- compute MGU
+    case unify eqs of
+      Right mgu -> do
+        return $
+          for (map snd results) $ \(f, xs, (e, ty)) ->
+            let e' = applySubst mgu e
+                ty' = fromJust (lookup ty mgu)
+            in (f, xs, (e', ty'))
+      Left _ ->
+        error "inferProgType': could not apply MGU"
+
+inferProgType :: Program -> [(Text, [Text], (Typed, Type))]
+inferProgType prog = fst . runState (inferProgType' prog) $ 0
 
 inferType :: Typable a => Env -> a -> ([(Type, Type)], Int)
 inferType env expr =
