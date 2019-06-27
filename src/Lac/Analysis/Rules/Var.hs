@@ -7,5 +7,5 @@ import           Lac.Analysis.Rules.Common
 ruleVar :: Ctx -> Text -> Gen Ctx
 ruleVar q _ =
   do
-    assert (ctxEmpty q) "ruleVar: context not empty"
+    assert (numVarsCtx q == 1) "ruleVar: context must have length 1"
     return q
