@@ -8,6 +8,8 @@ import           Lac.Analysis.Rules.Common
 ruleNil :: Ctx -> Gen Ctx
 ruleNil ctx =
   do
+    assert (ctxEmpty ctx) $ "ruleNil: context not empty"
+
     ctx' <- returnCtx (Bound 1)
 
     forM_ (zip [1..] (enumRankCoeffs ctx)) $ \(i, (_, qc)) -> do
