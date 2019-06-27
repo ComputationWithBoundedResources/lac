@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RecordWildCards            #-}
 
@@ -8,6 +9,7 @@ module Lac.Analysis.Types (
   , freshCtx
   , rootCtx
   , lengthCtx
+  , numVarsCtx
   , splitCtx
   , ctxEmpty
   , ppCtx
@@ -15,7 +17,9 @@ module Lac.Analysis.Types (
   , coeff
   , coeffs
   , vecCoeffsRev
+  , isRankCoeff
   , augmentCtx
+  , weakenCtx
   , returnCtx
   , Idx(..)
   , enumRankCoeffs
@@ -101,6 +105,9 @@ trees = filter (\(_, ty) -> ty == tyTree)
 lengthCtx :: Ctx -> Int
 lengthCtx = countTrees . M.toList . ctxVariables
 
+numVarsCtx :: Ctx -> Int
+numVarsCtx Ctx{..} = length . M.toList $ ctxVariables
+
 augmentCtx :: Bound -> Ctx -> [(Text, Type)] -> Gen Ctx
 augmentCtx bound ctx@Ctx{..} xs =
   do
@@ -146,6 +153,15 @@ splitCtx bound ctx xs = go ctx xs []
           go ctx' xs ((x, ty) : acc)
         _ -> throwError . AssertionFailed $ "splitCtx: variable " <> x <> " not found in context"
 
+weakenCtx :: Bound -> Ctx -> Text -> Gen ((Text, Type), Ctx)
+weakenCtx u q@Ctx{..} x =
+  case (M.toList . M.delete x) ctxVariables of
+    (y, _) : _ -> splitCtx u q [y] >>=
+                    \case
+                      ([(y, t)], q') -> return ((y, t), q')
+                      _              -> throwError $ AssertionFailed "weakenCtx: unexpected splitCtx behavior"
+    _ -> throwError $ AssertionFailed "weakenCtx: cannot weaken"
+
 ppCtx :: Ctx -> Text
 ppCtx Ctx{..} =
   "variables: "
@@ -182,6 +198,10 @@ coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
 
 coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
 coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
+
+isRankCoeff :: Idx -> Bool
+isRankCoeff (IdIdx _) = True
+isRankCoeff _         = False
 
 idx :: Int -> Ctx -> Gen Idx
 idx i Ctx{..} =
@@ -255,7 +275,6 @@ assert :: Bool -> Text -> Gen ()
 assert p s =
   if p then return ()
        else throwError (AssertionFailed s)
-
 
 data Output
   = Output {
