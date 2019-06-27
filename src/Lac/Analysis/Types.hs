@@ -9,6 +9,7 @@ module Lac.Analysis.Types (
   , rootCtx
   , lengthCtx
   , splitCtx
+  , ctxEmpty
   , ppCtx
   , ppConstr
   , coeff
@@ -69,6 +70,9 @@ data Ctx
 
 ctxName :: Ctx -> Text
 ctxName Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "}"
+
+ctxEmpty :: Ctx -> Bool
+ctxEmpty Ctx{..} = M.null ctxVariables
 
 data Idx
   = AstIdx
