@@ -44,6 +44,8 @@ import           Control.Monad.State.Strict.Ext
 import           Data.Bound
 import           Data.Term.Pretty
 import           Data.Type
+import           Lac.Analysis.Coeff
+import           Lac.Analysis.Constraint
 import           Latex
 
 import           Control.Monad.Except
@@ -79,12 +81,6 @@ data Idx
   | IdIdx Text
   | VecIdx [Int]
   deriving (Eq, Ord, Show)
-
-data Coeff
-  = Coeff {
-    coeffId :: Int
-  }
-  deriving (Eq, Show)
 
 -- do not export `nullCtx`
 nullCtx :: Ctx
@@ -260,14 +256,6 @@ assert p s =
   if p then return ()
        else throwError (AssertionFailed s)
 
-data Constraint
-  = CEq CExpr CExpr
-  deriving (Eq, Show)
-
-data CExpr
-  = CAtom Coeff
-  | CSum [CExpr]
-  deriving (Eq, Show)
 
 data Output
   = Output {
