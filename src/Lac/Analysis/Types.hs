@@ -34,6 +34,7 @@ module Lac.Analysis.Types (
   , tell
   , tellConstr
   , throwError
+  , assert
   , liftIO
   )
   where
@@ -249,6 +250,11 @@ data Error
   | NotApplicable Text
   | AssertionFailed Text
   deriving (Eq, Show)
+
+assert :: Bool -> Text -> Gen ()
+assert p s =
+  if p then return ()
+       else throwError (AssertionFailed s)
 
 data Constraint
   = CEq CExpr CExpr
