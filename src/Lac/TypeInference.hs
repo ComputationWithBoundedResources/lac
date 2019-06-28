@@ -13,7 +13,7 @@ import           Control.Monad                  (replicateM)
 import           Control.Monad.State.Strict.Ext
 import           Data.List                      (find)
 import qualified Data.List.NonEmpty             as NE
-import           Data.Maybe                     (fromJust)
+import           Data.Maybe                     (fromJust, fromMaybe)
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
@@ -179,7 +179,7 @@ applySubst subst =
   where
     lookup' k =
       case k of
-        V x    -> fromJust (lookup (V x) subst)
+        V x    -> fromMaybe (V x) (lookup (V x) subst)
                   -- fromMaybe k (lookup k subst)
         F f ts -> F f (map lookup' ts)
     rec = applySubst subst
