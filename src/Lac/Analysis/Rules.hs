@@ -13,6 +13,7 @@ import           Lac.Analysis.Rules.Match as E
 import           Lac.Analysis.Rules.Nil   as E
 import           Lac.Analysis.Rules.Node  as E
 import           Lac.Analysis.Rules.Var   as E
+import           Lac.Analysis.Rules.WVar  as E
 import           Lac.Analysis.Types
 
 import           Data.List.NonEmpty       (NonEmpty (..))
@@ -27,7 +28,9 @@ dispatch q e =
     TyLit (TyLNode (TyVar x1) _ (TyVar x2)) ->
       ruleNode q x1 x2
     TyVar x ->
-      ruleVar q x
+      if ctxEmpty q
+        then ruleVar q x
+        else ruleWVar dispatch q x
     TyCmp _ (TyVar x1, _) (TyVar x2, _) ->
       ruleCmp q x1 x2
     TyIte (TyVar x, _) (e1, _) (e2, _) ->
