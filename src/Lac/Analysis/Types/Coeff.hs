@@ -1,4 +1,4 @@
-module Lac.Analysis.Coeff where
+module Lac.Analysis.Types.Coeff where
 
 data Coeff
   = Coeff {

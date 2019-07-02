@@ -1,15 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lac.Analysis.Constraint (
+module Lac.Analysis.Types.Constraint (
     Constraint(..)
   , CExpr(..)
   , toSMT
   ) where
 
-import           Lac.Analysis.Coeff
+import           Lac.Analysis.Types.Coeff
 
-import           Data.Text          (Text)
-import qualified Data.Text          as T
+import           Data.Text                (Text)
+import qualified Data.Text                as T
 
 data Constraint
   = CEq CExpr CExpr

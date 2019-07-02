@@ -48,8 +48,8 @@ import           Control.Monad.State.Strict.Ext
 import           Data.Bound
 import           Data.Term.Pretty
 import           Data.Type
-import           Lac.Analysis.Coeff
-import           Lac.Analysis.Constraint
+import           Lac.Analysis.Types.Coeff
+import           Lac.Analysis.Types.Constraint
 import           Latex
 
 import           Control.Monad.Except
