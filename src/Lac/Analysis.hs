@@ -59,7 +59,7 @@ writeProof path ctx expr =
                 , "\\usepackage{amsmath}"
                 , "\\usepackage{proof}"
                 , "\\begin{document}"
-                , T.unpack (latex p)
+                , "TODO"
                 , "\n\n\n"
                 , T.unpack eqAry
                 , "\\end{document}"

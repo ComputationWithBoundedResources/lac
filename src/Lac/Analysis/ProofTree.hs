@@ -2,25 +2,10 @@
 
 module Lac.Analysis.ProofTree where
 
-import           Latex
+import           Data.Expr.Typed
+import           Lac.Analysis.RuleName
+import           Lac.Analysis.Types
 
-import           Data.Text (Text)
-import qualified Data.Text as T
-
--- * Proof tree
-
--- | An intermediate representation of a proof tree that can later be converted to LaTex code.
 data ProofTree
-  = ProofTree Text [ProofTree]
-  deriving (Eq, Show)
-
-instance Latex ProofTree where
-  latex (ProofTree concl premises)
-    | null premises = concl
-    | otherwise     = "\\infer{" <> concl <> "}{" <> T.intercalate " & " (map latex premises) <> "}"
-
-provedBy :: Text -> [ProofTree] -> ProofTree
-concl `provedBy` ts = ProofTree concl ts
-
-assume :: Text -> ProofTree
-assume s = ProofTree s []
+  = ProofTree (Ctx, Typed, Ctx) [(RuleName, [Constraint], [ProofTree])]
+  deriving (Show)
