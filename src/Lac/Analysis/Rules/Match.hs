@@ -26,7 +26,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
     -- r(vec{a}, a, a, b) = q(vec{a}, a, b)
     let raaabs = vecCoeffsRev r' $
           \case
-            (b:a1:a2:as) | a1 == a2, all (== a1) as -> True
+            (b:a1:a2:as) | a1 == a2 -> True
             _ -> False
     qaabs <- forM raaabs $ \(VecIdx xs, _) ->
               let a = head xs
@@ -48,8 +48,8 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
           c = last xs
           qabs = vecCoeffsRev q $
             \case
-              (b:a:as) | all (== a) as, a + b == c -> True
-              _                                    -> False
+              (b:a:as) | a + b == c -> True
+              _                     -> False
       in
       tellConstr [ CEq (CAtom pac) (CSum (map (CAtom . snd) qabs)) ]
 
