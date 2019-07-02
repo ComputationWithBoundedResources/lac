@@ -6,7 +6,7 @@ module Lac.Analysis.Rules.Node where
 
 import           Lac.Analysis.Rules.Common
 
-ruleNode :: Ctx -> Text -> Text -> Gen Ctx
+ruleNode :: Ctx -> Text -> Text -> Gen ProofTree
 ruleNode ctx x1 x2 =
   do
     ctx' <- returnCtx (Bound 1)
@@ -31,4 +31,9 @@ ruleNode ctx x1 x2 =
       ++
       zipWith (\x y -> CEq (CAtom x) (CAtom y)) (map snd qaabs) qabs
 
-    return ctx'
+    return $
+      ProofTree
+        (ctx, TyLit (TyLNode (TyVar x1) (TyVar "_") (TyVar x2)), ctx')
+        (RuleName "node")
+        [] -- TODO: return constraints
+        []

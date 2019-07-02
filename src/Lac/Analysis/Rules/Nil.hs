@@ -5,7 +5,7 @@ module Lac.Analysis.Rules.Nil where
 
 import           Lac.Analysis.Rules.Common
 
-ruleNil :: Ctx -> Gen Ctx
+ruleNil :: Ctx -> Gen ProofTree
 ruleNil ctx =
   do
     assert (ctxEmpty ctx) $ "ruleNil: context not empty"
@@ -17,4 +17,9 @@ ruleNil ctx =
       qab's <- forM splits $ \(a, b) -> coeff ctx' (VecIdx [a, b])
       tellConstr [CEq (CAtom qc) (CSum (map CAtom qab's))]
 
-    return ctx'
+    return $
+      ProofTree
+        (ctx, TyLit TyLNil, ctx')
+        (RuleName "nil")
+        [] -- TODO: constraints
+        []
