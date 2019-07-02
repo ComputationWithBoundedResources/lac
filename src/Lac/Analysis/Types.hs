@@ -5,7 +5,7 @@
 
 module Lac.Analysis.Types (
     Ctx()
-  , ctxName
+  , latexCtx
   , freshCtx
   , rootCtx
   , lengthCtx
@@ -74,8 +74,8 @@ data Ctx
   }
   deriving (Eq, Show)
 
-ctxName :: Ctx -> Text
-ctxName Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "}"
+latexCtx :: Ctx -> Text
+latexCtx Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "}"
 
 ctxEmpty :: Ctx -> Bool
 ctxEmpty Ctx{..} = M.null ctxVariables
