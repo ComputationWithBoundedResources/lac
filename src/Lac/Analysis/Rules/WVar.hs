@@ -4,16 +4,20 @@ module Lac.Analysis.Rules.WVar where
 
 import           Lac.Analysis.Rules.Common
 
-ruleWVar :: Rule -> Ctx -> Text -> Gen Ctx
+import qualified Data.Text.IO              as T (putStrLn)
+
+ruleWVar :: Rule -> Ctx -> Text -> Gen ProofTree
 ruleWVar dispatch q x =
   do
+    setRuleName "w : var"
+
     let u = Bound 1
     (_, r) <- weakenCtx u q x
 
     -- equate rank coefficients
     forM_ (coeffs r isRankCoeff) $ \(idx, ri) -> do
       qi <- coeff q idx
-      tellConstr [CEq (CAtom qi) (CAtom ri)]
+      accumConstr [CEq (CAtom qi) (CAtom ri)]
 
     -- equate vector coefficients
     let rabs = vecCoeffsRev r $
@@ -23,6 +27,8 @@ ruleWVar dispatch q x =
                   let as = init vec
                       b = last vec
                   qa0b <- coeff q (VecIdx (as ++ [0, b]))
-                  tellConstr [CEq (CAtom rab) (CAtom qa0b)]
+                  accumConstr [CEq (CAtom rab) (CAtom qa0b)]
 
-    dispatch r (TyVar x)
+    q' <- prove dispatch r (TyVar x)
+
+    conclude q (TyVar x) q'
