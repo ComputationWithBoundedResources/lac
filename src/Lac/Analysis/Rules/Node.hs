@@ -9,6 +9,10 @@ import           Lac.Analysis.Rules.Common
 ruleNode :: Ctx -> Text -> Text -> Gen ProofTree
 ruleNode ctx x1 x2 =
   do
+    setRuleName "node"
+
+    -- TODO: weaken until only x1, x2 and x3 remain in context
+
     ctx' <- returnCtx (Bound 1)
 
     q1 <- coeff ctx (IdIdx x1)
@@ -31,9 +35,4 @@ ruleNode ctx x1 x2 =
       ++
       zipWith (\x y -> CEq (CAtom x) (CAtom y)) (map snd qaabs) qabs
 
-    return $
-      ProofTree
-        (ctx, TyLit (TyLNode (TyVar x1) hole (TyVar x2)), ctx')
-        (RuleName "node")
-        [] -- TODO: return constraints
-        []
+    conclude ctx (TyLit (TyLNode (TyVar x1) hole (TyVar x2))) ctx'
