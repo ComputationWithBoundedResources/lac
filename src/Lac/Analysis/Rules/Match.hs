@@ -6,7 +6,7 @@ import           Lac.Analysis.Rules.Common
 
 import qualified Data.Text.IO              as T
 
-ruleMatch :: Rule -> Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen Ctx
+ruleMatch :: Rule -> Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen ProofTree
 ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
   do
     let u = Bound 1
@@ -84,12 +84,13 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
           ]
 
     -- recursive calls
-    q1' <- dispatch p e1
-    q2' <- dispatch r' e2
+    q1' <- prove dispatch p  e1
+    q2' <- prove dispatch r' e2
 
     -- equate "return" contexts
     q' <- returnCtx u
     eqReturnCtx q1' q2'
     eqReturnCtx q2' q'
 
-    return q'
+    -- TODO: fix expression
+    conclude q nil q'
