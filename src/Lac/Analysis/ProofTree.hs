@@ -15,11 +15,12 @@ import qualified Data.Text                as T
 import qualified Data.Text.IO             as T
 
 data ProofTree
-  = ProofTree
-      (Ctx, Typed, Ctx)
-      RuleName
-      [Constraint]
-      [ProofTree]
+  = ProofTree {
+      ptConclusion  :: (Ctx, Typed, Ctx)
+    , ptRuleName    :: RuleName
+    , ptConstraints :: [Constraint]
+    , ptSubtrees    :: [ProofTree]
+    }
   deriving (Show)
 
 latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
