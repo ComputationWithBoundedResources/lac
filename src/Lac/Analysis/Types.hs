@@ -152,6 +152,13 @@ weakenCtx u q@Ctx{..} x =
                       _              -> throwError $ AssertionFailed "weakenCtx: unexpected splitCtx behavior"
     _ -> throwError $ AssertionFailed "weakenCtx: cannot weaken"
 
+deleteAll :: Ord k => [k] -> Map k v -> Map k v
+deleteAll [] m = m
+deleteAll (x:xs) m =
+  let m' = M.delete x m
+  in
+  deleteAll xs m'
+
 ppCtx :: Ctx -> Text
 ppCtx Ctx{..} =
   "variables: "
