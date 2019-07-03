@@ -143,9 +143,9 @@ splitCtx bound ctx xs = go ctx xs []
           go ctx' xs ((x, ty) : acc)
         _ -> throwError . AssertionFailed $ "splitCtx: variable " <> x <> " not found in context"
 
-weakenCtx :: Bound -> Ctx -> Text -> Gen ((Text, Type), Ctx)
-weakenCtx u q@Ctx{..} x =
-  case (M.toList . M.delete x) ctxVariables of
+weakenCtx :: Bound -> Ctx -> [Text] -> Gen ((Text, Type), Ctx)
+weakenCtx u q@Ctx{..} xs =
+  case (M.toList . deleteAll xs) ctxVariables of
     (y, _) : _ -> splitCtx u q [y] >>=
                     \case
                       ([(y, t)], q') -> return ((y, t), q')

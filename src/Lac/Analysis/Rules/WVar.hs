@@ -12,7 +12,7 @@ ruleWVar dispatch q x =
     setRuleName "w : var"
 
     let u = Bound 1
-    (_, r) <- weakenCtx u q x
+    (_, r) <- weakenCtx u q [x]
 
     -- equate rank coefficients
     forM_ (coeffs r isRankCoeff) $ \(idx, ri) -> do
