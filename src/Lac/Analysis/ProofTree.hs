@@ -42,26 +42,3 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
         latexCExpr (CSum es) = T.intercalate " + " (map latexCExpr es)
 
         latexCoeff (Coeff i) = "q_{" <> T.pack (show i) <> "}"
-
-test =
-  do
-    T.writeFile "proof.tex" (latexProofTree proof)
-  where
-    proof =
-      ProofTree
-        (rootCtx, TyVar "x", rootCtx)
-        (RuleName "none")
-        [CEq (CAtom (Coeff 1)) (CAtom (Coeff 2))]
-        [t1, t2]
-    t1 =
-      ProofTree
-        (rootCtx, TyLit (TyLBool True), rootCtx)
-        (RuleName "other")
-        []
-        []
-    t2 =
-      ProofTree
-        (rootCtx, TyVar "y", rootCtx)
-        (RuleName "another")
-        []
-        []
