@@ -5,6 +5,7 @@ module Lac.Analysis.ProofTree where
 import           Data.Expr.FromTyped
 import           Data.Expr.Latex
 import           Data.Expr.Typed
+import           Data.Type
 import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types
 import           Lac.Analysis.Types.Coeff

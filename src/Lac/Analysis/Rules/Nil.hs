@@ -19,7 +19,7 @@ ruleNil ctx =
 
     return $
       ProofTree
-        (ctx, TyLit TyLNil, ctx')
+        (ctx, nil, ctx')
         (RuleName "nil")
         [] -- TODO: constraints
         []

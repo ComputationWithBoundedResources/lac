@@ -33,7 +33,7 @@ ruleNode ctx x1 x2 =
 
     return $
       ProofTree
-        (ctx, TyLit (TyLNode (TyVar x1) (TyVar "_") (TyVar x2)), ctx')
+        (ctx, TyLit (TyLNode (TyVar x1) hole (TyVar x2)), ctx')
         (RuleName "node")
         [] -- TODO: return constraints
         []
