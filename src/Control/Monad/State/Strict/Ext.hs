@@ -3,13 +3,24 @@
 module Control.Monad.State.Strict.Ext (
     module E
   , fresh
+  , HasFresh(..)
   ) where
 
 import           Control.Monad.State.Strict as E
 
-fresh :: MonadState Int m => m Int
+class HasFresh a where
+  getFresh :: a -> Int
+  putFresh :: Int -> a -> a
+
+instance HasFresh Int where
+  getFresh = id
+  putFresh = const
+
+fresh :: (MonadState s m, HasFresh s) => m Int
 fresh = do
-  i <- get
+  s <- get
+  let i = getFresh s
   let i' = i + 1
-  put i'
+  let s' = putFresh i' s
+  put s'
   return i'
