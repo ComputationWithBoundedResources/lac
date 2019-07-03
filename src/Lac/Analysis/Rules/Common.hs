@@ -1,8 +1,6 @@
 module Lac.Analysis.Rules.Common (
     module E
 
-  , Rule
-
   , nil
   , hole
   ) where
@@ -17,8 +15,6 @@ import           Lac.Analysis.RuleName  as E
 import           Lac.Analysis.Types     as E
 
 import           Control.Monad          as E (forM, forM_)
-
-type Rule = Ctx -> Typed -> Gen ProofTree
 
 nil :: Typed
 nil = TyLit TyLNil

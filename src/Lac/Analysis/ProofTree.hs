@@ -1,18 +1,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lac.Analysis.ProofTree where
+module Lac.Analysis.ProofTree (
+    ProofTree(..)
+  , latexProofTree
+  ) where
 
 import           Data.Expr.FromTyped
 import           Data.Expr.Latex
 import           Data.Expr.Typed
 import           Data.Type
 import           Lac.Analysis.RuleName
-import           Lac.Analysis.Types
 import           Lac.Analysis.Types.Coeff
+import           Lac.Analysis.Types.Constraint
+import           Lac.Analysis.Types.Ctx
 import           Latex
 
-import qualified Data.Text                as T
-import qualified Data.Text.IO             as T
+import qualified Data.Text                     as T
+import qualified Data.Text.IO                  as T
 
 data ProofTree
   = ProofTree {

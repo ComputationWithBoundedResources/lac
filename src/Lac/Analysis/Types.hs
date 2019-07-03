@@ -41,15 +41,25 @@ module Lac.Analysis.Types (
   , throwError
   , assert
   , liftIO
+
+  , Rule
+  , setRuleName
+  , accumConstr
+  , prove
+  , conclude
   )
   where
 
 import           Control.Monad.State.Strict.Ext
 import           Data.Bound
+import           Data.Expr.Typed                (Typed)
 import           Data.Term.Pretty
 import           Data.Type
+import           Lac.Analysis.ProofTree
+import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
+import           Lac.Analysis.Types.Ctx
 import           Latex
 
 import           Control.Monad.Except
@@ -62,29 +72,6 @@ import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
 -- * Basic types
-
-data Ctx
-  = Ctx {
-    -- | Context identifier, i.e. 2 for context @Q_2@
-    ctxId           :: Int
-    -- | Coefficients in context
-    -- | Variables in context
-  , ctxCoefficients :: Map Idx Coeff
-  , ctxVariables    :: Map Text Type
-  }
-  deriving (Eq, Show)
-
-latexCtx :: Ctx -> Text
-latexCtx Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "}"
-
-ctxEmpty :: Ctx -> Bool
-ctxEmpty Ctx{..} = M.null ctxVariables
-
-data Idx
-  = AstIdx
-  | IdIdx Text
-  | VecIdx [Int]
-  deriving (Eq, Ord, Show)
 
 -- do not export `nullCtx`
 nullCtx :: Ctx
@@ -111,15 +98,17 @@ numVarsCtx Ctx{..} = length . M.toList $ ctxVariables
 augmentCtx :: Bound -> Ctx -> [(Text, Type)] -> Gen Ctx
 augmentCtx bound ctx@Ctx{..} xs =
   do
+    let xs' = M.toList ctxVariables ++ xs
+
     astCoefficient <- fresh >>= \i -> return (AstIdx, Coeff i)
 
     rankCoefficients <-
       mapM
         (\(x, _) -> fresh >>= \i -> return (IdIdx x, Coeff i))
-        (trees xs)
+        (trees xs')
 
     vecCoefficients <-
-      let c = countTrees xs
+      let c = countTrees xs'
       in
       if c > 0
         then
@@ -143,8 +132,9 @@ splitCtx bound ctx xs = go ctx xs []
     go :: Ctx -> [Text] -> [(Text, Type)] -> Gen ([(Text, Type)], Ctx)
     go ctx@Ctx{..} [] acc =
       do
-        ctx' <- augmentCtx bound ctx (M.toList ctxVariables)
-        return (reverse acc, ctx')
+        q <- freshCtx
+        q' <- augmentCtx bound q (M.toList ctxVariables)
+        return (reverse acc, q')
     go ctx@Ctx{..} (x:xs) acc =
       case M.updateLookupWithKey (const (const Nothing)) x ctxVariables of
         (Just ty, m) ->
@@ -295,20 +285,87 @@ instance Monoid Output where
   mempty = Output mempty mempty mempty
 
 newtype Gen a = Gen {
-    unGen :: ExceptT Error (StateT Int (WriterT Output IO)) a
+    unGen :: ExceptT Error (StateT GenState (WriterT Output IO)) a
   }
   deriving (
     Functor
   , Applicative
   , Monad
   , MonadError Error
-  , MonadState Int
+  , MonadState GenState
   , MonadWriter Output
   , MonadIO
   )
 
+data GenState
+  = GenState {
+    gsFresh                :: Int
+  , gsProofTreeRuleName    :: Maybe RuleName
+  , gsProofTreeConstraints :: [Constraint]
+  , gsProofTreeSubtrees    :: [ProofTree]
+  }
+  deriving Show
+
+initState :: GenState
+initState = GenState 0 Nothing mempty mempty
+
+type Rule = Ctx -> Typed -> Gen ProofTree
+
+setRuleName :: Text -> Gen ()
+setRuleName n = do
+  liftIO $ print n
+  s@GenState{..} <- get
+  if gsProofTreeRuleName /= Nothing
+    then throwError $ AssertionFailed "rule name can only be set once"
+    else
+      let s' = s { gsProofTreeRuleName = Just (RuleName n) }
+      in
+      put s'
+
+accumConstr :: [Constraint] -> Gen ()
+accumConstr cs =
+  modify $ \s@GenState{..} -> s { gsProofTreeConstraints = gsProofTreeConstraints ++ cs }
+
+prove :: Rule -> Ctx -> Typed -> Gen Ctx
+prove dispatch q e =
+  do
+    -- save current state
+    saved <- get
+    modify $ \s@GenState{..} -> initState { gsFresh = gsFresh }
+    -- dispatch nested rule application
+    t@ProofTree{..} <- dispatch q e
+    -- recover state w/ updated "fresh" value
+    modify $ \s@GenState{..} -> saved { gsFresh             = gsFresh
+                                      , gsProofTreeSubtrees = t : gsProofTreeSubtrees
+                                      }
+    let (_, _, q') = ptConclusion
+    return q'
+
+conclude :: Ctx -> Typed -> Ctx -> Gen ProofTree
+conclude q e q' =
+  do
+    s@GenState{..} <- get
+    case gsProofTreeRuleName of
+      Just n -> do
+        put $ s { gsProofTreeRuleName    = Nothing
+                , gsProofTreeConstraints = []
+                , gsProofTreeSubtrees    = []
+                }
+        return $
+          ProofTree
+            (q, e, q')
+            n
+            gsProofTreeConstraints
+            gsProofTreeSubtrees
+      Nothing ->
+        throwError $ AssertionFailed "cannot conclude w/o set rule name"
+
+instance HasFresh GenState where
+  getFresh GenState{..} = gsFresh
+  putFresh i s = s { gsFresh = i }
+
 runGen :: Gen r -> IO (Either Error r, Output)
-runGen = fmap f . runWriterT . flip runStateT 0 . runExceptT . unGen
+runGen = fmap f . runWriterT . flip runStateT initState . runExceptT . unGen
   where
     f ((e, _), cs) = (e, cs)
 
