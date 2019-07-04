@@ -34,9 +34,9 @@ dispatch q e =
       if numVarsCtx q == 1
         then ruleVar q x
         else ruleWVar dispatch q e [x]
-    {-
     TyCmp _ (TyVar x1, _) (TyVar x2, _) ->
-      ruleCmp q x1 x2
+      ruleCmp q e
+    {-
     TyIte (TyVar x, _) (e1, _) (e2, _) ->
       ruleIte dispatch q x e1 e2
     -}
