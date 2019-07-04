@@ -123,21 +123,22 @@ augmentCtx bound ctx@Ctx{..} xs =
           }
 
 splitCtx :: Bound -> Ctx -> [Text] -> Gen ([(Text, Type)], Ctx)
-splitCtx bound ctx xs = go ctx xs []
+splitCtx bound q xs = go q xs []
   where
     go :: Ctx -> [Text] -> [(Text, Type)] -> Gen ([(Text, Type)], Ctx)
     go ctx@Ctx{..} [] acc =
       do
-        q <- freshCtx
-        q' <- augmentCtx bound q (M.toList ctxVariables)
-        return (reverse acc, q')
-    go ctx@Ctx{..} (x:xs) acc =
-      case M.updateLookupWithKey (const (const Nothing)) x ctxVariables of
+        r <- freshCtx
+        r' <- augmentCtx bound r (M.toList ctxVariables)
+        return (reverse acc, r')
+    go ctx@Ctx{..} (y:ys) acc =
+      case M.updateLookupWithKey (const (const Nothing)) y ctxVariables of
         (Just ty, m) ->
           let ctx' = ctx { ctxVariables = m }
           in
-          go ctx' xs ((x, ty) : acc)
-        _ -> throwError . AssertionFailed $ "splitCtx: variable " <> x <> " not found in context"
+          go ctx' ys ((y, ty) : acc)
+        _ ->
+          throwError . AssertionFailed $ "splitCtx: variable " <> y <> " not found in context"
 
 weakenCtx :: Bound -> Ctx -> [Text] -> Gen ((Text, Type), Ctx)
 weakenCtx u q@Ctx{..} xs =
