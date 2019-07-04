@@ -8,3 +8,8 @@ g t e1 =
 h x y = x;
 
 i x y = x < y;
+
+j x =
+  if x
+    then nil
+    else nil;
