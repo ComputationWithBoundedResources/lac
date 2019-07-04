@@ -13,7 +13,7 @@ import qualified Data.Text          as T
 instance Latex Expr where
   latex e =
     case e of
-      Var "_" -> "\\cdot"
+      Var "_" -> "\\Box"
       Var x   -> latexVar x
       Match x cs ->
         "\\mathrm{match}\\;" <> latex x <> "\\; \\mathrm{with}\\;" <> cases
