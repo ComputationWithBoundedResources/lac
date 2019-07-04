@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Lac.Analysis.Rules.Ite where
 
 import           Lac.Analysis.Rules.Common
