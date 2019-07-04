@@ -6,3 +6,5 @@ g t e1 =
     | (l, x, r) -> (l, x, r);
 
 h x y = x;
+
+i x y = x < y;
