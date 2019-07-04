@@ -341,9 +341,9 @@ prove dispatch q e =
     -- dispatch nested rule application
     t@ProofTree{..} <- dispatch q e
     -- recover state w/ updated "fresh" value
-    modify $ \s@GenState{..} -> saved { gsFresh             = gsFresh
-                                      , gsProofTreeSubtrees = t : gsProofTreeSubtrees
-                                      }
+    modify $ \s -> saved { gsFresh             = gsFresh s
+                         , gsProofTreeSubtrees = t : gsProofTreeSubtrees saved
+                         }
     let (_, _, q') = ptConclusion
     return q'
 
