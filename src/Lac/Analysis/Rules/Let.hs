@@ -24,7 +24,8 @@ ruleLet dispatch q e@(TyLet x (e1, ty) (e2, _)) =
     r' <- augmentCtx u r [(x, ty)]
 
     s <- prove dispatch p  e1
-    t <- prove dispatch r' e2 -- TODO: cost-free
+    t <- prove dispatch r' e2
+    -- TODO: cost-free
 
     --eqCtx s t
 
