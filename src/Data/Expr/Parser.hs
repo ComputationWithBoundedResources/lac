@@ -13,7 +13,6 @@ import           Data.List.NonEmpty
 import           Data.Maybe          (mapMaybe)
 import           Data.Text           (Text)
 import qualified Data.Text           as T
-import           System.Environment  (getArgs)
 import           Text.Parsec
 import           Text.Parsec.Helpers (many1', parens)
 

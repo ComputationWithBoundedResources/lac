@@ -7,7 +7,6 @@ import           Data.Bound
 import           Data.Expr
 import           Data.Expr.Parser       (expr)
 import           Data.Expr.Typed
-import qualified Data.Text              as T
 import qualified Data.Text.IO           as T
 import           Data.Type
 import           Lac.Analysis.ProofTree
