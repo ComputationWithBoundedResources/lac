@@ -48,14 +48,16 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
         latexCExpr (CAtom c) = latexCoeff c
         latexCExpr (CSum es) = T.intercalate " + " (map latexCExpr es)
 
-        latexCoeff (Coeff c) =
-          case lookup (Coeff c) (f r) of
-            Just i -> g r i
-            Nothing ->
+        latexCoeff (Coeff c) = go contexts
+          where
+            contexts = [q, r] ++ lookahead ts
+
+            go [] = "\\#_{" <> T.pack (show c) <> "}"
+            go (q:qs) =
               case lookup (Coeff c) (f q) of
                 Just i -> g q i
-                Nothing -> "\\#_{" <> T.pack (show c) <> "}"
-          where
+                Nothing -> go qs
+
             f = map swap . M.toList . ctxCoefficients
             g Ctx{..} idx =
               "q^{" <> T.pack (show ctxId) <> "}"
@@ -64,3 +66,11 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
             h (VecIdx a) =
               "(" <> T.intercalate ", " (map (T.pack . show) a) <> ")"
             h AstIdx = "\\ast"
+
+lookahead :: [ProofTree] -> [Ctx]
+lookahead = concatMap f
+  where
+    f ProofTree{..} =
+      let (q, _, r) = ptConclusion
+      in
+      [q, r]
