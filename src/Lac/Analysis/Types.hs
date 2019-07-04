@@ -12,6 +12,7 @@ module Lac.Analysis.Types (
   , numVarsCtx
   , splitCtx
   , ctxEmpty
+  , ctxVars
   , ppCtx
   , ppConstr
   , coeff

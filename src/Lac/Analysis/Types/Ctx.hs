@@ -8,9 +8,11 @@ import           Data.Type
 import           Lac.Analysis.Types.Coeff
 
 import           Data.Map.Strict          (Map)
-import           Data.Map.Strict          as M
+import qualified Data.Map.Strict          as M
+import           Data.Set                 (Set)
+import qualified Data.Set                 as S
 import           Data.Text                (Text)
-import           Data.Text                as T
+import qualified Data.Text                as T
 
 data Ctx
   = Ctx {
@@ -31,6 +33,9 @@ latexCtx Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "} = (" <> T.intercalate ", "
 
 ctxEmpty :: Ctx -> Bool
 ctxEmpty Ctx{..} = M.null ctxVariables
+
+ctxVars :: Ctx -> Set Text
+ctxVars Ctx{..} = S.fromList (map fst . M.toList $ ctxVariables)
 
 data Idx
   = AstIdx
