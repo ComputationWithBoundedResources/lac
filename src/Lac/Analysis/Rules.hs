@@ -10,6 +10,7 @@ import           Data.Expr.Types
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules.Cmp   as E
 import           Lac.Analysis.Rules.Ite   as E
+import           Lac.Analysis.Rules.Let   as E
 import           Lac.Analysis.Rules.Match as E
 import           Lac.Analysis.Rules.Nil   as E
 import           Lac.Analysis.Rules.Node  as E
@@ -38,4 +39,7 @@ dispatch q e =
       ruleCmp q e
     TyIte (TyVar x, _) (e1, _) (e2, _) ->
       ruleIte dispatch q x e1 e2
+    TyLet _ _ _ ->
+      -- TODO: apply (share) rule if context is not linear
+      ruleLet dispatch q e
     _ -> throwError (AssertionFailed "dispatch: rule unimplemented")
