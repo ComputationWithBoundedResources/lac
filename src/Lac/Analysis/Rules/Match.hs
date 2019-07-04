@@ -13,15 +13,8 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
     let m = lengthCtx q - 1
 
     (_, p) <- splitCtx u q [x]
-    liftIO $ do
-      putStrLn "P"
-      T.putStrLn (ppCtx p)
-
     (_, r) <- splitCtx u q [x]
     r' <- augmentCtx u r [(x1, tyTree), (x2, tyNat), (x3, tyTree)]
-    liftIO $ do
-      putStrLn "R"
-      T.putStrLn (ppCtx r')
 
     -- r(vec{a}, a, a, b) = q(vec{a}, a, b)
     let raaabs = vecCoeffsRev r' $

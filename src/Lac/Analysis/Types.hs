@@ -320,7 +320,6 @@ type Rule = Ctx -> Typed -> Gen ProofTree
 
 setRuleName :: Text -> Gen ()
 setRuleName n = do
-  liftIO $ print n
   s@GenState{..} <- get
   if gsProofTreeRuleName /= Nothing
     then throwError $ AssertionFailed "rule name can only be set once"
