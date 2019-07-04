@@ -17,6 +17,6 @@ ruleNil q e =
     forM_ (zip [1..] (enumRankCoeffs q)) $ \(i, (_, qc)) -> do
       let splits = [(x, i - x) | x <- [0..i]]
       qab's <- forM splits $ \(a, b) -> coeff q' (VecIdx [a, b])
-      tellConstr [CEq (CAtom qc) (CSum (map CAtom qab's))]
+      accumConstr [CEq (CAtom qc) (CSum (map CAtom qab's))]
 
     conclude q nil q'

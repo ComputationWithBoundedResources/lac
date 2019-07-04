@@ -37,7 +37,6 @@ module Lac.Analysis.Types (
   , Gen (..)
   , runGen
   , tell
-  , tellConstr
   , throwError
   , assert
   , liftIO
@@ -235,7 +234,7 @@ eqReturnCtx :: Ctx -> Ctx -> Gen Bool
 eqReturnCtx q r =
   case (coeff' q AstIdx, coeff' r AstIdx) of
     (Just c, Just d) -> do
-      tellConstr [CEq (CAtom c) (CAtom d)]
+      accumConstr [CEq (CAtom c) (CAtom d)]
       return True
     (Nothing, Nothing) -> return False
     _ -> throwError $ AssertionFailed "eqReturnCtx: bad contexts"
@@ -272,21 +271,20 @@ assert p s =
 
 data Output
   = Output {
-      outConstraints :: [Constraint]
-    , outLog         :: [Text]
+      outLog         :: [Text]
     , outEqs         :: [(Text, Text)]
   }
   deriving (Eq, Show)
 
 outEq :: Text -> Text -> Output
-outEq lhs rhs = Output mempty mempty [(lhs, rhs)]
+outEq lhs rhs = Output mempty [(lhs, rhs)]
 
 instance Semigroup Output where
-  Output xs1 ys1 zs1 <> Output xs2 ys2 zs2 =
-    Output (xs1 <> xs2) (ys1 <> ys2) (zs1 <> zs2)
+  Output ys1 zs1 <> Output ys2 zs2 =
+    Output (ys1 <> ys2) (zs1 <> zs2)
 
 instance Monoid Output where
-  mempty = Output mempty mempty mempty
+  mempty = Output mempty mempty
 
 newtype Gen a = Gen {
     unGen :: ExceptT Error (StateT GenState (WriterT Output IO)) a
@@ -371,10 +369,3 @@ runGen :: Gen r -> IO (Either Error r, Output)
 runGen = fmap f . runWriterT . flip runStateT initState . runExceptT . unGen
   where
     f ((e, _), cs) = (e, cs)
-
-tellConstr :: [Constraint] -> Gen ()
-tellConstr cs = tell
-  Output { outConstraints = cs
-         , outEqs = []
-         , outLog = []
-         }

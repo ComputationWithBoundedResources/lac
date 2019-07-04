@@ -29,7 +29,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
               in
               coeff q (VecIdx vec)
 
-    forM_ (zip (map snd raaabs) qaabs) $ \(ri, qi) -> tellConstr [CEq (CAtom ri) (CAtom qi)]
+    forM_ (zip (map snd raaabs) qaabs) $ \(ri, qi) -> accumConstr [CEq (CAtom ri) (CAtom qi)]
 
     -- p(vec{a}, c) = sum{a+b=c} q(vec{a}, a, b)
     let pacs =
@@ -45,7 +45,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
               (b:a:as) | a + b == c -> True
               _                     -> False
       in
-      tellConstr [ CEq (CAtom pac) (CSum (map (CAtom . snd) qabs)) ]
+      accumConstr [ CEq (CAtom pac) (CSum (map (CAtom . snd) qabs)) ]
 
     -- r_{m+1} = r_{m+2} = q_{m+1}
     i1 <- idx (m + 1) r'
@@ -54,7 +54,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
     rm2 <- coeff r' i2
     i3 <- idx (m + 1) q
     qm1 <- coeff q i3
-    tellConstr
+    accumConstr
       [ CEq (CAtom rm1) (CAtom rm2)
       , CEq (CAtom rm2) (CAtom qm1)
       ]
@@ -72,7 +72,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
                   _                        -> False
       in do
       forM_ r0010s $ \(VecIdx _, r0010) ->
-        tellConstr
+        accumConstr
           [ CEq (CAtom r0100) (CAtom r0010)
           , CEq (CAtom r0010) (CAtom qm1)
           ]
