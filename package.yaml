@@ -58,16 +58,6 @@ executables:
     source-dirs:  exe/lnf
     dependencies:
     - lac
-  lac-proof:
-    main:         Main.hs
-    source-dirs:  exe/proof
-    dependencies:
-    - lac
-  lac-demo:
-    main: Main.hs
-    source-dirs: exe/demo
-    dependencies:
-    - lac
 
 tests:
   lac-test:

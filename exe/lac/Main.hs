@@ -10,6 +10,7 @@ import           Data.Expr.Typed
 import           Data.Term
 import           Data.Type
 import           Lac
+import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules
 import           Lac.Analysis.Types         (augmentCtx, rootCtx, runGen)
 import           Lac.Eval
@@ -26,12 +27,40 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.IO               as T
 import           System.Environment.Ext
+import           System.Exit
 import qualified System.Repl                as Repl
 import           Text.Parsec                (parse)
 
 main :: IO ()
 main = do
   (flags, args) <- partitionArgs <$> getArgs
+  case args of
+    [] -> putStrLn "please specify at least one input file" >> exitFailure
+    a:_ ->
+      if "-i" `elem` flags
+        then
+          interactive flags args
+        else
+          readProg a >>=
+            \case
+              Left e -> print e
+              Right p@Prog{..} -> do
+                let decls = typedProgram progEnv
+                forM_ decls $ \(f, _, (e, ty)) -> do
+                  r <- runGen $ do
+                    let (xs, e') = splitDecl e
+                    q <- augmentCtx (Bound 1) rootCtx xs
+                    dispatch q e'
+                  case r of
+                    (Left e, _) -> print e
+                    (Right t, o) -> do
+                      let p = a <> "-" <> T.unpack f <> ".tex"
+                      T.writeFile p (latexProofTree t)
+                      putStrLn $ "wrote proof tree to file `" <> p <> "`"
+
+interactive :: [String] -> [String] -> IO ()
+interactive flags args =
+  -- TODO: load all declarations, then enter REPL
   forM_ args $ \arg -> do
     r <- readProg arg
     case r of
@@ -150,10 +179,10 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
         return True
 
 getTypedProgram :: StateT ReplState IO [(Text, [Text], (Typed, Type))]
-getTypedProgram =
-  do
-    decls <- (map select . M.toList . rsEnv) <$> get
-    let program = Program decls
-    return $ inferProgType program
+getTypedProgram = (typedProgram . rsEnv) <$> get
+
+typedProgram :: ToExpr a => Map Text a -> [(Text, [Text], (Typed, Type))]
+typedProgram env = inferProgType (Program decls)
   where
+    decls = map select . M.toList $ env
     select (name, e) = Decl name [] (toExpr e)
