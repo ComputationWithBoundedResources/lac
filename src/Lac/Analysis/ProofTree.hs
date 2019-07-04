@@ -16,7 +16,9 @@ import           Lac.Analysis.Types.Ctx
 import           Latex
 
 import qualified Data.Map.Strict               as M
+import           Data.Text                     (Text)
 import qualified Data.Text                     as T
+import           Data.Tuple                    (swap)
 
 data ProofTree
   = ProofTree {
@@ -27,6 +29,7 @@ data ProofTree
     }
   deriving (Show)
 
+latexProofTree :: ProofTree -> Text
 latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
     "\\infer[(\\mathsf{" <> n
       <> "})]{" <> latexCtx q <> " \\vdash " <> latexTyped e <> " : " <> latexCtx r <> "}"
@@ -61,5 +64,3 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
             h (VecIdx a) =
               "(" <> T.intercalate ", " (map (T.pack . show) a) <> ")"
             h AstIdx = "\\ast"
-
-swap (x, y) = (y, x)
