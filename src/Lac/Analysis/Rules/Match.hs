@@ -9,6 +9,8 @@ import qualified Data.Text.IO              as T
 ruleMatch :: Rule -> Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen ProofTree
 ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
   do
+    setRuleName "match"
+
     let u = Bound 1
     let m = lengthCtx q - 1
 
@@ -86,4 +88,4 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
     eqReturnCtx q2' q'
 
     -- TODO: fix expression
-    conclude q nil q'
+    conclude q hole q'
