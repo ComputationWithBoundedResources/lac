@@ -24,7 +24,7 @@ module Lac.Analysis.Types (
   , Idx(..)
   , enumRankCoeffs
   , idx
-  , eqReturnCtx
+  , eqCtx
 
   , Error(..)
 
@@ -67,6 +67,7 @@ import           Control.Monad.Writer
 import           Data.Map.Strict                (Map)
 import qualified Data.Map.Strict                as M
 import           Data.Maybe                     (mapMaybe)
+import qualified Data.Set                       as S
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
@@ -230,14 +231,23 @@ returnCtx bound =
               `M.union` M.fromList vecCoefficients
           }
 
-eqReturnCtx :: Ctx -> Ctx -> Gen Bool
-eqReturnCtx q r =
-  case (coeff' q AstIdx, coeff' r AstIdx) of
-    (Just c, Just d) -> do
-      accumConstr [CEq (CAtom c) (CAtom d)]
-      return True
-    (Nothing, Nothing) -> return False
-    _ -> throwError $ AssertionFailed "eqReturnCtx: bad contexts"
+eqCtx :: Ctx -> Ctx -> Gen ()
+eqCtx q r =
+  let f = S.fromList . M.keys . ctxCoefficients
+      kq = f q
+      kr = f r
+  in
+  if kq /= kr
+    then
+      let m = "eqCtx: contexts differ (Q: " <> g kq <> "; R: " <> g kr <> ")"
+          g = T.intercalate "," . map (T.pack . show) . S.toList
+      in
+      throwError (AssertionFailed m)
+    else
+      forM_ kq $ \i -> do
+        qi <- coeff q i
+        ri <- coeff r i
+        accumConstr $ [CEq (CAtom qi) (CAtom ri)]
 
 vectors :: Bound -> Int -> [[Int]]
 vectors (Bound bound) n = go n

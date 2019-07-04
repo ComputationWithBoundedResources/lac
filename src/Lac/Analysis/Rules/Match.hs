@@ -83,8 +83,9 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
 
     -- equate "return" contexts
     q' <- returnCtx u
-    eqReturnCtx q1' q2'
-    eqReturnCtx q2' q'
+
+    eqCtx q1' q2'
+    eqCtx q2' q'
 
     -- TODO: fix expression
     conclude q hole q'
