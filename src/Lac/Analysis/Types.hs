@@ -73,12 +73,8 @@ import qualified Data.Text                      as T
 
 -- * Basic types
 
--- do not export `nullCtx`
-nullCtx :: Ctx
-nullCtx = Ctx 0 mempty mempty
-
 rootCtx :: Ctx
-rootCtx = nullCtx { ctxId = -1 }
+rootCtx = Ctx 0 mempty mempty
 
 freshCtx :: Gen Ctx
 freshCtx = Ctx <$> fresh <*> pure mempty <*> pure mempty

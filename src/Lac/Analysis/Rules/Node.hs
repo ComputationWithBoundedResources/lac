@@ -24,7 +24,7 @@ ruleNode ctx x1 x2 =
                                _ -> False
     qabs <- forM qaabs $ \(VecIdx [a, _, b], _) -> coeff ctx' (VecIdx [a, b])
 
-    tellConstr $
+    accumConstr $
       [ CEq (CAtom q1) (CAtom q2)
       , CEq (CAtom q2) (CAtom qx')
       , CEq (CAtom q100) (CAtom q010)

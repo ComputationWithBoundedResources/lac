@@ -5,8 +5,6 @@ module Lac.Analysis.Rules.WVar where
 
 import           Lac.Analysis.Rules.Common
 
-import qualified Data.Text.IO              as T (putStrLn)
-
 ruleWVar :: Rule -> Ctx -> Typed -> [Text] -> Gen ProofTree
 ruleWVar dispatch q e xs =
   do

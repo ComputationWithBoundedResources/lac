@@ -1,10 +1,9 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Lac.Analysis.Rules.Match where
 
 import           Lac.Analysis.Rules.Common
-
-import qualified Data.Text.IO              as T
 
 ruleMatch :: Rule -> Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen ProofTree
 ruleMatch dispatch q x e1 (x1, x2, x3) e2 =

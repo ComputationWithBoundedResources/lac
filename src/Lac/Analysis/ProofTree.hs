@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Lac.Analysis.ProofTree (
     ProofTree(..)
@@ -6,17 +7,16 @@ module Lac.Analysis.ProofTree (
   ) where
 
 import           Data.Expr.FromTyped
-import           Data.Expr.Latex
+import           Data.Expr.Latex               (latexVar)
 import           Data.Expr.Typed
-import           Data.Type
 import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
 import           Lac.Analysis.Types.Ctx
 import           Latex
 
+import qualified Data.Map.Strict               as M
 import qualified Data.Text                     as T
-import qualified Data.Text.IO                  as T
 
 data ProofTree
   = ProofTree {
@@ -45,4 +45,21 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
         latexCExpr (CAtom c) = latexCoeff c
         latexCExpr (CSum es) = T.intercalate " + " (map latexCExpr es)
 
-        latexCoeff (Coeff i) = "q_{" <> T.pack (show i) <> "}"
+        latexCoeff (Coeff c) =
+          case lookup (Coeff c) (f r) of
+            Just i -> g r i
+            Nothing ->
+              case lookup (Coeff c) (f q) of
+                Just i -> g q i
+                Nothing -> "\\#_{" <> T.pack (show c) <> "}"
+          where
+            f = map swap . M.toList . ctxCoefficients
+            g Ctx{..} idx =
+              "q^{" <> T.pack (show ctxId) <> "}"
+                <> "_{" <> h idx <> "}"
+            h (IdIdx x) = latexVar x
+            h (VecIdx a) =
+              "(" <> T.intercalate ", " (map (T.pack . show) a) <> ")"
+            h AstIdx = "\\ast"
+
+swap (x, y) = (y, x)

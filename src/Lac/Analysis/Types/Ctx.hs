@@ -4,7 +4,6 @@
 module Lac.Analysis.Types.Ctx where
 
 import           Data.Expr.Latex
-import           Data.Term                (ppTerm')
 import           Data.Type
 import           Lac.Analysis.Types.Coeff
 

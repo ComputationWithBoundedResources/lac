@@ -2,8 +2,6 @@
 
 module Data.Type where
 
-import           Latex
-
 import           Data.Term
 import           Data.Term.Pretty (convertTerm)
 import           Data.Text        (Text)
