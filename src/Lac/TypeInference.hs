@@ -99,7 +99,7 @@ inferExprType (env, expr, tau) =
       (xs, e1') <- infer (env, e1, V a)
       (ys, e2') <- infer (env, e2, V a)
       let eqs = (tau, tyBool) : (xs ++ ys)
-      return (eqs, TyCmp op (e1', V a) (e1', V a))
+      return (eqs, TyCmp op (e1', V a) (e2', V a))
 
 mkProgEnv :: Env -> [Decl] -> State Int [((T String Text, Type), (Text, [Text], Expr))]
 mkProgEnv env decls =
