@@ -3,6 +3,8 @@
 
 module Lac.Analysis.Types.Ctx where
 
+import           Data.Expr.Latex
+import           Data.Term                (ppTerm')
 import           Data.Type
 import           Lac.Analysis.Types.Coeff
 
@@ -23,7 +25,10 @@ data Ctx
   deriving (Eq, Show)
 
 latexCtx :: Ctx -> Text
-latexCtx Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "}"
+latexCtx Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "} = (" <> T.intercalate ", " vars <> ")"
+  where
+    vars = Prelude.map var . M.toList $ ctxVariables
+    var (x, ty) = latexVar x <> ": " <> latexType ty
 
 ctxEmpty :: Ctx -> Bool
 ctxEmpty Ctx{..} = M.null ctxVariables

@@ -4,6 +4,7 @@ module Data.Term.Pretty (
     ppTerm
   , ppTerm'
   , ppEqn
+  , convertTerm
   ) where
 
 import           Data.Term.Term

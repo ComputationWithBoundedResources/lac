@@ -1,11 +1,29 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Data.Type where
 
+import           Latex
+
 import           Data.Term
-import           Data.Text (Text)
+import           Data.Term.Pretty (convertTerm)
+import           Data.Text        (Text)
+import qualified Data.Text        as T
 
 type Env = [(T String Text, Type)]
 
 type Type = T String Int
+
+latexType :: Type -> Text
+latexType = go False . convertTerm
+  where
+    go _ (V x) = x
+    go l (F "->" [t, u]) = brace l inner
+      where inner = go True t <> " \\rightarrow " <> go False u
+    go _ (F f []) = "\\mathsf{" <> f <> "}"
+    go _ (F f ts) = "\\mathsf{" <> f <> "}" <> "(" <> (T.intercalate ", " . map (go False) $ ts) <> ")"
+
+    brace False x = x
+    brace True  x = "(" <> x <> ")"
 
 tyBool :: Type
 tyBool = F "Bool" []
