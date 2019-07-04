@@ -13,3 +13,14 @@ j x =
   if x
     then nil
     else nil;
+
+k x y z =
+  let p = x < y
+  in
+  if p
+    then nil
+    else
+      let l = nil in
+      let r = nil
+      in
+      (l, z, r);
