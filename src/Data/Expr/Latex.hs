@@ -3,14 +3,18 @@
 module Data.Expr.Latex where
 
 import           Data.Expr.Types
-import qualified Data.List.NonEmpty as NE
-import qualified Data.Text          as T
 import           Latex
+
+import           Data.Char
+import qualified Data.List.NonEmpty as NE
+import           Data.Text          (Text)
+import qualified Data.Text          as T
 
 instance Latex Expr where
   latex e =
     case e of
-      Var x -> x
+      Var "_" -> "\\cdot"
+      Var x   -> latexVar x
       Match x cs ->
         "\\mathrm{match}\\;" <> latex x <> "\\; \\mathrm{with}\\;" <> cases
         where
@@ -22,6 +26,14 @@ instance Latex Expr where
           <> "\\; \\mathrm{else}\\;" <> latex e2
       Lit l -> latex l
       _ -> "\\mathrm{TODO}"
+
+latexVar :: Text -> Text
+latexVar x =
+  let (p, s) = T.break isDigit x
+  in
+  if T.all isDigit s
+    then p <> "_{" <> s <> "}"
+    else p <> s
 
 instance Latex Pattern where
   latex PNil          = "\\mathrm{nil}"
