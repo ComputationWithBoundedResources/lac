@@ -66,7 +66,7 @@ import           Control.Monad.Except
 import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer
 import           Data.Map.Strict                (Map)
-import qualified Data.Map.Strict                as M
+import qualified Data.Map.Strict.Ext            as M
 import           Data.Maybe                     (mapMaybe)
 import qualified Data.Set                       as S
 import           Data.Text                      (Text)
@@ -143,19 +143,12 @@ splitCtx bound q xs = go q xs []
 
 weakenCtx :: Bound -> Ctx -> [Text] -> Gen ((Text, Type), Ctx)
 weakenCtx u q@Ctx{..} xs =
-  case (M.toList . deleteAll xs) ctxVariables of
+  case (M.toList . M.deleteAll xs) ctxVariables of
     (y, _) : _ -> splitCtx u q [y] >>=
                     \case
                       ([(y, t)], q') -> return ((y, t), q')
                       _              -> throwError $ AssertionFailed "weakenCtx: unexpected splitCtx behavior"
     _ -> throwError $ AssertionFailed "weakenCtx: cannot weaken"
-
-deleteAll :: Ord k => [k] -> Map k v -> Map k v
-deleteAll [] m = m
-deleteAll (x:xs) m =
-  let m' = M.delete x m
-  in
-  deleteAll xs m'
 
 ppCtx :: Ctx -> Text
 ppCtx Ctx{..} =
