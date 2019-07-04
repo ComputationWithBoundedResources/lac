@@ -2,6 +2,7 @@
 
 module Data.Type where
 
+import           Data.Expr.Latex  (latexVar)
 import           Data.Term
 import           Data.Term.Pretty (convertTerm)
 import           Data.Text        (Text)
@@ -14,7 +15,7 @@ type Type = T String Int
 latexType :: Type -> Text
 latexType = go False . convertTerm
   where
-    go _ (V x) = x
+    go _ (V x) = latexVar x
     go l (F "->" [t, u]) = brace l inner
       where inner = go True t <> " \\rightarrow " <> go False u
     go _ (F f []) = "\\mathsf{" <> f <> "}"
