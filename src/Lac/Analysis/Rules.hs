@@ -26,7 +26,9 @@ dispatch q e =
     TyMatch (TyVar x, _) ((PNil, (e1, _)) :| [(PNode x1 x2 x3, (e2, _))]) ->
       ruleMatch dispatch q x e1 (x1, x2, x3) e2
     TyLit TyLNil ->
-      ruleNil q e
+      if numVarsCtx q == 0
+        then ruleNil q e
+        else ruleWVar dispatch q e []
     TyLit (TyLNode (TyVar x1) (TyVar x2) (TyVar x3)) ->
       if numVarsCtx q > 3
         then ruleWVar dispatch q e [x1, x2, x3]
@@ -36,8 +38,9 @@ dispatch q e =
         then ruleVar q x
         else ruleWVar dispatch q e [x]
     TyCmp _ (TyVar x1, _) (TyVar x2, _) ->
-      -- TODO: apply (w : var) to forget everything but x1 and x2
-      ruleCmp q e
+      if numVarsCtx q == 2
+        then ruleCmp q e
+        else ruleWVar dispatch q e [x1, x2]
     TyIte (TyVar x, _) (e1, _) (e2, _) ->
       ruleIte dispatch q x e1 e2
     TyLet _ _ _ ->
