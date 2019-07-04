@@ -7,7 +7,7 @@ import           Lac.Analysis.Rules.Common
 import qualified Data.Set                  as S
 
 ruleLet :: Rule -> Ctx -> Typed -> Gen ProofTree
-ruleLet dispatch q e@(TyLet x (e1, _) (e2, _)) =
+ruleLet dispatch q e@(TyLet x (e1, ty) (e2, _)) =
   do
     setRuleName "let"
 
@@ -21,10 +21,11 @@ ruleLet dispatch q e@(TyLet x (e1, _) (e2, _)) =
 
     (_, p) <- splitCtx u q (S.toList $ xs `S.intersection` v2)
     (_, r) <- splitCtx u q (S.toList $ xs `S.intersection` v1)
+    r' <- augmentCtx u r [(x, ty)]
 
-    s <- prove dispatch p e1
-    t <- prove dispatch r e2 -- TODO: cost-free
+    s <- prove dispatch p  e1
+    t <- prove dispatch r' e2 -- TODO: cost-free
 
-    eqCtx s t
+    --eqCtx s t
 
     conclude q e s
