@@ -36,6 +36,7 @@ dispatch q e =
         then ruleVar q x
         else ruleWVar dispatch q e [x]
     TyCmp _ (TyVar x1, _) (TyVar x2, _) ->
+      -- TODO: apply (w : var) to forget everything but x1 and x2
       ruleCmp q e
     TyIte (TyVar x, _) (e1, _) (e2, _) ->
       ruleIte dispatch q x e1 e2
