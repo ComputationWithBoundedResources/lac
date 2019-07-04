@@ -25,6 +25,13 @@ instance Latex Expr where
           <> "\\; \\mathrm{then}\\;" <> latex e1
           <> "\\; \\mathrm{else}\\;" <> latex e2
       Lit l -> latex l
+      Cmp op e1 e2 -> latex e1 <> " " <> op' <> " " <> latex e2
+        where
+          op' =
+            case op of
+              CmpEq -> "="
+              CmpLt -> "<"
+              CmpGt -> ">"
       _ -> "\\mathrm{TODO}"
 
 latexVar :: Text -> Text
