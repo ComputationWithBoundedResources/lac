@@ -11,8 +11,6 @@ ruleNode ctx x1 x2 =
   do
     setRuleName "node"
 
-    -- TODO: weaken until only x1, x2 and x3 remain in context
-
     ctx' <- returnCtx (Bound 1)
 
     q1 <- coeff ctx (IdIdx x1)

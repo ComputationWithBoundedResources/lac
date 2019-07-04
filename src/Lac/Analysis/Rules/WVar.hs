@@ -7,13 +7,13 @@ import           Lac.Analysis.Rules.Common
 
 import qualified Data.Text.IO              as T (putStrLn)
 
-ruleWVar :: Rule -> Ctx -> Text -> Gen ProofTree
-ruleWVar dispatch q x =
+ruleWVar :: Rule -> Ctx -> Typed -> [Text] -> Gen ProofTree
+ruleWVar dispatch q e xs =
   do
     setRuleName "w : var"
 
     let u = Bound 1
-    (_, r) <- weakenCtx u q [x]
+    (_, r) <- weakenCtx u q xs
 
     -- equate rank coefficients
     forM_ (coeffs r isRankCoeff) $ \(idx, ri) -> do
@@ -30,6 +30,6 @@ ruleWVar dispatch q x =
                   qa0b <- coeff q (VecIdx (as ++ [0, b]))
                   accumConstr [CEq (CAtom rab) (CAtom qa0b)]
 
-    q' <- prove dispatch r (TyVar x)
+    q' <- prove dispatch r e
 
-    conclude q (TyVar x) q'
+    conclude q e q'

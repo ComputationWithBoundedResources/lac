@@ -26,12 +26,14 @@ dispatch q e =
       ruleMatch dispatch q x e1 (x1, x2, x3) e2
     TyLit TyLNil ->
       ruleNil q e
-    TyLit (TyLNode (TyVar x1) _ (TyVar x2)) ->
-      ruleNode q x1 x2
+    TyLit (TyLNode (TyVar x1) (TyVar x2) (TyVar x3)) ->
+      if numVarsCtx q > 3
+        then ruleWVar dispatch q e [x1, x2, x3]
+        else ruleNode q x1 x3
     TyVar x ->
       if numVarsCtx q == 1
         then ruleVar q x
-        else ruleWVar dispatch q x
+        else ruleWVar dispatch q e [x]
     {-
     TyCmp _ (TyVar x1, _) (TyVar x2, _) ->
       ruleCmp q x1 x2
