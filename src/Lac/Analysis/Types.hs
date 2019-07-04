@@ -364,7 +364,7 @@ conclude q e q' =
             gsProofTreeConstraints
             gsProofTreeSubtrees
       Nothing ->
-        throwError $ AssertionFailed "cannot conclude w/o set rule name"
+        throwError $ AssertionFailed "no rule name set"
 
 instance HasFresh GenState where
   getFresh GenState{..} = gsFresh
