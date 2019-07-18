@@ -15,12 +15,16 @@ ruleLet dispatch q e@(TyLet x (e1, ty) (e2, _)) =
 
     -- TODO: assert linearity
 
-    let xs = ctxVars q
-    let v1 = var . fromTyped $ e1
-    let v2 = var . fromTyped $ e2
+    let var' = var . fromTyped
 
-    (_, p) <- splitCtx u q (S.toList $ xs `S.intersection` v2)
-    (_, r) <- splitCtx u q (S.toList $ xs `S.intersection` v1)
+    let vq  = ctxVars q   -- all variables in context Q
+    let ve1 = var' e1     -- variables in expression e1
+    let rem = vq S.\\ ve1 -- remaining variables (i.e. variables in
+                          -- expression e2 and variables that later be
+                          -- subject to weakening)
+
+    (_, p) <- splitCtx u q (S.toList rem)
+    (_, r) <- splitCtx u q (S.toList ve1)
     r' <- augmentCtx u r [(x, ty)]
 
     s <- prove dispatch p  e1
