@@ -33,9 +33,9 @@ latexCtx Ctx{..} = varCtx <> "|Q_{" <> T.pack (show ctxId) <> "}"
     vars = Prelude.map var . M.toList $ ctxVariables
     var (x, ty) = latexVar x <> ": " <> latexType ty
 
--- TODO: show correct type
+-- TODO: show type
 latexRetCtx :: Ctx -> Text
-latexRetCtx Ctx{..} = "\\tau|Q_{" <> T.pack (show ctxId) <> "}"
+latexRetCtx Ctx{..} = "\\Box|Q_{" <> T.pack (show ctxId) <> "}"
 
 ctxEmpty :: Ctx -> Bool
 ctxEmpty Ctx{..} = M.null ctxVariables
