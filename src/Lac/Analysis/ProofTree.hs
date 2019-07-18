@@ -29,10 +29,11 @@ data ProofTree
     }
   deriving (Show)
 
+-- TODO: show return type
 latexProofTree :: ProofTree -> Text
 latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
     "\\infer[(\\mathsf{" <> n
-      <> "})]{" <> latexCtx q <> " \\vdash " <> latexTyped e <> " : " <> latexCtx r <> "}"
+      <> "})]{" <> latexCtx q <> " \\vdash " <> latexTyped e <> " : " <> latexRetCtx r <> "}"
       <> "{"
       <> T.intercalate " & " (latexConstraints cs : map latexProofTree ts)
       <> "}"

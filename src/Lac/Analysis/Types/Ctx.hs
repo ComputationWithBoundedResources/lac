@@ -26,10 +26,16 @@ data Ctx
   deriving (Eq, Show)
 
 latexCtx :: Ctx -> Text
-latexCtx Ctx{..} = "Q_{" <> T.pack (show ctxId) <> "} = (" <> T.intercalate ", " vars <> ")"
+latexCtx Ctx{..} = varCtx <> "|Q_{" <> T.pack (show ctxId) <> "}"
   where
+    varCtx | null vars = "\\varnothing"
+           | otherwise = T.intercalate ", " vars
     vars = Prelude.map var . M.toList $ ctxVariables
     var (x, ty) = latexVar x <> ": " <> latexType ty
+
+-- TODO: show correct type
+latexRetCtx :: Ctx -> Text
+latexRetCtx Ctx{..} = "\\tau|Q_{" <> T.pack (show ctxId) <> "}"
 
 ctxEmpty :: Ctx -> Bool
 ctxEmpty Ctx{..} = M.null ctxVariables
