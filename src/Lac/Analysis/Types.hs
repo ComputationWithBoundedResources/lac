@@ -341,7 +341,7 @@ prove dispatch q e =
     t@ProofTree{..} <- dispatch q e
     -- recover state w/ updated "fresh" value
     modify $ \s -> saved { gsFresh             = gsFresh s
-                         , gsProofTreeSubtrees = t : gsProofTreeSubtrees saved
+                         , gsProofTreeSubtrees = gsProofTreeSubtrees saved ++ [t]
                          }
     let (_, _, q') = ptConclusion
     return q'
