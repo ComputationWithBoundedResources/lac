@@ -11,6 +11,7 @@ module Lac.Analysis.Types (
   , lengthCtx
   , numVarsCtx
   , splitCtx
+  , splitCtx'
   , ctxEmpty
   , ctxVars
   , ppCtx
@@ -140,6 +141,14 @@ splitCtx bound q xs = go q xs []
           go ctx' ys ((y, ty) : acc)
         _ ->
           throwError . AssertionFailed $ "splitCtx: variable " <> y <> " not found in context"
+
+splitCtx' :: Bound -> Ctx -> Text -> Gen ((Text, Type), Ctx)
+splitCtx' u q y =
+  splitCtx u q [y] >>=
+    \(xs, q') ->
+      case xs of
+        [(x, ty)] -> return ((x, ty), q')
+        _ -> throwError . AssertionFailed $ "splitCtx': splitCtx returned /= 1 variable/type pair"
 
 weakenCtx :: Bound -> Ctx -> [Text] -> Gen ((Text, Type), Ctx)
 weakenCtx u q@Ctx{..} xs =
