@@ -27,10 +27,32 @@ ruleLet dispatch q e@(TyLet x (e1, ty) (e2, _)) =
     (_, r) <- splitCtx u q (S.toList ve1)
     r' <- augmentCtx u r [(x, ty)]
 
-    s <- prove dispatch p  e1
+    s <- prove dispatch p  e1 -- R'
     t <- prove dispatch r' e2
     -- TODO: cost-free
 
+    -- p_i = q_i
+    forM_ (enumRankCoeffs p) $ \(idx, pi) ->
+      coeff q idx >>= \qi ->
+        accumConstr [ CEq (CAtom pi) (CAtom qi) ]
+
+    -- p'_\ast = r_{k+1}
+    -- only possible when x is bound to a value of type tree?
+    if ty == tyTree
+      then do
+        rx <- coeff r' (IdIdx x)
+        tx <- coeff t  AstIdx
+        accumConstr [ CEq (CAtom rx) (CAtom tx) ]
+      else
+        liftIO $ putStrLn "x is not bound to a value of type tree"
+
+    -- r_j = q_j
+    forM_ (enumRankCoeffs r) $ \(idx, rj) ->
+      coeff q idx >>= \qj ->
+        accumConstr [ CEq (CAtom rj) (CAtom qj) ]
+
     --eqCtx s t
 
-    conclude q e s
+    q' <- returnCtx u
+
+    conclude q e q'
