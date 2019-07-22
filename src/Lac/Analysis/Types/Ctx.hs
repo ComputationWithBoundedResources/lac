@@ -46,5 +46,5 @@ ctxVars Ctx{..} = S.fromList (map fst . M.toList $ ctxVariables)
 data Idx
   = AstIdx
   | IdIdx Text
-  | VecIdx [Int]
+  | VecIdx (Set (Text, Int))
   deriving (Eq, Ord, Show)

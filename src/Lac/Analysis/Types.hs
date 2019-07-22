@@ -111,8 +111,8 @@ augmentCtx bound ctx@Ctx{..} xs =
       if c > 0
         then
           mapM
-            (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
-            (vectors bound (c + 1))
+            (\vec -> fresh >>= \i -> return (VecIdx (S.fromList vec), Coeff i))
+            (vecs bound . map fst $ xs)
         else
           return []
 
@@ -252,14 +252,10 @@ eqCtx q r =
         ri <- coeff r i
         accumConstr $ [CEq (CAtom qi) (CAtom ri)]
 
-vectors :: Bound -> Int -> [[Int]]
-vectors (Bound bound) n = go n
+vecs :: Bound -> [Text] -> [[(Text, Int)]]
+vecs (Bound u) xs = [[(x, i) | x <- xs] | i <- range]
   where
-    range = [0..bound]
-
-    go 0 = []
-    go 1 = map (\x -> [x]) range
-    go n = [i : xs | i <- range, xs <- go (n - 1)]
+    range = [0..u]
 
 instance Latex Ctx where
   latex Ctx{..} =

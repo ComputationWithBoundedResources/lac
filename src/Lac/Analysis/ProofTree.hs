@@ -16,6 +16,7 @@ import           Lac.Analysis.Types.Ctx
 import           Latex
 
 import qualified Data.Map.Strict               as M
+import qualified Data.Set                      as S
 import           Data.Text                     (Text)
 import qualified Data.Text                     as T
 import           Data.Tuple                    (swap)
@@ -64,8 +65,9 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
               "q^{" <> T.pack (show ctxId) <> "}"
                 <> "_{" <> h idx <> "}"
             h (IdIdx x) = latexVar x
-            h (VecIdx a) =
-              "(" <> T.intercalate ", " (map (T.pack . show) a) <> ")"
+            -- TODO: nice output
+            h (VecIdx xs) =
+              "(" <> T.intercalate ", " (map (T.pack . show) . S.toList $ xs) <> ")"
             h AstIdx = "\\ast"
 
 lookahead :: [ProofTree] -> [Ctx]
