@@ -23,7 +23,14 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
 
     -- TODO: p(vec{a}, c) = sum{a+b=c} q(vec{a}, a, b)
 
-    -- TODO: r_{m+1} = r_{m+2} = q_{m+1}
+    -- r_{m+1} = r_{m+2} = q_{m+1}
+    rx1 <- coeff r' (IdIdx x1)
+    rx3 <- coeff r' (IdIdx x3)
+    qx <- coeff q (IdIdx x)
+    accumConstr
+      [ CEq (CAtom rx1) (CAtom rx3)
+      , CEq (CAtom rx3) (CAtom qx)
+      ]
 
     -- TODO: r_{(\vec{0}, 1, 0, 0)} = r_{(\vec{0}, 0, 1, 0)} = q_{m+1}
 
