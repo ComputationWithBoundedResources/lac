@@ -3,6 +3,8 @@
 
 module Lac.Analysis.Rules.Match where
 
+import           Data.Expr.Types           (Pattern (..))
+import           Data.List.NonEmpty        (NonEmpty (..))
 import           Lac.Analysis.Rules.Common
 
 ruleMatch :: Rule -> Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen ProofTree
@@ -13,8 +15,8 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
     let u = Bound 1
     let m = lengthCtx q - 1
 
-    (_, p) <- splitCtx u q [x]
-    (_, r) <- splitCtx u q [x]
+    ((_, τx), p) <- splitCtx' u q x
+    (_, r) <- splitCtx' u q x
     r' <- augmentCtx u r [(x1, tyTree), (x2, tyNat), (x3, tyTree)]
 
     -- TODO: r(vec{a}, a, a, b) = q(vec{a}, a, b)
@@ -36,4 +38,4 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
     eqCtx q2' q'
 
     -- TODO: fix expression
-    conclude q hole q'
+    conclude q (TyMatch (TyVar x, τx) ((PNil, (hole, tyHole)) :| [(PNode x1 x2 x3, (hole, tyHole))])) q'
