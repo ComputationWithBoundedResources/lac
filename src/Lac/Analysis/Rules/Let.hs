@@ -41,7 +41,7 @@ ruleLet dispatch q e@(TyLet x (e1, ty) (e2, _)) =
     if ty == tyTree
       then do
         rx <- coeff r' (IdIdx x)
-        tx <- coeff t  AstIdx
+        tx <- coeff t  astIdx
         accumConstr [ CEq (CAtom rx) (CAtom tx) ]
       else
         liftIO $ putStrLn "x is not bound to a value of type tree"

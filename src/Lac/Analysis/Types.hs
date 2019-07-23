@@ -23,6 +23,7 @@ module Lac.Analysis.Types (
   , weakenCtx
   , returnCtx
   , Idx(..)
+  , astIdx
   , enumRankCoeffs
   , eqCtx
 
@@ -96,8 +97,6 @@ augmentCtx bound ctx@Ctx{..} xs =
   do
     let xs' = M.toList ctxVariables ++ xs
 
-    astCoefficient <- fresh >>= \i -> return (AstIdx, Coeff i)
-
     rankCoefficients <-
       mapM
         (\(x, _) -> fresh >>= \i -> return (IdIdx x, Coeff i))
@@ -117,8 +116,7 @@ augmentCtx bound ctx@Ctx{..} xs =
     return $
       ctx { ctxVariables = M.fromList xs `M.union` ctxVariables
           , ctxCoefficients =
-              M.fromList [astCoefficient]
-                `M.union` M.fromList rankCoefficients
+              M.fromList rankCoefficients
                 `M.union` M.fromList vecCoefficients
           }
 
@@ -172,10 +170,10 @@ ppCoeff :: (Idx, Coeff) -> Text
 ppCoeff (idx, (Coeff i)) = T.pack (show i) <> ": " <> c
   where
     c = case idx of
+          IdIdx "*"  -> "q*"
           IdIdx x    -> "q(" <> x <> ")"
           -- TODO: fix output
           VecIdx vec -> "q(" <> T.intercalate ", " (map (T.pack . show) . S.toList $ vec) <> ")"
-          AstIdx     -> "q*"
 
 ppConstr :: Constraint -> Text
 ppConstr (CEq lhs rhs) = ppCExpr lhs <> " = " <> ppCExpr rhs
@@ -217,7 +215,7 @@ returnCtx bound =
     return $
       ctx { ctxVariables = mempty
           , ctxCoefficients =
-              M.singleton AstIdx (Coeff i)
+              M.singleton astIdx (Coeff i)
               `M.union` M.fromList vecCoefficients
           }
 

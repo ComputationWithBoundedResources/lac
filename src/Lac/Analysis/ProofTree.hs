@@ -64,11 +64,13 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
             g Ctx{..} idx =
               "q^{" <> T.pack (show ctxId) <> "}"
                 <> "_{" <> h idx <> "}"
-            h (IdIdx x) = latexVar x
+            h (IdIdx x) =
+              if x == "*"
+                then "\\ast"
+                else latexVar x
             -- TODO: nice output
             h (VecIdx xs) =
               "(" <> T.intercalate ", " (map (T.pack . show) . S.toList $ xs) <> ")"
-            h AstIdx = "\\ast"
 
 lookahead :: [ProofTree] -> [Ctx]
 lookahead = concatMap f

@@ -22,7 +22,7 @@ ruleVar q x =
 
         -- preserve potential
         q1 <- coeff q (IdIdx x)
-        q'x <- coeff q' AstIdx
+        q'x <- coeff q' astIdx
         accumConstr [ CEq (CAtom q1) (CAtom q'x) ]
 
         conclude q (TyVar x) q'

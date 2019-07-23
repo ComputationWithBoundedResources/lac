@@ -15,7 +15,7 @@ ruleNode ctx x1 x2 =
 
     q1 <- coeff ctx (IdIdx x1)
     q2 <- coeff ctx (IdIdx x2)
-    qx' <- coeff ctx' AstIdx
+    qx' <- coeff ctx' astIdx
 
     -- TODO: q100 = q010 = qx'
 

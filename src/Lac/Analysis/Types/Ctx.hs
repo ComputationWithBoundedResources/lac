@@ -43,9 +43,10 @@ ctxEmpty Ctx{..} = M.null ctxVariables
 ctxVars :: Ctx -> Set Text
 ctxVars Ctx{..} = S.fromList (map fst . M.toList $ ctxVariables)
 
--- TODO: merge AstIdx and IdIdx, i.e. AstIdx == IdIdx "*"?
 data Idx
-  = AstIdx
-  | IdIdx Text
+  = IdIdx Text
   | VecIdx (Set (Text, Int))
   deriving (Eq, Ord, Show)
+
+astIdx :: Idx
+astIdx = IdIdx "*"
