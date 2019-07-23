@@ -200,19 +200,8 @@ enumRankCoeffs Ctx{..} = filter (p . fst) . M.toList $ ctxCoefficients
 
 returnCtx :: Bound -> Gen Ctx
 returnCtx bound =
-  do
-    ctx <- freshCtx
-    vecCoefficients <-
-      mapM
-        (\vec -> fresh >>= \i -> return (VecIdx (S.fromList vec), Coeff i))
-        (vecs bound ["*"])
-    i <- fresh
-    return $
-      ctx { ctxVariables = mempty
-          , ctxCoefficients =
-              M.singleton astIdx (Coeff i)
-              `M.union` M.fromList vecCoefficients
-          }
+  freshCtx >>= \q ->
+    augmentCtx bound q [("*", tyTree)]
 
 eqCtx :: Ctx -> Ctx -> Gen ()
 eqCtx q r =
