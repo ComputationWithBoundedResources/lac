@@ -96,22 +96,17 @@ augmentCtx :: Bound -> Ctx -> [(Text, Type)] -> Gen Ctx
 augmentCtx bound ctx@Ctx{..} xs =
   do
     let xs' = M.toList ctxVariables ++ xs
+    let ts = trees xs'
 
     rankCoefficients <-
       mapM
         (\(x, _) -> fresh >>= \i -> return (IdIdx x, Coeff i))
-        (trees xs')
+        ts
 
     vecCoefficients <-
-      let c = countTrees xs'
-      in
-      if c > 0
-        then
-          mapM
-            (\vec -> fresh >>= \i -> return (VecIdx (S.fromList vec), Coeff i))
-            (vecs bound . map fst $ xs)
-        else
-          return []
+      mapM
+        (\vec -> fresh >>= \i -> return (VecIdx (S.fromList vec), Coeff i))
+        (vecs bound . map fst $ ts)
 
     return $
       ctx { ctxVariables = M.fromList xs `M.union` ctxVariables
