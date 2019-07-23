@@ -35,3 +35,6 @@ tyTree = F "Tree" [tyNat]
 
 tyFun :: Type -> Type -> Type
 tyFun a b = F "->" [a, b]
+
+tyHole :: Type
+tyHole = F "_" []
