@@ -18,15 +18,7 @@ ruleWVar dispatch q e xs =
       qi <- coeff q idx
       accumConstr [CEq (CAtom qi) (CAtom ri)]
 
-    -- equate vector coefficients
-    let rabs = vecCoeffsRev r $
-                  \case b:as -> True
-                        _    -> False
-    forM_ rabs $ \(VecIdx vec, rab) -> do
-                  let as = init vec
-                      b = last vec
-                  qa0b <- coeff q (VecIdx (as ++ [0, b]))
-                  accumConstr [CEq (CAtom rab) (CAtom qa0b)]
+    -- TODO: equate vector coefficients
 
     q' <- prove dispatch r e
 

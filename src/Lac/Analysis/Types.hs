@@ -18,14 +18,12 @@ module Lac.Analysis.Types (
   , ppConstr
   , coeff
   , coeffs
-  , vecCoeffsRev
   , isRankCoeff
   , augmentCtx
   , weakenCtx
   , returnCtx
   , Idx(..)
   , enumRankCoeffs
-  , idx
   , eqCtx
 
   , Error(..)
@@ -175,7 +173,8 @@ ppCoeff (idx, (Coeff i)) = T.pack (show i) <> ": " <> c
   where
     c = case idx of
           IdIdx x    -> "q(" <> x <> ")"
-          VecIdx vec -> "q(" <> T.intercalate ", " (map (T.pack . show) vec) <> ")"
+          -- TODO: fix output
+          VecIdx vec -> "q(" <> T.intercalate ", " (map (T.pack . show) . S.toList $ vec) <> ")"
           AstIdx     -> "q*"
 
 ppConstr :: Constraint -> Text
@@ -200,18 +199,6 @@ isRankCoeff :: Idx -> Bool
 isRankCoeff (IdIdx _) = True
 isRankCoeff _         = False
 
-idx :: Int -> Ctx -> Gen Idx
-idx i Ctx{..} =
-  case drop (i - 1) (trees . M.toList $ ctxVariables) of
-    (x, _) : _ -> return $ IdIdx x
-    _          -> throwError . AssertionFailed $ "coefficient for index " <> T.pack (show i) <> " not found"
-
-vecCoeffsRev :: Ctx -> ([Int] -> Bool) -> [(Idx, Coeff)]
-vecCoeffsRev Ctx{..} q = mapMaybe p . M.toList $ ctxCoefficients
-  where
-    p c@(VecIdx vec, _) | q (reverse vec) = Just c
-    p _                                   = Nothing
-
 enumRankCoeffs :: Ctx -> [(Idx, Coeff)]
 enumRankCoeffs Ctx{..} = filter (p . fst) . M.toList $ ctxCoefficients
   where
@@ -224,8 +211,8 @@ returnCtx bound =
     ctx <- freshCtx
     vecCoefficients <-
       mapM
-        (\vec -> fresh >>= \i -> return (VecIdx vec, Coeff i))
-        (vectors bound 2)
+        (\vec -> fresh >>= \i -> return (VecIdx (S.fromList vec), Coeff i))
+        (vecs bound ["*"])
     i <- fresh
     return $
       ctx { ctxVariables = mempty
