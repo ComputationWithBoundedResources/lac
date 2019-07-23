@@ -16,8 +16,11 @@ module Lac.Analysis.Types (
   , ctxVars
   , ppCtx
   , ppConstr
+
   , coeff
   , coeffs
+  , vecCoeffs
+
   , isRankCoeff
   , augmentCtx
   , weakenCtx
@@ -63,12 +66,14 @@ import           Lac.Analysis.Types.Constraint
 import           Lac.Analysis.Types.Ctx
 import           Latex
 
+import           Control.Arrow                  (first)
 import           Control.Monad.Except
 import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer
 import           Data.Map.Strict                (Map)
 import qualified Data.Map.Strict.Ext            as M
 import           Data.Maybe                     (mapMaybe)
+import           Data.Set                       (Set)
 import qualified Data.Set                       as S
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
@@ -188,6 +193,15 @@ coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
 
 coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
 coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
+
+vecCoeffs :: Ctx -> ((Text, Int) -> Bool) -> (Set (Text, Int) -> Set (Text, Int)) -> [(Idx, Coeff)]
+vecCoeffs Ctx{..} select alter =
+    map (first f) . filter g . M.toList $ ctxCoefficients
+  where
+    f (VecIdx s) = VecIdx (alter s)
+
+    g (VecIdx i, c) = let xs = S.toList i in all select xs
+    g _             = False
 
 isRankCoeff :: Idx -> Bool
 isRankCoeff (IdIdx _) = True
