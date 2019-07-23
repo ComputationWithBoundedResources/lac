@@ -53,6 +53,7 @@ module Lac.Analysis.Types (
 import           Control.Monad.State.Strict.Ext
 import           Data.Bound
 import           Data.Expr.Typed                (Typed)
+import           Data.List.Helpers              (enum)
 import           Data.Term.Pretty
 import           Data.Type
 import           Lac.Analysis.ProofTree
@@ -226,15 +227,6 @@ vecs (Bound u) xs =
   let vvs = enum u (length xs)
   in
   map (zip xs) vvs
-
-enum :: Int -> Int -> [[Int]]
-enum u = go
-  where
-    go 0 = []
-    go 1 = map (\x -> [x]) range
-    go n = [i : xs | i <- range, xs <- go (n - 1)]
-
-    range = [0..u]
 
 instance Latex Ctx where
   latex Ctx{..} =
