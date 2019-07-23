@@ -106,7 +106,7 @@ augmentCtx bound ctx@Ctx{..} xs =
     vecCoefficients <-
       mapM
         (\vec -> fresh >>= \i -> return (VecIdx (S.fromList vec), Coeff i))
-        (vecs bound . map fst $ ts)
+        (vecs bound . ("+" :) . map fst $ ts)
 
     return $
       ctx { ctxVariables = M.fromList xs `M.union` ctxVariables
