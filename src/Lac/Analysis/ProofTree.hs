@@ -68,9 +68,10 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
               if x == "*"
                 then "\\ast"
                 else latexVar x
-            -- TODO: nice output
             h (VecIdx xs) =
-              "(" <> T.intercalate ", " (map (T.pack . show) . S.toList $ xs) <> ")"
+              "\\{" <> T.intercalate ", " (map ppVecSubScr . S.toList $ xs) <> "\\}"
+
+            ppVecSubScr (x, v) = "(" <> x <> "," <> T.pack (show v) <> ")"
 
 lookahead :: [ProofTree] -> [Ctx]
 lookahead = concatMap f
