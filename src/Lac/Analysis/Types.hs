@@ -222,8 +222,18 @@ eqCtx q r =
         accumConstr $ [CEq (CAtom qi) (CAtom ri)]
 
 vecs :: Bound -> [Text] -> [[(Text, Int)]]
-vecs (Bound u) xs = [[(x, i) | x <- xs] | i <- range]
+vecs (Bound u) xs =
+  let vvs = enum u (length xs)
+  in
+  map (zip xs) vvs
+
+enum :: Int -> Int -> [[Int]]
+enum u = go
   where
+    go 0 = []
+    go 1 = map (\x -> [x]) range
+    go n = [i : xs | i <- range, xs <- go (n - 1)]
+
     range = [0..u]
 
 instance Latex Ctx where
