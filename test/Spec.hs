@@ -2,6 +2,7 @@
 
 module Main where
 
+import           Data.Expr.LetNF
 import           Data.Expr.Types
 
 import           Control.Monad   (void)
@@ -26,10 +27,10 @@ iteExpr p = Ite p (Var "e1") (Var "e2")
 testLetNF1 =
   let expr = iteExpr (Lit (LBool True))
   in
-  TestCase $ assertEqual "let-NF #1" expr (letNF expr)
+  TestCase $ assertEqual "let-NF #1" expr (toLetNF expr)
 
 testLetNF2 =
   let cmp = Cmp CmpEq (Var"x") (Var"y")
       expr = iteExpr cmp
   in
-  TestCase $ assertBool "let-NF #2" $ expr /= letNF expr
+  TestCase $ assertBool "let-NF #2" $ expr /= toLetNF expr
