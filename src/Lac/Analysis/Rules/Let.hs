@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Lac.Analysis.Rules.Let where
 
 import           Data.Expr.FromTyped

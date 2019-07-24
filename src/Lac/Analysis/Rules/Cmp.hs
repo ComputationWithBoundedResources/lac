@@ -2,7 +2,6 @@
 
 module Lac.Analysis.Rules.Cmp where
 
-import           Data.Expr                 (CmpOp (CmpEq))
 import           Lac.Analysis.Rules.Common
 
 ruleCmp :: Ctx -> Typed -> Gen ProofTree
