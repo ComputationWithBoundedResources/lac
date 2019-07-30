@@ -48,5 +48,14 @@ data Idx
   | VecIdx (Set (Text, Int))
   deriving (Eq, Ord, Show)
 
+astId :: Text
+astId = "*"
+
 astIdx :: Idx
-astIdx = IdIdx "*"
+astIdx = IdIdx astId
+
+costId :: Text
+costId = "+"
+
+costIdx :: Idx
+costIdx = IdIdx costId

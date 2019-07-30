@@ -6,8 +6,8 @@
 module Lac.Analysis.Types (
     Ctx()
   , latexCtx
-  , freshCtx
-  , rootCtx
+  , emptyCtx
+  , rootCtx -- TODO: remove
   , lengthCtx
   , numVarsCtx
   , splitCtx
@@ -86,6 +86,15 @@ rootCtx = Ctx 0 mempty mempty
 freshCtx :: Gen Ctx
 freshCtx = Ctx <$> fresh <*> pure mempty <*> pure mempty
 
+emptyCtx :: Bound -> Gen Ctx
+emptyCtx (Bound u) =
+  do
+    q <- freshCtx
+    cs <- forM is $ \i -> fresh >>= \a -> return (i, Coeff a)
+    return $ q { ctxCoefficients = M.fromList cs }
+  where
+    is = [VecIdx (S.singleton (costId, c)) | c <- [0..u]]
+
 countTrees :: [(Text, Type)] -> Int
 countTrees = length . trees
 
@@ -127,7 +136,7 @@ splitCtx bound q xs = go q xs []
     go :: Ctx -> [Text] -> [(Text, Type)] -> Gen ([(Text, Type)], Ctx)
     go ctx@Ctx{..} [] acc =
       do
-        r <- freshCtx
+        r <- emptyCtx bound
         r' <- augmentCtx bound r (M.toList ctxVariables)
         return (reverse acc, r')
     go ctx@Ctx{..} (y:ys) acc =
@@ -214,9 +223,9 @@ enumRankCoeffs Ctx{..} = filter (p . fst) . M.toList $ ctxCoefficients
     p _         = False
 
 returnCtx :: Bound -> Gen Ctx
-returnCtx bound =
-  freshCtx >>= \q ->
-    augmentCtx bound q [("*", tyTree)]
+returnCtx b =
+  emptyCtx b >>= \q ->
+    augmentCtx b q [("*", tyTree)]
 
 eqCtx :: Ctx -> Ctx -> Gen ()
 eqCtx q r =
