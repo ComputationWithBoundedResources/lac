@@ -7,7 +7,6 @@ module Lac.Analysis.Types (
     Ctx()
   , latexCtx
   , emptyCtx
-  , rootCtx -- TODO: remove
   , lengthCtx
   , numVarsCtx
   , splitCtx
@@ -79,9 +78,6 @@ import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 
 -- * Basic types
-
-rootCtx :: Ctx
-rootCtx = Ctx 0 mempty mempty
 
 freshCtx :: Gen Ctx
 freshCtx = Ctx <$> fresh <*> pure mempty <*> pure mempty

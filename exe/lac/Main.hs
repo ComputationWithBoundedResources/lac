@@ -12,7 +12,7 @@ import           Data.Type
 import           Lac
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules
-import           Lac.Analysis.Types         (augmentCtx, rootCtx, runGen)
+import           Lac.Analysis.Types         (augmentCtx, emptyCtx, runGen)
 import           Lac.Eval
 import           Lac.TypeInference
 
@@ -49,8 +49,10 @@ main = do
                 forM_ decls $ \(f, _, (e, ty)) -> do
                   r <- runGen $ do
                     let (xs, e') = splitDecl e
-                    q <- augmentCtx (Bound 1) rootCtx xs
-                    dispatch q e'
+                    let b = Bound 1
+                    q <- emptyCtx b
+                    q' <- augmentCtx b q xs
+                    dispatch q' e'
                   case r of
                     (Left e, _) -> print e
                     (Right t, o) -> do
@@ -173,8 +175,10 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
           liftIO $ do
             ctx' <- runGen $ do
               let (xs, e') = splitDecl e
-              q <- augmentCtx (Bound 1) rootCtx xs
-              dispatch q e'
+              let b = Bound 1
+              q <- emptyCtx b
+              q' <- augmentCtx b q xs
+              dispatch q' e'
             print ctx'
         return True
 
