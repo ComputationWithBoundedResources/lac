@@ -20,14 +20,16 @@ main =
                      , TestLabel "testLetNF2" testLetNF2
                      ]
 
+iteExpr :: Expr -> Expr
 iteExpr p = Ite p (Var "e1") (Var "e2")
-  where
 
+testLetNF1 :: Test
 testLetNF1 =
   let expr = iteExpr (Lit (LBool True))
   in
   TestCase $ assertEqual "let-NF #1" expr (toLetNF expr)
 
+testLetNF2 :: Test
 testLetNF2 =
   let cmp = Cmp CmpEq (Var"x") (Var"y")
       expr = iteExpr cmp
