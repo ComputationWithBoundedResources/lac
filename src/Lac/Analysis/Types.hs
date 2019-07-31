@@ -18,7 +18,6 @@ module Lac.Analysis.Types (
   , ppConstr
 
   , coeff
-  , coeffs
 
   , VecSel(..)
   , after
@@ -31,7 +30,6 @@ module Lac.Analysis.Types (
   , dropCtxVars
   , dropAllBut
 
-  , isRankCoeff
   , augmentCtx
   , weakenCtx
   , returnCtx
@@ -203,9 +201,6 @@ coeff ctx idx =
 coeff' :: Ctx -> Idx -> Maybe Coeff
 coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
 
-coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
-coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
-
 data VecSel a
   = Accept a
   | Reject
@@ -273,15 +268,11 @@ after f g xs =
     Reject    -> Reject
     Invalid t -> Invalid t
 
-isRankCoeff :: Idx -> Bool
-isRankCoeff (IdIdx _) = True
-isRankCoeff _         = False
-
 enumRankCoeffs :: Ctx -> [(Idx, Coeff)]
-enumRankCoeffs Ctx{..} = filter (p . fst) . M.toList $ ctxCoefficients
+enumRankCoeffs Ctx{..} = filter (isRankCoeff . fst) . M.toList $ ctxCoefficients
   where
-    p (IdIdx _) = True
-    p _         = False
+    isRankCoeff (IdIdx _) = True
+    isRankCoeff _         = False
 
 returnCtx :: Bound -> Gen Ctx
 returnCtx b =

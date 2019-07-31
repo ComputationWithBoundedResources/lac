@@ -14,7 +14,7 @@ ruleWVar dispatch q e xs =
     (_, r) <- weakenCtx u q xs
 
     -- r_i = q_i
-    forM_ (coeffs r isRankCoeff) $ \(idx, ri) -> do
+    forM_ (enumRankCoeffs r) $ \(idx, ri) -> do
       qi <- coeff q idx
       accumConstr [CEq (CAtom qi) (CAtom ri)]
 
