@@ -14,7 +14,7 @@ ruleNil q e =
 
     q' <- returnCtx (Bound 1)
 
-    -- q_{(c)} = \sum_{a+b=c} q'_{(a,b)
+    -- q_{(c)} = \sum_{a+b=c} q'_{(a,b)}
     forVec_ q selAll $ \xs ->
       case xs of
         ([(x, c)], qc) | x == costId ->
