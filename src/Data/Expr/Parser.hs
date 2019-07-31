@@ -18,7 +18,7 @@ import           Text.Parsec         hiding (spaces)
 import           Text.Parsec.Helpers (many1', parens)
 
 prog :: Stream s m Char => ParsecT s u m [Decl]
-prog = many1 decl
+prog = many1 decl <* eof
 
 sEq :: String
 sEq = "="
