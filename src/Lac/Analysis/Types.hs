@@ -69,14 +69,10 @@ import           Lac.Analysis.Types.Constraint
 import           Lac.Analysis.Types.Ctx
 import           Latex
 
-import           Control.Arrow                  (first)
 import           Control.Monad.Except
 import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer
-import           Data.Map.Strict                (Map)
 import qualified Data.Map.Strict.Ext            as M
-import           Data.Maybe                     (mapMaybe)
-import           Data.Set                       (Set)
 import qualified Data.Set                       as S
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T

@@ -5,7 +5,6 @@ module Main where
 import           Data.Expr.LetNF
 import           Data.Expr.Types
 
-import           Control.Monad   (void)
 import           System.Exit
 import           Test.HUnit
 
