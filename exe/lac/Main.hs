@@ -56,9 +56,12 @@ main = do
                   case r of
                     (Left e, _) -> print e
                     (Right t, o) -> do
-                      let p = a <> "-" <> T.unpack f <> ".tex"
-                      T.writeFile p (latexProofTree t)
-                      putStrLn $ "wrote proof tree to file `" <> p <> "`"
+                      let texPath = a <> "-" <> T.unpack f <> ".tex"
+                      T.writeFile texPath (latexProofTree t)
+                      let smtPath = a <> "-" <> T.unpack f <> ".smt"
+                      T.writeFile smtPath $ T.unlines (smtProofTree t)
+                      putStrLn $ "wrote proof tree to file `" <> texPath <> "`"
+                      putStrLn $ "wrote SMT constraints to file `" <> smtPath <> "`"
 
 interactive :: [String] -> [String] -> IO ()
 interactive flags args =

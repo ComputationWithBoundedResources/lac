@@ -4,4 +4,4 @@ data Coeff
   = Coeff {
     coeffId :: Int
   }
-  deriving (Eq, Show)
+  deriving (Ord, Eq, Show)

@@ -4,6 +4,7 @@
 module Lac.Analysis.ProofTree (
     ProofTree(..)
   , latexProofTree
+  , smtProofTree
   ) where
 
 import           Data.Expr.FromTyped
@@ -80,3 +81,27 @@ lookahead = concatMap f
       let (q, _, r) = ptConclusion
       in
       [q, r]
+
+smtProofTree :: ProofTree -> [Text]
+smtProofTree ProofTree{..} =
+    let constrained = S.fromList . concatMap constrCoefficients $ cs
+        allCoeffs = S.fromList $ ptCoefficients q ++ ptCoefficients q'
+        unconstrained = allCoeffs S.\\ constrained
+        zeroes = map setZero . S.toList $ unconstrained
+        assertions = map toSMT cs ++ zeroes
+    in
+      concat
+        [ [ "(set-logic QF_LIA)" ]
+        , map declare (S.toList allCoeffs)
+        , map (\x -> "(assert " <> x <> ")") assertions
+        , [ "(check-sat)"
+          , "(get-model)"
+          ]
+        ]
+  where
+    (q, _, q') = ptConclusion
+    cs = ptConstraints
+
+    setZero (Coeff x) = "(= x" <> (T.pack . show) x <> " 0)"
+
+    declare (Coeff x) = "(declare-fun x" <> (T.pack . show) x <> " () Int)"

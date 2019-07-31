@@ -59,3 +59,6 @@ costId = "+"
 
 costIdx :: Idx
 costIdx = IdIdx costId
+
+ptCoefficients :: Ctx -> [Coeff]
+ptCoefficients Ctx{..} = map snd . M.toList $ ctxCoefficients
