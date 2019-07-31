@@ -199,14 +199,25 @@ coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
 coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
 coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
 
-vecCoeffs :: Ctx -> ((Text, Int) -> Bool) -> (Set (Text, Int) -> Set (Text, Int)) -> [(Idx, Coeff)]
-vecCoeffs Ctx{..} select alter =
-    map (first f) . filter g . M.toList $ ctxCoefficients
+vecCoeffs :: Ctx -> ([(Text, Int)] -> Maybe [(Text, Int)]) -> [([(Text, Int)], Coeff)]
+vecCoeffs Ctx{..} f =
+    mapMaybe g . mapMaybe p . M.toList $ ctxCoefficients
   where
-    f (VecIdx s) = VecIdx (alter s)
+    p ((VecIdx i), c) = Just (S.toList i, c)
+    p _               = Nothing
 
-    g (VecIdx i, c) = let xs = S.toList i in all select xs
-    g _             = False
+    g (i, c) | Just i' <- f i = Just (i', c)
+             | otherwise      = Nothing
+
+dropCtxVars :: Ctx -> [(Text, Int)] -> Maybe [(Text, Int)]
+dropCtxVars Ctx{..} = Just . filter q
+  where
+    xs = map fst . filter p . M.toList $ ctxVariables
+
+    p (_, ty) = ty == tyTree
+
+    q ("+", _) = True
+    q (x, v)   = x `notElem` xs
 
 isRankCoeff :: Idx -> Bool
 isRankCoeff (IdIdx _) = True
