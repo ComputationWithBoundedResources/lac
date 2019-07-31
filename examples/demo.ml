@@ -24,3 +24,14 @@ k x y z =
       let r = nil
       in
       (l, z, r);
+
+(* test for (w : var) rule *)
+l x y t a =
+  let p = x < y
+  in
+  if p
+    then nil
+    else
+      let n = nil
+      in
+      (t, a, n);
