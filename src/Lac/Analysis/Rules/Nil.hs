@@ -15,10 +15,10 @@ ruleNil q e =
     q' <- returnCtx (Bound 1)
 
     -- q_{(c)} = \sum_{a+b=c} q'_{(a,b)
-    forM_ (vecCoeffs q Just) $ \xs ->
+    forVec_ q selAll $ \xs ->
       case xs of
         ([(x, c)], qc) | x == costId ->
-          forM_ (vecCoeffs q' Just) $ \ys ->
+          forVec_ q' selAll $ \ys ->
             case ys of
               ([(x, a), (y, b)], qab) | a + b == c ->
                 accumConstr [ CEq (CAtom qc) (CAtom qab) ]

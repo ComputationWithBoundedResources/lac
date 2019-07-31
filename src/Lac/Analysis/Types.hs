@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -18,7 +19,10 @@ module Lac.Analysis.Types (
 
   , coeff
   , coeffs
-  , vecCoeffs
+  , VecSel(..)
+  , selAll
+  , forVec
+  , forVec_
 
   , isRankCoeff
   , augmentCtx
@@ -199,15 +203,31 @@ coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
 coeffs :: Ctx -> (Idx -> Bool) -> [(Idx, Coeff)]
 coeffs Ctx{..} p = filter (p . fst) . M.toList $ ctxCoefficients
 
-vecCoeffs :: Ctx -> ([(Text, Int)] -> Maybe [(Text, Int)]) -> [([(Text, Int)], Coeff)]
-vecCoeffs Ctx{..} f =
-    mapMaybe g . mapMaybe p . M.toList $ ctxCoefficients
-  where
-    p ((VecIdx i), c) = Just (S.toList i, c)
-    p _               = Nothing
+data VecSel a
+  = Accept a
+  | Reject
+  | Invalid Text
+  deriving (Eq, Ord, Show)
 
-    g (i, c) | Just i' <- f i = Just (i', c)
-             | otherwise      = Nothing
+selAll = Accept . id
+
+forVec :: MonadError Error m => Ctx -> ([(Text, Int)] -> VecSel a) -> ((a, Coeff) -> m b) -> m [b]
+forVec Ctx{..} p g =
+  do
+    xs <- foldM f [] . M.toList $ ctxCoefficients
+    mapM g xs
+  where
+    f xs (VecIdx i, c) =
+      let i' = S.toList i
+      in
+      case p i' of
+        Accept j -> return $ (j, c) : xs
+        Reject   -> return xs
+        Invalid e -> throwError (AssertionFailed e)
+    f xs _ = return xs
+
+forVec_ :: MonadError Error m => Ctx -> ([(Text, Int)] -> VecSel a) -> ((a, Coeff) -> m b) -> m ()
+forVec_ q f g = void (forVec q f g)
 
 dropCtxVars :: Ctx -> [(Text, Int)] -> Maybe [(Text, Int)]
 dropCtxVars Ctx{..} = Just . filter q
