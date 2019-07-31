@@ -19,11 +19,17 @@ module Lac.Analysis.Types (
 
   , coeff
   , coeffs
+
   , VecSel(..)
+  , after
+  , onlyCost
+  , only1
+  , only2
   , selAll
   , forVec
   , forVec_
   , dropCtxVars
+  , dropAllBut
 
   , isRankCoeff
   , augmentCtx
@@ -228,14 +234,44 @@ forVec_ q f g = void (forVec q f g)
 
 -- TODO: better name
 dropCtxVars :: Ctx -> [(Text, Int)] -> VecSel [(Text, Int)]
-dropCtxVars Ctx{..} = Accept . filter q
+dropCtxVars = dropAllBut []
+
+dropAllBut :: [Text] -> Ctx -> [(Text, Int)] -> VecSel [(Text, Int)]
+dropAllBut ys Ctx{..} = Accept . filter q
   where
     xs = map fst . filter p . M.toList $ ctxVariables
 
     p (_, ty) = ty == tyTree
 
     q ("+", _) = True
-    q (x, v)   = x `notElem` xs
+    q (x, v)   = (x `notElem` xs) || (x `elem` ys)
+
+onlyCost :: [(Text, Int)] -> VecSel Int
+onlyCost [(x, c)] = Accept c
+onlyCost _        = Invalid "onlyCost"
+
+only1 :: Text -> [(Text, Int)] -> VecSel (Int, Int)
+only1 x ys =
+  case ys of
+    [("+", c), (y, a)] | x == y -> Accept (a, c)
+    _                           -> Invalid "only1"
+
+only2 :: Text -> Text -> [(Text, Int)] -> VecSel (Int, Int, Int)
+only2 x1 x2 ys =
+  case ys of
+    [("+", c), (y1, a1), (y2, a2)] | x1 == y1 && x2 == y2 -> Accept (a1, a2, c)
+    [("+", c), (y1, a1), (y2, a2)] | x1 == y2 && x2 == y1 -> Accept (a2, a1, c)
+    _                                                     -> Invalid $ "only2" <> (T.pack . show $ ys)
+
+after ::
+  (a -> VecSel b)
+  -> ([(Text, Int)] -> VecSel a)
+  -> [(Text, Int)] -> VecSel b
+after f g xs =
+  case g xs of
+    Accept v  -> f v
+    Reject    -> Reject
+    Invalid t -> Invalid t
 
 isRankCoeff :: Idx -> Bool
 isRankCoeff (IdIdx _) = True
