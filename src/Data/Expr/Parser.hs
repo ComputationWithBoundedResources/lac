@@ -7,13 +7,14 @@ module Data.Expr.Parser where
 import           Data.Expr.Types     hiding (var)
 
 import           Control.Applicative ((<*))
-import           Control.Monad       (void, when)
+import           Control.Monad       (liftM, mzero, void, when)
 import           Data.Function.Ext   (uncurry3)
+import           Data.List           (intercalate)
 import           Data.List.NonEmpty
 import           Data.Maybe          (mapMaybe)
 import           Data.Text           (Text)
 import qualified Data.Text           as T
-import           Text.Parsec
+import           Text.Parsec         hiding (spaces)
 import           Text.Parsec.Helpers (many1', parens)
 
 prog :: Stream s m Char => ParsecT s u m [Decl]
@@ -25,18 +26,39 @@ sEq = "="
 sCmpEq :: String
 sCmpEq = "=="
 
+spaces :: Stream s m Char => ParsecT s u m String
+spaces = many (oneOf " \t\n\r")
+
+spaces' :: Stream s m Char => ParsecT s u m ()
+spaces' = spaces >> optional (try comment >> spaces')
+
+comment :: Stream s m Char => ParsecT s u m String
+comment =
+  do
+    a <- string "(*"
+    b <- concat <$> many (try comment <|> fmap toString other)
+    c <- string "*)"
+    return $ a <> b <> c
+  where
+    toString x = [x]
+
+    other =
+      try (noneOf "(*")
+      <|> try (char '*' >> notFollowedBy (char ')') >> return '*')
+      <|> try (char '(' >> notFollowedBy (char '*') >> return '(')
+
 eq :: Stream s m Char => ParsecT s u m String
 eq = do
   void $ string sEq
   notFollowedBy (string sEq)
-  spaces
+  spaces'
   return sEq
 
 cmpEq :: Stream s m Char => ParsecT s u m String
-cmpEq = string sCmpEq >> spaces >> return sCmpEq
+cmpEq = string sCmpEq >> spaces' >> return sCmpEq
 
 cmpOp :: Stream s m Char => ParsecT s u m CmpOp
-cmpOp = op <* spaces
+cmpOp = op <* spaces'
   where
     op = (string "<" *> return CmpLt)
       <|> (string ">" *> return CmpGt)
@@ -48,7 +70,7 @@ identifier = do
   c  <- startChar
   cs <- many (startChar <|> digit)
   ps <- many $ char '\''
-  spaces
+  spaces'
   return $ c : (cs ++ ps)
 
 let_ :: Stream s m Char => ParsecT s u m Expr
@@ -92,13 +114,13 @@ tree p x g = (nil >> return x) <|> (g <$> node p)
 
 node :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (a, a, a)
 node p = do
-  string "(" >> spaces
+  string "(" >> spaces'
   e1 <- p
-  string "," >> spaces
+  string "," >> spaces'
   e2 <- p
-  string "," >> spaces
+  string "," >> spaces'
   e3 <- p
-  string ")" >> spaces
+  string ")" >> spaces'
   return (e1, e2, e3)
 
 nil :: Stream s m Char => ParsecT s u m ()
@@ -142,7 +164,7 @@ decl =
     (name, args) <- hd
     void eq
     e <- expr
-    string ";" >> spaces
+    string ";" >> spaces'
     return $ Decl name args e
   where
     hd =
@@ -156,13 +178,13 @@ fromVar (Var x) = Just x
 fromVar _ = Nothing
 
 keyword :: Stream s m Char => String -> ParsecT s u m ()
-keyword s = void $ string s <* spaces
+keyword s = void $ string s <* spaces'
 
 arrow :: Stream s m Char => ParsecT s u m ()
-arrow = void $ string "->" >> spaces
+arrow = void $ string "->" >> spaces'
 
 pipe :: Stream s m Char => ParsecT s u m ()
-pipe = void $ string "|" >> spaces
+pipe = void $ string "|" >> spaces'
 
 var :: Stream s m Char => ParsecT s u m Text
 var =
@@ -180,4 +202,4 @@ literal = nat <|> true <|> false <|> tree expr LNil (uncurry3 LNode)
     false = keyword "false" *> return (LBool False)
 
 nat :: Stream s m Char => ParsecT s u m Literal
-nat = (LNat . read) <$> (many1 digit <* spaces)
+nat = (LNat . read) <$> (many1 digit <* spaces')
