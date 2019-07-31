@@ -23,6 +23,6 @@ ruleNil q e =
               ([(x, a), (y, b)], qab) | a + b == c ->
                 accumConstr [ CEq (CAtom qc) (CAtom qab) ]
               _ -> return ()
-        _ -> throwError $ AssertionFailed "ruleNil: error" -- TODO: better message
+        _ -> throwError $ AssertionFailed "ruleNil: found unexpected non-cost coefficient in context"
 
     conclude q nil q'
