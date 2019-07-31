@@ -23,6 +23,7 @@ module Lac.Analysis.Types (
   , selAll
   , forVec
   , forVec_
+  , dropCtxVars
 
   , isRankCoeff
   , augmentCtx
@@ -225,8 +226,9 @@ forVec Ctx{..} p g =
 forVec_ :: MonadError Error m => Ctx -> ([(Text, Int)] -> VecSel a) -> ((a, Coeff) -> m b) -> m ()
 forVec_ q f g = void (forVec q f g)
 
-dropCtxVars :: Ctx -> [(Text, Int)] -> Maybe [(Text, Int)]
-dropCtxVars Ctx{..} = Just . filter q
+-- TODO: better name
+dropCtxVars :: Ctx -> [(Text, Int)] -> VecSel [(Text, Int)]
+dropCtxVars Ctx{..} = Accept . filter q
   where
     xs = map fst . filter p . M.toList $ ctxVariables
 

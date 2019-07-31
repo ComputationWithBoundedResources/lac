@@ -13,12 +13,24 @@ ruleWVar dispatch q e xs =
     let u = Bound 1
     (_, r) <- weakenCtx u q xs
 
-    -- equate rank coefficients
+    -- r_i = q_i
     forM_ (coeffs r isRankCoeff) $ \(idx, ri) -> do
       qi <- coeff q idx
       accumConstr [CEq (CAtom qi) (CAtom ri)]
 
-    -- TODO: equate vector coefficients
+    -- r_{(\vec{a},b)} = q_{(\vec{a},0,b)}
+    forVec_ r (dropCtxVars q) $ \ys ->
+      case ys of
+        ([(y, b)], rb) | y == costId ->
+          forVec_ q (dropCtxVars q) $ \zs ->
+            let p (x, a) = ((x `elem` xs) && a == 0) || (x == costId && a == b)
+            in
+            case zs of
+              (as, qb') | all p as ->
+                accumConstr [CEq (CAtom rb) (CAtom qb')]
+              _ ->
+                return ()
+        _ -> throwError (AssertionFailed "ruleWVar: illegal vector index")
 
     q' <- prove dispatch r e
 
