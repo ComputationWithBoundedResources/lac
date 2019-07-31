@@ -7,9 +7,8 @@ module Data.Expr.Parser where
 import           Data.Expr.Types     hiding (var)
 
 import           Control.Applicative ((<*))
-import           Control.Monad       (liftM, mzero, void, when)
+import           Control.Monad       (void, when)
 import           Data.Function.Ext   (uncurry3)
-import           Data.List           (intercalate)
 import           Data.List.NonEmpty
 import           Data.Maybe          (mapMaybe)
 import           Data.Text           (Text)
