@@ -4,7 +4,7 @@
 
 Load program and enter REPL
 
-    $ lac <path/to/program.ml>
+    $ lac -i <path/to/program.ml>
 
 Show declarations of program
 
@@ -22,6 +22,10 @@ Evaluate expression
 Quit
 
     > :quit
+
+Analyze program
+
+    $ lac <path/to/program.ml>
 
 Example run
 
