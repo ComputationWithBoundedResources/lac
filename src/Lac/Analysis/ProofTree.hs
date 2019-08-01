@@ -82,6 +82,7 @@ lookahead = concatMap f
       in
       [q, r]
 
+-- TODO: recurse
 smtProofTree :: ProofTree -> [Text]
 smtProofTree ProofTree{..} =
     let constrained = S.fromList . concatMap constrCoefficients $ cs

@@ -202,7 +202,7 @@ coeff' :: Ctx -> Idx -> Maybe Coeff
 coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
 
 data VecSel a
-  = Accept a
+  = Accept a -- TODO: Select ?
   | Reject
   | Invalid Text
   deriving (Eq, Ord, Show)
