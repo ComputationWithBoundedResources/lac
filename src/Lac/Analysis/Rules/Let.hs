@@ -48,7 +48,15 @@ ruleLet dispatch q e@(TyLet x (e1, ty) (e2, _)) =
       else
         liftIO $ putStrLn "x is not bound to a value of type tree"
 
-    -- r_j = q_j
+    -- TODO: p_{(\vec{a},c)} = q_{(\vec{a},\vec{0},c)}
+
+    -- TODO: p'_{(a,c)} = r_{(\vec{0},a,c)}
+
+    -- TODO: p^{\vec{b}}_{(\vec{a},c)} = q_{(\vec{a},\vec{b},c)}
+
+    -- TODO: p'^{\vec{b}}_{(\vec{a},c)} = r_{(\vec{b},a,c)}
+
+    -- r_j = q_{m+j}
     forM_ (enumRankCoeffs r) $ \(idx, rj) ->
       coeff q idx >>= \qj ->
         accumConstr [ CEq (CAtom rj) (CAtom qj) ]
