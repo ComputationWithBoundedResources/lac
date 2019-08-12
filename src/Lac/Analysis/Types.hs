@@ -25,6 +25,7 @@ module Lac.Analysis.Types (
   , only1
   , only2
   , selAll
+  , selAssign
   , forVec
   , forVec_
   , dropCtxVars
@@ -226,6 +227,14 @@ forVec Ctx{..} p g =
 
 forVec_ :: MonadError Error m => Ctx -> ([(Text, Int)] -> VecSel a) -> ((a, Coeff) -> m b) -> m ()
 forVec_ q f g = void (forVec q f g)
+
+-- select assignment
+selAssign :: [(Text, Int)] -> [(Text, Int)] -> VecSel [(Text, Int)]
+selAssign (x:xs) ys =
+  if x `elem` ys
+    then selAssign xs ys
+    else Reject
+selAssign [] ys = Accept ys
 
 -- TODO: better name
 dropCtxVars :: Ctx -> [(Text, Int)] -> VecSel [(Text, Int)]
