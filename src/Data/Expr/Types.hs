@@ -71,7 +71,10 @@ sub e =
         g (PNode x y z) = map Var [x, y, z]
 
 var :: Expr -> Set Text
-var = S.fromList . mapMaybe f . sub
+var = S.fromList . var'
+
+var' :: Expr -> [Text]
+var' = mapMaybe f . sub
   where
     f (Var x) = Just x
     f _       = Nothing
