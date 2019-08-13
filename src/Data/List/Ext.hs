@@ -2,6 +2,7 @@ module Data.List.Ext (
     module E
   , equal
   , for
+  , elemElem
   ) where
 
 import           Data.List as E
@@ -16,3 +17,9 @@ equal (x1:x2:xs) =
 
 for :: [a] -> (a -> b) -> [b]
 for = flip map
+
+elemElem :: Eq a => a -> [a] -> Bool
+elemElem x ys =
+  case break (== x) ys of
+    (_, [])      -> False
+    (_, (_:ys')) -> x `elem` ys'
