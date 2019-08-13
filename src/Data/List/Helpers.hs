@@ -3,6 +3,7 @@ module Data.List.Helpers (
   , enum
   , split
   , splits
+  , subseq
   ) where
 
 delete' :: Eq a => a -> [(a, b)] -> [(a, b)]
@@ -28,3 +29,12 @@ splits 0 _ = []
 splits 1 x = [[x]]
 splits 2 x = [[a, b] | (a, b) <- split x]
 splits n x = concat $ [map (a:) (splits (n - 1) (x - a)) | a <- [0..x]]
+
+subseq :: (a -> a -> Bool) -> [a] -> [[a]]
+subseq p = go []
+  where
+    go acc    []     = [reverse acc]
+    go []     (y:ys) = go [y] ys
+    go (a:as) (y:ys)
+        | p a y      =                  go (y:a:as) ys
+        | otherwise  = reverse (a:as) : go [y]      ys
