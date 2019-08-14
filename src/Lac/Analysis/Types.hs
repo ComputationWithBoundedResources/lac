@@ -18,6 +18,7 @@ module Lac.Analysis.Types (
   , ppConstr
 
   , coeff
+  , coeffs
 
   , VecSel(..)
   , after
@@ -202,6 +203,9 @@ coeff ctx idx =
 
 coeff' :: Ctx -> Idx -> Maybe Coeff
 coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
+
+coeffs :: Ctx -> [(Idx, Coeff)]
+coeffs Ctx{..} = M.toList ctxCoefficients
 
 data VecSel a
   = Accept a -- TODO: Select ?
