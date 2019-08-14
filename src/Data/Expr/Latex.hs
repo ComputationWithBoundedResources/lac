@@ -33,6 +33,7 @@ instance Latex Expr where
               CmpLt -> "<"
               CmpGt -> ">"
       Let x e1 e2 -> "\\mathrm{let}\\;" <> latexVar x <> " = \\Box\\; \\mathrm{in}\\; \\Box"
+      App f x -> latex f <> "\\; \\Box"
       _ -> "\\mathrm{TODO}"
 
 latexVar :: Text -> Text
