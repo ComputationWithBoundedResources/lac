@@ -35,3 +35,8 @@ l x y t a =
       let n = nil
       in
       (t, a, n);
+
+m t x y =
+  let s = (t, y, t)
+  in
+  (t, x, s);
