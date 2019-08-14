@@ -11,6 +11,7 @@ import           Data.Expr.Typed
 import           Data.Expr.Types
 import           Data.Type                (isTyTree)
 import           Lac.Analysis.ProofTree
+import           Lac.Analysis.Rules.App   as E
 import           Lac.Analysis.Rules.Cmp   as E
 import           Lac.Analysis.Rules.Ite   as E
 import           Lac.Analysis.Rules.Let   as E
@@ -57,6 +58,8 @@ dispatch q e =
     TyLet _ _ _ ->
       -- TODO: apply (share) rule if context is not linear
       ruleLet dispatch q e
+    TyApp (TyVar f, _) (TyVar x, _) ->
+      ruleApp dispatch q e
     _ -> throwError (AssertionFailed "dispatch: rule unimplemented")
 
 nonLinear :: Ctx -> Typed -> [Text]
