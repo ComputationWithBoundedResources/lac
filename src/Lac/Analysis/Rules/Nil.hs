@@ -12,7 +12,7 @@ ruleNil q e =
 
     assert (ctxEmpty q) $ "ruleNil: context not empty"
 
-    q' <- returnCtx (Bound 1)
+    q' <- returnCtx def
 
     -- q_{(c)} = \sum_{a+b=c} q'_{(a,b)}
     forVec_ q selAll $ \xs ->

@@ -17,7 +17,7 @@ ruleShare rec q z e =
   do
     setRuleName "share"
 
-    let u = Bound 1
+    let u = def
 
     let zs = filter (== z) . var' . fromTyped $ e
     zs' <- replicateM (length zs) (freshVar z)

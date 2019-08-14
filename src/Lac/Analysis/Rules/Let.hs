@@ -13,7 +13,7 @@ ruleLet dispatch q e@(TyLet x (e1, ty) (e2, _)) =
   do
     setRuleName "let"
 
-    let u = Bound 1
+    let u = def
 
     -- TODO: assert linearity
 

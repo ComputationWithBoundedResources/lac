@@ -10,7 +10,7 @@ ruleWVar dispatch q e xs =
   do
     setRuleName "w : var"
 
-    let u = Bound 1
+    let u = def
     (_, r) <- weakenCtx u q xs
 
     -- r_i = q_i

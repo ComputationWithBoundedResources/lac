@@ -13,7 +13,7 @@ ruleVar q x =
 
     -- TODO: check for variable
 
-    let u = Bound 1
+    let u = def
     ((_, ty), _) <- splitCtx' u q x
 
     if ty == tyTree

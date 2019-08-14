@@ -13,7 +13,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
   do
     setRuleName "match"
 
-    let u = Bound 1
+    let u = def
 
     ((_, τx), p) <- splitCtx' u q x
     (_, r) <- splitCtx' u q x

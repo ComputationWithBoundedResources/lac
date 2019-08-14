@@ -9,12 +9,12 @@ ruleIte dispatch q x e1 e2 =
   do
     setRuleName "ite"
 
-    (_, q1) <- splitCtx (Bound 1) q [x]
+    (_, q1) <- splitCtx def q [x]
 
     qe1 <- prove dispatch q1 e1
     qe2 <- prove dispatch q1 e2
 
-    r <- returnCtx (Bound 1)
+    r <- returnCtx def
     eqCtx qe1 qe2
     eqCtx qe2 r
 

@@ -11,7 +11,7 @@ ruleNode ctx (TyLit (TyLNode (TyVar x1) (TyVar _) (TyVar x2))) =
   do
     setRuleName "node"
 
-    ctx' <- returnCtx (Bound 1)
+    ctx' <- returnCtx def
 
     q1 <- coeff ctx (IdIdx x1)
     q2 <- coeff ctx (IdIdx x2)
