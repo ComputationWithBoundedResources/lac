@@ -51,6 +51,7 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
         latexConstraint (CGe e1 e2) = latexCExpr e1 <> " \\ge " <> latexCExpr e2
 
         latexCExpr (CAtom c) = latexCoeff c
+        latexCExpr (CInt i)  = T.pack . show $ i
         latexCExpr (CSum es) = T.intercalate " + " (map latexCExpr es)
 
         latexCoeff (Coeff c) = go contexts
