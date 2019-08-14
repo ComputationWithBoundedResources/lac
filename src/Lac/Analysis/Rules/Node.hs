@@ -6,8 +6,8 @@ module Lac.Analysis.Rules.Node where
 
 import           Lac.Analysis.Rules.Common
 
-ruleNode :: Ctx -> Text -> Text -> Gen ProofTree
-ruleNode ctx x1 x2 =
+ruleNode :: Ctx -> Typed -> Gen ProofTree
+ruleNode ctx (TyLit (TyLNode (TyVar x1) (TyVar _) (TyVar x2))) =
   do
     setRuleName "node"
 

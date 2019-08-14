@@ -19,6 +19,7 @@ import           Lac.Analysis.Rules.Nil   as E
 import           Lac.Analysis.Rules.Node  as E
 import           Lac.Analysis.Rules.Share as E
 import           Lac.Analysis.Rules.Var   as E
+import           Lac.Analysis.Rules.W     as E
 import           Lac.Analysis.Rules.WVar  as E
 import           Lac.Analysis.Types
 import           Lac.Analysis.Types.Ctx
@@ -42,7 +43,7 @@ dispatch q e =
     TyLit (TyLNode (TyVar x1) (TyVar x2) (TyVar x3)) ->
       if numVarsCtx q > 3
         then ruleWVar dispatch q e [x1, x2, x3]
-        else ruleNode q x1 x3
+        else ruleW ruleNode q e
     TyVar x ->
       if numVarsCtx q == 1
         then ruleVar q x
