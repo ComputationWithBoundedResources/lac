@@ -99,14 +99,8 @@ emptyCtx (Bound u) =
   where
     is = [VecIdx (S.singleton (costId, c)) | c <- [0..u]]
 
-countTrees :: [(Text, Type)] -> Int
-countTrees = length . trees
-
-trees :: [(Text, Type)] -> [(Text, Type)]
-trees = filter (\(_, ty) -> ty == tyTree)
-
 lengthCtx :: Ctx -> Int
-lengthCtx = countTrees . M.toList . ctxVariables
+lengthCtx = length . trees
 
 numVarsCtx :: Ctx -> Int
 numVarsCtx Ctx{..} = length . M.toList $ ctxVariables
@@ -114,18 +108,17 @@ numVarsCtx Ctx{..} = length . M.toList $ ctxVariables
 augmentCtx :: Bound -> Ctx -> [(Text, Type)] -> Gen Ctx
 augmentCtx bound ctx@Ctx{..} xs =
   do
-    let xs' = M.toList ctxVariables ++ xs
-    let ts = trees xs'
+    let ts = trees ctx ++ (map fst . filter (isTyTree . snd) $ xs)
 
     rankCoefficients <-
       mapM
-        (\(x, _) -> fresh >>= \i -> return (IdIdx x, Coeff i))
+        (\x -> fresh >>= \i -> return (IdIdx x, Coeff i))
         ts
 
     vecCoefficients <-
       mapM
         (\vec -> fresh >>= \i -> return (VecIdx (S.fromList vec), Coeff i))
-        (vecs bound . ("+" :) . map fst $ ts)
+        (vecs bound . ("+" :) $ ts)
 
     return $
       ctx { ctxVariables = M.fromList xs `M.union` ctxVariables

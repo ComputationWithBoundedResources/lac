@@ -62,3 +62,9 @@ costIdx = IdIdx costId
 
 ptCoefficients :: Ctx -> [Coeff]
 ptCoefficients Ctx{..} = map snd . M.toList $ ctxCoefficients
+
+trees :: Ctx -> [Text]
+trees Ctx{..} = map fst . filter (isTyTree . snd) . M.toList $ ctxVariables
+
+vecIdx :: [(Text, Int)] -> Idx
+vecIdx = VecIdx . S.fromList
