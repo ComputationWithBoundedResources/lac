@@ -20,6 +20,7 @@ data Constraint
 
 data CExpr
   = CAtom Coeff
+  | CInt Int
   | CSum [CExpr]
   deriving (Eq, Show)
 
