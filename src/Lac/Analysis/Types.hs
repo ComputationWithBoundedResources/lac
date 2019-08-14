@@ -65,7 +65,7 @@ module Lac.Analysis.Types (
 import           Control.Monad.State.Strict.Ext
 import           Data.Bound
 import           Data.Expr.Typed                (Typed)
-import           Data.List.Helpers              (enum)
+import           Data.List.Ext                  (enum)
 import           Data.Term.Pretty
 import           Data.Type
 import           Lac.Analysis.ProofTree
