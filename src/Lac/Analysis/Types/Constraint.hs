@@ -14,6 +14,8 @@ import qualified Data.Text                as T
 
 data Constraint
   = CEq CExpr CExpr
+  | CLe CExpr CExpr
+  | CGe CExpr CExpr
   deriving (Eq, Show)
 
 data CExpr
@@ -22,13 +24,20 @@ data CExpr
   deriving (Eq, Show)
 
 toSMT :: Constraint -> Text
-toSMT (CEq e1 e2) = "(= " <> go e1 <> " " <> go e2 <> ")"
-  where
-    go (CAtom (Coeff i)) = "x" <> T.pack (show i)
-    go (CSum es) = "(+ " <> T.intercalate " " (map go es) <> ")"
+toSMT (CEq e1 e2) = "(= " <> texCExpr e1 <> " " <> texCExpr e2 <> ")"
+toSMT (CLe e1 e2) = "(<= " <> texCExpr e1 <> " " <> texCExpr e2 <> ")"
+toSMT (CGe e1 e2) = "(>= " <> texCExpr e1 <> " " <> texCExpr e2 <> ")"
+
+texCExpr (CAtom (Coeff i)) = "x" <> T.pack (show i)
+texCExpr (CSum es) = "(+ " <> T.intercalate " " (map texCExpr es) <> ")"
 
 constrCoefficients :: Constraint -> [Coeff]
-constrCoefficients (CEq a b) =
+constrCoefficients c =
+  let (a, b) = case c of
+                CEq a b -> (a, b)
+                CLe a b -> (a, b)
+                CGe a b -> (a, b)
+  in
     f a ++ f b
   where
     f (CAtom c) = [c]

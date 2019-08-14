@@ -47,6 +47,8 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
           <> "\\end{array}"
       where
         latexConstraint (CEq e1 e2) = latexCExpr e1 <> " = " <> latexCExpr e2
+        latexConstraint (CLe e1 e2) = latexCExpr e1 <> " \\le " <> latexCExpr e2
+        latexConstraint (CGe e1 e2) = latexCExpr e1 <> " \\ge " <> latexCExpr e2
 
         latexCExpr (CAtom c) = latexCoeff c
         latexCExpr (CSum es) = T.intercalate " + " (map latexCExpr es)
