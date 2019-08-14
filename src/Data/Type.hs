@@ -38,3 +38,6 @@ tyFun a b = F "->" [a, b]
 
 tyHole :: Type
 tyHole = F "_" []
+
+isTyTree :: Type -> Bool
+isTyTree = (== tyTree)

@@ -1,12 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Lac.Analysis.Rules (
     module E
   , dispatch
   ) where
 
+import           Data.Expr.FromTyped
 import           Data.Expr.Typed
 import           Data.Expr.Types
+import           Data.Type                (isTyTree)
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules.Cmp   as E
 import           Lac.Analysis.Rules.Ite   as E
@@ -14,15 +17,22 @@ import           Lac.Analysis.Rules.Let   as E
 import           Lac.Analysis.Rules.Match as E
 import           Lac.Analysis.Rules.Nil   as E
 import           Lac.Analysis.Rules.Node  as E
+import           Lac.Analysis.Rules.Share as E
 import           Lac.Analysis.Rules.Var   as E
 import           Lac.Analysis.Rules.WVar  as E
 import           Lac.Analysis.Types
+import           Lac.Analysis.Types.Ctx
 
+import           Data.List.Ext            (elemElem)
 import           Data.List.NonEmpty       (NonEmpty (..))
+import qualified Data.Map.Strict          as M
+import           Data.Text                (Text)
 
 dispatch :: Ctx -> Typed -> Gen ProofTree
 dispatch q e =
   case e of
+    _ | (z:_) <- nonLinear q e ->
+      ruleShare dispatch q z e
     TyMatch (TyVar x, _) ((PNil, (e1, _)) :| [(PNode x1 x2 x3, (e2, _))]) ->
       ruleMatch dispatch q x e1 (x1, x2, x3) e2
     TyLit TyLNil ->
@@ -47,3 +57,10 @@ dispatch q e =
       -- TODO: apply (share) rule if context is not linear
       ruleLet dispatch q e
     _ -> throwError (AssertionFailed "dispatch: rule unimplemented")
+
+nonLinear :: Ctx -> Typed -> [Text]
+nonLinear Ctx{..} e =
+    filter (`elemElem` xs) $ ts
+  where
+    xs = var' .  fromTyped $ e
+    ts = map fst . filter (isTyTree . snd) . M.toList $ ctxVariables

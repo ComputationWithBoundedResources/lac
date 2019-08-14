@@ -29,4 +29,3 @@ readProg :: FilePath -> IO (Either ParseError Prog)
 readProg path = do
   text <- T.readFile path
   return $ parseProg text
-
