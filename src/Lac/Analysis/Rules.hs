@@ -58,13 +58,13 @@ dispatch q e =
     TyLet _ _ _ ->
       -- TODO: apply (share) rule if context is not linear
       ruleLet dispatch q e
-    TyApp (TyVar f, _) (TyVar x, _) ->
+    TyApp (TyVar _, _) (TyVar _, _) ->
       ruleApp dispatch q e
     _ -> throwError (AssertionFailed "dispatch: rule unimplemented")
 
 nonLinear :: Ctx -> Typed -> [Text]
 nonLinear Ctx{..} e =
-    filter (`elemElem` xs) $ ts
+    filter (`elemElem` xs) ts
   where
     xs = var' .  fromTyped $ e
     ts = map fst . filter (isTyTree . snd) . M.toList $ ctxVariables
