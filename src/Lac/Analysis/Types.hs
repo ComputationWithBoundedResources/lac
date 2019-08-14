@@ -34,6 +34,7 @@ module Lac.Analysis.Types (
   , augmentCtx
   , weakenCtx
   , returnCtx
+  , copyCtx
   , Idx(..)
   , astIdx
   , enumRankCoeffs
@@ -287,6 +288,19 @@ returnCtx :: Bound -> Gen Ctx
 returnCtx b =
   emptyCtx b >>= \q ->
     augmentCtx b q [("*", tyTree)]
+
+copyCtx :: Ctx -> Gen Ctx
+copyCtx q =
+  do
+    r <- freshCtx
+    cs <- forM (M.toList . ctxCoefficients $ q) $
+            \(i, _) ->
+              Coeff <$> fresh >>= \c ->
+                return (i, c)
+    return $
+      r { ctxVariables    = ctxVariables q
+        , ctxCoefficients = M.fromList cs
+        }
 
 eqCtx :: Ctx -> Ctx -> Gen ()
 eqCtx q r =
