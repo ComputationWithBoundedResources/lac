@@ -72,7 +72,7 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
             h (VecIdx xs) =
               "\\{" <> T.intercalate ", " (map ppVecSubScr . S.toList $ xs) <> "\\}"
 
-            ppVecSubScr (x, v) = "(" <> x <> "," <> T.pack (show v) <> ")"
+            ppVecSubScr (x, v) = "(" <> latexVar x <> "," <> T.pack (show v) <> ")"
 
 lookahead :: [ProofTree] -> [Ctx]
 lookahead = concatMap f

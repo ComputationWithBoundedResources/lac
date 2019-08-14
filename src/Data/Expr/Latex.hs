@@ -40,8 +40,11 @@ latexVar x =
   let (p, s) = T.break isDigit x
   in
   if T.all isDigit s
-    then p <> "_{" <> s <> "}"
-    else p <> s
+    then escape p <> "_{" <> s <> "}"
+    else escape p <> s
+
+escape :: Text -> Text
+escape = T.replace "$" "\\$"
 
 instance Latex Pattern where
   latex PNil          = "\\mathrm{nil}"
