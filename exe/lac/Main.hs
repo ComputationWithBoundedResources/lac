@@ -28,7 +28,7 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.IO               as T
 import           System.Environment.Ext
-import           System.Exit                hiding (die)
+import           System.Exit.Ext
 import qualified System.Repl                as Repl
 import           Text.Parsec                (parse)
 
@@ -68,19 +68,16 @@ main = do
                       putStrLn $ "wrote proof tree to file `" <> texPath <> "`"
                       putStrLn $ "wrote SMT constraints to file `" <> smtPath <> "`"
 
-die :: Text -> IO ()
-die m = T.putStrLn m >> exitFailure
-
 isProgValid :: Prog -> IO Bool
 isProgValid Prog{..} =
   do
     forM_ progDecls $ \(Decl f xs e) -> do
       mapM_
-        (\x -> die $ "Variable `" <> x <> "` not bound in declaration `" <> f <> "`")
+        (\x -> dieT $ "Variable `" <> x <> "` not bound in declaration `" <> f <> "`")
         (unbound' (f:xs) e)
 
       mapM_
-        (\x -> die $ "Variable `" <> x <> "` shadowed in declaration `" <> f <> "`")
+        (\x -> dieT $ "Variable `" <> x <> "` shadowed in declaration `" <> f <> "`")
         (shadowed' (f:xs) e)
 
     return True
