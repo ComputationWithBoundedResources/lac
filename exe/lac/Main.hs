@@ -75,19 +75,13 @@ isProgValid :: Prog -> IO Bool
 isProgValid Prog{..} =
   do
     forM_ progDecls $ \(Decl f xs e) -> do
-      case unbound' (f:xs) e of
-        Just x -> do
-          die $ "Variable `" <> x <> "` not bound in declaration `" <> f <> "`"
-          exitFailure
-        _ ->
-          return ()
+      mapM_
+        (\x -> die $ "Variable `" <> x <> "` not bound in declaration `" <> f <> "`")
+        (unbound' (f:xs) e)
 
-      case shadowed' (f:xs) e of
-        Just x -> do
-          die $ "Variable `" <> x <> "` shadowed in declaration `" <> f <> "`"
-          exitFailure
-        _ ->
-          return ()
+      mapM_
+        (\x -> die $ "Variable `" <> x <> "` shadowed in declaration `" <> f <> "`")
+        (shadowed' (f:xs) e)
 
     return True
 
