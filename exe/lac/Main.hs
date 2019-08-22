@@ -19,6 +19,7 @@ import           Lac.TypeInference
 import           Control.Monad              (forM_, void, when)
 import           Control.Monad.State.Strict (StateT, get)
 import           Control.Monad.Trans        (liftIO)
+import           Data.Default
 import           Data.List                  (isPrefixOf)
 import           Data.Map                   (Map)
 import qualified Data.Map                   as M
@@ -49,7 +50,7 @@ main = do
                 forM_ decls $ \(f, _, (e, ty)) -> do
                   r <- runGen $ do
                     let (xs, e') = splitDecl e
-                    let b = Bound 1
+                    let b = def
                     q <- emptyCtx b
                     q' <- augmentCtx b q xs
                     dispatch q' e'
