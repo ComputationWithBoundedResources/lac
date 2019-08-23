@@ -2,11 +2,13 @@
 
 module Data.Type where
 
-import           Data.Expr.Latex  (latexVar)
+import           Data.Expr.Latex            (latexVar)
 import           Data.Term
-import           Data.Term.Pretty (convertTerm)
-import           Data.Text        (Text)
-import qualified Data.Text        as T
+import           Data.Term.Pretty           (convertTerm)
+import           Data.Text                  (Text)
+import qualified Data.Text                  as T
+
+import           Control.Monad.State.Strict
 
 type Env = [(T String Text, Type)]
 
@@ -41,3 +43,32 @@ tyHole = F "_" []
 
 isTyTree :: Type -> Bool
 isTyTree = (== tyTree)
+
+isBaseType :: Type -> Bool
+isBaseType (V _)    = False
+isBaseType (F _ xs) = all isBaseType xs
+
+fromTerm :: T String String -> Type
+fromTerm t = fst . runState (fromTerm' t) $ mempty
+
+fromTerm' :: T String String -> State [(String, Int)] Type
+fromTerm' = go
+  where
+    go :: T String String -> State [(String, Int)] Type
+    go (V x) = do
+      m <- get
+      case lookup x m of
+        Just x' -> return $ V x'
+        Nothing -> do
+          let i = case map snd m of
+                    [] -> 0
+                    xs -> maximum xs + 1
+          put $ (x, i) : m
+          m' <- get
+          return $ V i
+    go (F f ts) = do
+      ts' <- mapM go ts
+      return $ F f ts'
+
+fromTerms :: [T String String] -> [Type]
+fromTerms ts = fst $ runState (mapM fromTerm' ts) mempty
