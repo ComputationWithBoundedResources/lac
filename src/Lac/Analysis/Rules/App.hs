@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Lac.Analysis.Rules.App where
 
 import           Lac.Analysis.Rules.Common
