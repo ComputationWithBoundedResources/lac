@@ -4,17 +4,20 @@
 
 module Data.Expr.Parser where
 
-import           Data.Expr.Types     hiding (var)
+import           Data.Expr.Types      hiding (var)
+import qualified Data.Term            as Term
+import           Data.Type            (fromTerms)
+import           Data.TypeAnn.TypeAnn
 
-import           Control.Applicative ((<*))
-import           Control.Monad       (void, when)
-import           Data.Function.Ext   (uncurry3)
-import           Data.List.NonEmpty
-import           Data.Maybe          (mapMaybe)
-import           Data.Text           (Text)
-import qualified Data.Text           as T
-import           Text.Parsec         hiding (spaces)
-import           Text.Parsec.Helpers (many1', parens)
+import           Control.Applicative  ((<*))
+import           Control.Monad        (void, when)
+import           Data.Function.Ext    (uncurry3)
+import           Data.List.NonEmpty   (NonEmpty (..))
+import           Data.Maybe           (mapMaybe)
+import           Data.Text            (Text)
+import qualified Data.Text            as T
+import           Text.Parsec          hiding (spaces)
+import           Text.Parsec.Helpers  (many1', parens)
 
 prog :: Stream s m Char => ParsecT s u m [Decl]
 prog = many1 decl <* eof
@@ -202,3 +205,23 @@ literal = nat <|> true <|> false <|> tree expr LNil (uncurry3 LNode)
 
 nat :: Stream s m Char => ParsecT s u m Literal
 nat = (LNat . read) <$> (many1 digit <* spaces')
+
+typeAnn :: Stream s m Char => ParsecT s u m TypeAnn
+typeAnn = do
+  f <- T.pack <$> identifier
+  spaces'
+  char ':'
+  spaces'
+  ts <- term `sepBy1` arrow
+  return $ TypeAnn f (fromTerms ts) (mempty, mempty)
+
+term :: Stream s m Char => ParsecT s u m (Term.T String String)
+term = do
+  f <- identifier
+  mxs <- optionMaybe (parens (term `sepBy1` (char ',' >> spaces')))
+  return $
+    case mxs of
+      Just xs ->
+        Term.F f xs
+      Nothing ->
+        Term.V f
