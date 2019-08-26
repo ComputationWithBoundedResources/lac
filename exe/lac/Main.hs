@@ -14,6 +14,7 @@ import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules
 import           Lac.Analysis.Types         (augmentCtx, emptyCtx, runGen)
 import           Lac.Eval
+import           Lac.Prog
 import           Lac.TypeInference
 
 import           Control.Monad              (forM_, void, when)
@@ -207,8 +208,9 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
 getTypedProgram :: StateT ReplState IO [(Text, [Text], (Typed, Type))]
 getTypedProgram = (typedProgram . rsEnv) <$> get
 
+-- TODO: accept `Prog` type
 typedProgram :: ToExpr a => Map Text a -> [(Text, [Text], (Typed, Type))]
-typedProgram env = inferProgType (Program decls)
+typedProgram env = inferProgType (Prog decls mempty)
   where
     decls = map select . M.toList $ env
     select (name, e) = Decl name [] (toExpr e) Nothing

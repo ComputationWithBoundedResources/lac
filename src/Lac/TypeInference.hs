@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Lac.TypeInference where
 
@@ -8,6 +9,7 @@ import           Data.Expr.Types
 import           Data.List.Ext                  (for)
 import           Data.Term
 import           Data.Type
+import           Lac.Prog
 
 import           Control.Monad                  (replicateM)
 import           Control.Monad.State.Strict.Ext
@@ -112,8 +114,8 @@ mkProgEnv env decls =
 extractEnv :: Env -> [((T String Text, Type), a)] -> Env
 extractEnv env decls' = map fst decls' ++ env
 
-inferProgType' :: Program -> State Int [(Text, [Text], (Typed, Type))]
-inferProgType' (Program decls) =
+inferProgType' :: [Decl] -> State Int [(Text, [Text], (Typed, Type))]
+inferProgType' decls =
   do
     let env = mempty
     decls' <- mkProgEnv env decls
@@ -137,8 +139,8 @@ inferProgType' (Program decls) =
       Left _ ->
         error "inferProgType': could not apply MGU"
 
-inferProgType :: Program -> [(Text, [Text], (Typed, Type))]
-inferProgType prog = fst . runState (inferProgType' prog) $ 0
+inferProgType :: Prog -> [(Text, [Text], (Typed, Type))]
+inferProgType Prog{..} = fst . runState (inferProgType' progDecls) $ 0
 
 inferType :: Typable a => Env -> a -> ([(Type, Type)], Int)
 inferType env expr =

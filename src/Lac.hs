@@ -5,6 +5,7 @@ module Lac where
 import           Data.Expr
 import           Data.TypeAnn
 import           Lac.Eval
+import           Lac.Prog
 
 import           Data.List    (find)
 import           Data.Map     (Map)
@@ -12,13 +13,6 @@ import qualified Data.Map     as M
 import           Data.Text    (Text)
 import qualified Data.Text.IO as T
 import           Text.Parsec  (ParseError, parse)
-
-data Prog
-  = Prog {
-    progDecls :: [Decl]
-  , progEnv   :: Map Text Value
-  }
-  deriving (Eq, Show)
 
 parseProg :: Text -> Either ParseError Prog
 parseProg text =
