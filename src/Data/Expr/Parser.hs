@@ -11,6 +11,7 @@ import           Data.TypeAnn.TypeAnn
 
 import           Control.Applicative  ((<*))
 import           Control.Monad        (void, when)
+import           Data.Either          (partitionEithers)
 import           Data.Function.Ext    (uncurry3)
 import           Data.List.NonEmpty   (NonEmpty (..))
 import           Data.Maybe           (mapMaybe)
@@ -19,8 +20,11 @@ import qualified Data.Text            as T
 import           Text.Parsec          hiding (spaces)
 import           Text.Parsec.Helpers  (many1', parens)
 
-prog :: Stream s m Char => ParsecT s u m [Decl]
-prog = many1 decl <* eof
+prog :: Stream s m Char => ParsecT s u m ([Decl], [TypeAnn])
+prog = do
+  parts <- many (try (Right <$> typeAnn) <|> (Left <$> decl))
+  eof
+  return (partitionEithers parts)
 
 sEq :: String
 sEq = "="
@@ -213,6 +217,8 @@ typeAnn = do
   char ':'
   spaces'
   ts <- term `sepBy1` arrow
+  char ';'
+  spaces'
   return $ TypeAnn f (fromTerms ts) (mempty, mempty)
 
 term :: Stream s m Char => ParsecT s u m (Term.T String String)
