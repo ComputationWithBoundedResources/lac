@@ -21,8 +21,6 @@ import           Control.Monad.State.Strict (StateT, get)
 import           Control.Monad.Trans        (liftIO)
 import           Data.Default
 import           Data.List                  (isPrefixOf)
-import           Data.Map                   (Map)
-import qualified Data.Map                   as M
 import           Data.Monoid                ((<>))
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -50,7 +48,7 @@ main = do
 
                 when (not progValid) exitFailure
 
-                let decls = typedProgram progEnv
+                let decls = inferProgType p
                 forM_ decls $ \(f, _, (e, ty)) -> do
                   r <- runGen $ do
                     let (xs, e') = splitDecl e
@@ -89,17 +87,17 @@ interactive flags args =
     r <- readProg arg
     case r of
       Left e -> print e
-      Right Prog{..} ->
+      Right p ->
         do
           let rs = defaultReplState {
-                rsEnv = progEnv
+                rsProg = p
               , rsFlags = flags
               }
           repl rs
 
 data ReplState
   = ReplState {
-    rsEnv   :: Map Text Value
+    rsProg  :: Prog
   , rsFlags :: [String]
   }
   deriving (Eq, Show)
@@ -130,7 +128,7 @@ repl s =
       case parse expr mempty (T.pack line) of
         Left e -> liftIO $ print e
         Right e -> do
-          env <- rsEnv <$> get
+          env <- (progEnv . rsProg) <$> get
           flags <- rsFlags <$> get
           liftIO $ do
             when ("--ast" `elem` flags) (print e)
@@ -205,11 +203,4 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
         return True
 
 getTypedProgram :: StateT ReplState IO [(Text, [Text], (Typed, Type))]
-getTypedProgram = (typedProgram . rsEnv) <$> get
-
--- TODO: accept `Prog` type
-typedProgram :: ToExpr a => Map Text a -> [(Text, [Text], (Typed, Type))]
-typedProgram env = inferProgType (Prog decls mempty)
-  where
-    decls = map select . M.toList $ env
-    select (name, e) = Decl name [] (toExpr e) Nothing
+getTypedProgram = (inferProgType . rsProg) <$> get
