@@ -1,11 +1,15 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Lac where
+module Lac (
+    parseProg
+  , readProg
+  , module E
+  ) where
 
 import           Data.Expr
 import           Data.TypeAnn
 import           Lac.Eval
-import           Lac.Prog
+import           Lac.Prog     as E
 
 import           Data.List    (find)
 import           Data.Map     (Map)

@@ -14,7 +14,6 @@ import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules
 import           Lac.Analysis.Types         (augmentCtx, emptyCtx, runGen)
 import           Lac.Eval
-import           Lac.Prog
 import           Lac.TypeInference
 
 import           Control.Monad              (forM_, void, when)
