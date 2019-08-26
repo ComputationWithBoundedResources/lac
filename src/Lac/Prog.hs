@@ -12,3 +12,13 @@ data Prog
   , progEnv   :: Map Text Value
   }
   deriving (Eq, Show)
+
+instance Semigroup Prog where
+  p <> q =
+    Prog {
+        progDecls = progDecls p <> progDecls q
+      , progEnv = progEnv p <> progEnv q
+      }
+
+instance Monoid Prog where
+  mempty = Prog mempty mempty
