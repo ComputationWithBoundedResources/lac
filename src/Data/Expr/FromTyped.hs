@@ -21,7 +21,7 @@ fromTyped (TyCmp op (e1, _) (e2, _)) = Cmp op (fromTyped e1) (fromTyped e2)
 fromTyped (TyIte (e1, _) (e2, _) (e3, _)) = Ite (fromTyped e1) (fromTyped e2) (fromTyped e3)
 fromTyped (TyLet x (e1, _) (e2, _)) = Let x (fromTyped e1) (fromTyped e2)
 fromTyped (TyApp (e1, _) (e2, _)) = App (fromTyped e1) (fromTyped e2)
-fromTyped (TyAbs (x, _) (e, _)) = Abs x (fromTyped e)
+fromTyped (TyAbs x (e, _)) = Abs x (fromTyped e)
 fromTyped (TyMatch (e1, _) cs) =
   let cs' = NE.map (\(p, (e, _)) -> (p, fromTyped e)) cs
   in

@@ -177,8 +177,8 @@ cmdDecls = ReplCmd "decls" cmd (const "show loaded declarations")
 splitDecl :: Typed -> ([(Text, Type)], Typed)
 splitDecl e = go [] e
   where
-    go acc (TyAbs (x, tx) (e, te)) =
-      let acc' = (x, tx) : acc
+    go acc (TyAbs x (e, τ)) =
+      let acc' = (x, τ) : acc
       in
       case e of
         TyAbs _ _ -> go acc' e

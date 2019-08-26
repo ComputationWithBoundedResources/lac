@@ -29,7 +29,7 @@ data Typed where
   TyLet :: Text -> (Typed, Type) -> (Typed, Type) -> Typed
   TyApp :: (Typed, Type) -> (Typed, Type) -> Typed
   TyMatch :: (Typed, Type) -> NonEmpty (Pattern, (Typed, Type)) -> Typed
-  TyAbs :: (Text, Type) -> (Typed, Type) -> Typed
+  TyAbs :: Text -> (Typed, Type) -> Typed
 
 deriving instance Show Typed
 
