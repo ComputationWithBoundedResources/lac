@@ -107,7 +107,7 @@ mkProgEnv env decls =
     as <- replicateM (length decls) fresh
     return $ zipWith f decls as
   where
-    f decl@(Decl name xs e) a = ((V name, V a), (name, xs, fromDecl xs e))
+    f decl@(Decl name xs e _) a = ((V name, V a), (name, xs, fromDecl xs e))
 
 extractEnv :: Env -> [((T String Text, Type), a)] -> Env
 extractEnv env decls' = map fst decls' ++ env

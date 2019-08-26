@@ -104,14 +104,14 @@ instance Pretty Expr where
   doc (Abs x e) = PP.sep [PP.text "\\ ", doc x, PP.text " -> (", doc e, PP.text ")"]
 
 instance Pretty Decl where
-  pretty (Decl n as e) =
+  pretty (Decl n as e _) =
     n <> args <> " = " <> pretty e <> ";"
     where
       args | null as   = ""
            | otherwise = " " <> T.intercalate " " as
 
 ppDecl :: Decl -> Text
-ppDecl (Decl x xs e) = x <> args <> " = " <> pretty e
+ppDecl (Decl x xs e _) = x <> args <> " = " <> pretty e
   where
     args | null xs   = ""
          | otherwise = " " <> T.intercalate " " xs

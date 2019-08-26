@@ -4,6 +4,8 @@
 
 module Data.Expr.Types where
 
+import           Data.TypeAnn
+
 import           Data.List.NonEmpty (NonEmpty ((:|)))
 import qualified Data.List.NonEmpty as NE
 import           Data.Maybe.Ext     (mapMaybe, orElse)
@@ -114,7 +116,12 @@ data Pattern
 -- Decl "id" ["x"] (Var "x")
 -- @
 data Decl
-  = Decl Text [Text] Expr -- TODO: Use `NonEmpty<Text>` for arguments?
+  = Decl {
+    declId    :: Text
+  , declArgs  :: [Text] -- TODO: Use `NonEmpty<Text>` for arguments?
+  , declExpr  :: Expr
+  , declTyAnn :: Maybe TypeAnn
+  }
   deriving (Eq, Show)
 
 -- Convert declaration to expression (abstraction)

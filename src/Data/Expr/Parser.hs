@@ -167,7 +167,7 @@ decl =
     void eq
     e <- expr
     string ";" >> spaces'
-    return $ Decl name args e
+    return $ Decl name args e Nothing
   where
     hd =
       app >>=

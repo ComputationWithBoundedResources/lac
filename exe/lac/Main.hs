@@ -71,7 +71,7 @@ main = do
 isProgValid :: Prog -> IO Bool
 isProgValid Prog{..} =
   do
-    forM_ progDecls $ \(Decl f xs e) -> do
+    forM_ progDecls $ \(Decl f xs e _) -> do
       mapM_
         (\x -> dieT $ "Variable `" <> x <> "` not bound in declaration `" <> f <> "`")
         (unbound' (f:xs) e)
@@ -211,4 +211,4 @@ typedProgram :: ToExpr a => Map Text a -> [(Text, [Text], (Typed, Type))]
 typedProgram env = inferProgType (Program decls)
   where
     decls = map select . M.toList $ env
-    select (name, e) = Decl name [] (toExpr e)
+    select (name, e) = Decl name [] (toExpr e) Nothing

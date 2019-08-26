@@ -21,7 +21,7 @@ parseProg text =
   case parse prog "<source>" text of
     Left e -> Left e
     Right decls ->
-      let env = M.fromList . map (\(Decl x xs e) -> (x, Lac.Eval.fromDecl xs e)) $ decls
+      let env = M.fromList . map (\(Decl x xs e _) -> (x, Lac.Eval.fromDecl xs e)) $ decls
       in
       Right (Prog decls env)
 

@@ -28,7 +28,7 @@ process path =
         mapM_ (T.putStrLn . ppDecl . letNF') progDecls
 
   where
-    letNF' (Decl x xs e) =
-      let e' = (toLetNF e)
+    letNF' (Decl x xs e _) =
+      let e' = toLetNF e
       in
-      Decl x xs e'
+      Decl x xs e' Nothing
