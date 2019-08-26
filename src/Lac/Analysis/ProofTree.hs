@@ -8,12 +8,13 @@ module Lac.Analysis.ProofTree (
   ) where
 
 import           Data.Expr.FromTyped
-import           Data.Expr.Latex               (latexVar)
+import           Data.Expr.Latex               ()
 import           Data.Expr.Typed
 import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
 import           Lac.Analysis.Types.Ctx
+import           Lac.PP                        (latexVar)
 import           Latex
 
 import qualified Data.Map.Strict               as M

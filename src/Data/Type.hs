@@ -2,11 +2,11 @@
 
 module Data.Type where
 
-import           Data.Expr.Latex            (latexVar)
 import           Data.Term
 import           Data.Term.Pretty           (convertTerm)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
+import           Lac.PP                     (latexVar)
 
 import           Control.Monad.State.Strict
 

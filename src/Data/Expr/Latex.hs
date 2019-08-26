@@ -3,11 +3,10 @@
 module Data.Expr.Latex where
 
 import           Data.Expr.Types
+import           Lac.PP
 import           Latex
 
-import           Data.Char
 import qualified Data.List.NonEmpty as NE
-import           Data.Text          (Text)
 import qualified Data.Text          as T
 
 instance Latex Expr where
@@ -35,17 +34,6 @@ instance Latex Expr where
       Let x e1 e2 -> "\\mathrm{let}\\;" <> latexVar x <> " = \\Box\\; \\mathrm{in}\\; \\Box"
       App f x -> latex f <> "\\; \\Box"
       _ -> "\\mathrm{TODO}"
-
-latexVar :: Text -> Text
-latexVar x =
-  let (p, s) = T.break isDigit x
-  in
-  if T.all isDigit s
-    then escape p <> "_{" <> s <> "}"
-    else escape p <> s
-
-escape :: Text -> Text
-escape = T.replace "$" "\\$"
 
 instance Latex Pattern where
   latex PNil          = "\\mathrm{nil}"

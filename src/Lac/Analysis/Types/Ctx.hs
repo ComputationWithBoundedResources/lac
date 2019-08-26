@@ -3,9 +3,9 @@
 
 module Lac.Analysis.Types.Ctx where
 
-import           Data.Expr.Latex
 import           Data.Type
 import           Lac.Analysis.Types.Coeff
+import           Lac.PP
 
 import           Data.Map.Strict          (Map)
 import qualified Data.Map.Strict          as M
