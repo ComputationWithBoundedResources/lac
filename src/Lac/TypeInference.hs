@@ -2,7 +2,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
-module Lac.TypeInference where
+module Lac.TypeInference (
+    inferProgType
+  ) where
 
 import           Data.Expr.Typed
 import           Data.Expr.Types
@@ -141,26 +143,6 @@ inferProgType' decls =
 
 inferProgType :: Prog -> [(Text, [Text], (Typed, Type))]
 inferProgType Prog{..} = fst . runState (inferProgType' progDecls) $ 0
-
-inferType :: Typable a => Env -> a -> ([(Type, Type)], Int)
-inferType env expr =
-  let ((constraints, _typed), n) = runState (infer (env, expr, V 0)) 0
-  in
-  (constraints, n)
-
-typed :: Env -> Expr -> Maybe (Typed, Type)
-typed env expr =
-  let ((eqs, varExpr), _) = runState (inferExprType (env, expr, V 0)) 0
-  in
-  case unify eqs of
-    Left _      -> Nothing
-    Right subst ->
-      let typedExpr = applySubst subst varExpr
-      in
-      Just (typedExpr, fromJust (lookup (V 0) subst))
-
-typed' :: Env -> Expr -> (Typed, Type)
-typed' env = fromJust . typed env
 
 applySubst :: [(Type, Type)] -> Typed -> Typed
 applySubst subst =
