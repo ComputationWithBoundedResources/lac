@@ -11,6 +11,7 @@ import           Data.Expr.Types
 import           Data.List.Ext                  (for)
 import           Data.Term
 import           Data.Type
+import           Data.TypeAnn.TypeSig
 import           Lac.Prog
 
 import           Control.Monad                  (replicateM)
@@ -104,17 +105,19 @@ inferExprType (env, expr, tau) =
       let eqs = (tau, tyBool) : (xs ++ ys)
       return (eqs, TyCmp op (e1', V a) (e2', V a))
 
-mkProgEnv :: Env -> [Decl] -> State Int [((T String Text, Type), (Text, [Text], Expr))]
+-- TODO: keep type annotation
+mkProgEnv :: Env -> [Decl] -> State Int [((T String Text, Type), (Text, [Text], Expr, Maybe Type))]
 mkProgEnv env decls =
   do
     as <- replicateM (length decls) fresh
     return $ zipWith f decls as
   where
-    f decl@(Decl name xs e _) a = ((V name, V a), (name, xs, fromDecl xs e))
+    f decl@(Decl name xs e ms) a = ((V name, V a), (name, xs, fromDecl xs e, tsType <$> ms))
 
 extractEnv :: Env -> [((T String Text, Type), a)] -> Env
 extractEnv env decls' = map fst decls' ++ env
 
+-- TODO: keep type annotation
 inferProgType' :: [Decl] -> State Int [(Text, [Text], (Typed, Type))]
 inferProgType' decls =
   do
@@ -124,19 +127,25 @@ inferProgType' decls =
 
     -- obtain equality constraints on type variables
     results <-
-      forM decls' $ \((_, a), (f, xs, e)) -> do
+      forM decls' $ \((_, a), (f, xs, e, mty)) -> do
         (cs, t) <- infer (env', e, a)
-        return (cs, (f, xs, (t, a)))
+        return (cs, (f, xs, (t, a), mty))
     let eqs = concat . map fst $ results
 
     -- compute MGU
     case unify eqs of
       Right mgu -> do
         return $
-          for (map snd results) $ \(f, xs, (e, ty)) ->
+          for (map snd results) $ \(f, xs, (e, ty), mty) ->
             let e' = applySubst mgu e
                 ty' = fromJust (lookup ty mgu)
-            in (f, xs, (e', ty'))
+            in
+            case mty of
+              Just tySig ->
+                case unify [(ty', tySig)] of
+                  Left e -> error $ "inferProgType': cannot unify with given type signature (" <> show e <> ")"
+                  Right _ -> (f, xs, (e', tySig))
+              Nothing -> (f, xs, (e', ty'))
       Left _ ->
         error "inferProgType': could not apply MGU"
 
