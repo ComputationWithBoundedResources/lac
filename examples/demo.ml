@@ -1,3 +1,4 @@
+f : Tree(Nat) -> Nat -> Tree(Nat) -> Tree(Nat);
 f l x r = (l, x, r);
 
 g t e1 =
@@ -5,10 +6,13 @@ g t e1 =
     | nil       -> e1
     | (l, x, r) -> (l, x, r);
 
+h : Tree (Nat) -> Tree (Nat) -> Tree(Nat);
 h x y = x;
 
+i : Nat -> Nat -> Bool;
 i x y = x < y;
 
+j : Tree (Nat) -> Tree (Nat);
 j x =
   if x
     then nil
@@ -40,3 +44,9 @@ m t x y =
   let s = (t, y, t)
   in
   (t, x, s);
+
+n f x y z =
+  let l = f x in
+  let r = (l, y, z)
+  in
+  (l, y, z);
