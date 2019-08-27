@@ -1,12 +1,12 @@
-module Data.Expr.Typed.Subst where
+module Data.Expr.Typed.Rename where
 
 import           Data.Expr.Typed
 
 import           Control.Monad.State
 import           Data.Text           (Text)
 
-subst' :: Text -> Typed -> State [Text] Typed
-subst' x = go
+rename' :: Text -> Typed -> State [Text] Typed
+rename' x = go
   where
     go e =
       case e of
@@ -54,5 +54,5 @@ subst' x = go
         put ys
         return y
 
-subst :: Text -> [Text] -> Typed -> Typed
-subst x xs e = fst $ runState (subst' x e) xs
+rename :: Text -> [Text] -> Typed -> Typed
+rename x xs e = fst $ runState (rename' x e) xs

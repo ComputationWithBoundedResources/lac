@@ -6,7 +6,7 @@ module Lac.Analysis.Rules.Share where
 import           Control.Monad.State.Strict.Ext
 import           Data.Expr                      (var')
 import           Data.Expr.FromTyped
-import           Data.Expr.Typed.Subst
+import           Data.Expr.Typed.Rename
 import           Lac.Analysis.Rules.Common
 
 import           Data.List.Ext                  (splits)
@@ -23,7 +23,7 @@ ruleShare rec q z e =
     let zs = filter (== z) . var' . fromTyped $ e
     zs' <- replicateM (length zs) (freshVar z)
 
-    let e' = subst z zs' e
+    let e' = rename z zs' e
 
     (_, q') <- splitCtx u q [z]
     q'' <- augmentCtx u q' (zip zs' (repeat tyTree))
