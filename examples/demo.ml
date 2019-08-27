@@ -12,7 +12,7 @@ h x y = x;
 i : Nat -> Nat -> Bool;
 i x y = x < y;
 
-j : Tree (Nat) -> Tree (Nat);
+j : Bool -> Tree (Nat);
 j x =
   if x
     then nil
