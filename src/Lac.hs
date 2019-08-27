@@ -3,6 +3,7 @@
 module Lac (
     parseProg
   , readProg
+  , parseExpr
   , module E
   ) where
 
@@ -33,3 +34,6 @@ readProg :: FilePath -> IO (Either ParseError Prog)
 readProg path = do
   text <- T.readFile path
   return $ parseProg text
+
+parseExpr :: Text -> Either ParseError Expr
+parseExpr = parse expr "<source>"
