@@ -38,4 +38,6 @@ instance ToExpr Value where
       VNat n         -> Lit (LNat n)
       VBool a        -> Lit (LBool a)
       VTree t        -> toExpr t
-      VClosure x e _ -> Abs x e -- TODO: env
+      VClosure x e m -> Abs x $ Prelude.foldr f e (M.toList m)
+        where
+          f (y, v) e2 = Let y (toExpr v) e2
