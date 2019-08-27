@@ -6,21 +6,13 @@ module Data.Expr.Pretty (
   ) where
 
 import           Data.Expr.Types
+import           Lac.PP.Pretty
 
 import qualified Data.List.NonEmpty        as NE
 import           Data.Monoid               ((<>))
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
 import qualified Text.PrettyPrint.HughesPJ as PP
-
--- TODO: move this class to own module?
-class Pretty t where
-  pretty :: t -> Text
-  pretty = T.pack . PP.renderStyle s . doc
-    where
-      s = PP.Style PP.PageMode 200 0
-
-  doc :: t -> PP.Doc
 
 instance Pretty Text where
   doc = PP.text . T.unpack
