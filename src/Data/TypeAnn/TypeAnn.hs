@@ -8,9 +8,9 @@ import           Data.Text (Text)
 
 data TypeAnn
   = TypeAnn {
-    taSym :: Text
-  , taArg :: [Type]
-  , taAnn :: ([Int], [([Int], Int)])
+    taSym  :: Text
+  , taType :: Type
+  , taAnn  :: ([Int], [([Int], Int)])
   }
   deriving (Eq, Show)
 
@@ -19,6 +19,3 @@ rankCoeffs = fst . taAnn
 
 vecCoeffs :: TypeAnn -> [([Int], Int)]
 vecCoeffs = snd . taAnn
-
-isBaseTypeAnn :: TypeAnn -> Bool
-isBaseTypeAnn TypeAnn{..} = all isBaseType taArg

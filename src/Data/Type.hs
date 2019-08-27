@@ -69,6 +69,3 @@ fromTerm' = go
     go (F f ts) = do
       ts' <- mapM go ts
       return $ F f ts'
-
-fromTerms :: [T String String] -> [Type]
-fromTerms ts = fst $ runState (mapM fromTerm' ts) mempty

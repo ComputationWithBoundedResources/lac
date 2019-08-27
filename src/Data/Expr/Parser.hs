@@ -6,7 +6,7 @@ module Data.Expr.Parser where
 
 import           Data.Expr.Types      hiding (var)
 import qualified Data.Term            as Term
-import           Data.Type            (fromTerms)
+import           Data.Type
 import           Data.TypeAnn.TypeAnn
 
 import           Control.Applicative  ((<*))
@@ -211,15 +211,21 @@ nat :: Stream s m Char => ParsecT s u m Literal
 nat = (LNat . read) <$> (many1 digit <* spaces')
 
 typeAnn :: Stream s m Char => ParsecT s u m TypeAnn
-typeAnn = do
-  f <- T.pack <$> identifier
-  spaces'
-  char ':'
-  spaces'
-  ts <- term `sepBy1` arrow
-  char ';'
-  spaces'
-  return $ TypeAnn f (fromTerms ts) (mempty, mempty)
+typeAnn =
+  do
+    f <- T.pack <$> identifier
+    spaces'
+    char ':'
+    spaces'
+    ty <- toType <$> term `sepBy1` arrow
+    char ';'
+    spaces'
+    return $ TypeAnn f ty (mempty, mempty)
+  where
+    toType :: [Term.T String String] -> Type
+    toType = fromTerm . foldr1 fun
+
+    fun x y = Term.F "->" [x, y]
 
 term :: Stream s m Char => ParsecT s u m (Term.T String String)
 term = do
