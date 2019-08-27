@@ -11,6 +11,7 @@ import           Data.TypeAnn.TypeAnn
 
 import           Control.Applicative  ((<*))
 import           Control.Monad        (void, when)
+import qualified Data.Char            as Char
 import           Data.Either          (partitionEithers)
 import           Data.Function.Ext    (uncurry3)
 import           Data.List.NonEmpty   (NonEmpty (..))
@@ -229,11 +230,12 @@ typeAnn =
 
 term :: Stream s m Char => ParsecT s u m (Term.T String String)
 term = do
-  f <- identifier
-  mxs <- optionMaybe (parens (term `sepBy1` (char ',' >> spaces')))
-  return $
-    case mxs of
-      Just xs ->
-        Term.F f xs
-      Nothing ->
-        Term.V f
+  f@(c:_) <- identifier
+  if Char.isUpper c
+    then do
+      -- TODO: reuse application parser
+      mxs <- optionMaybe (parens (term `sepBy1` (char ',' >> spaces')))
+      let xs = maybe [] id mxs
+      return $ Term.F f xs
+    else
+      return $ Term.V f
