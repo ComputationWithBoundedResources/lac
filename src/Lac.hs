@@ -23,12 +23,12 @@ parseProg :: Text -> Either ParseError Prog
 parseProg text =
   case parse prog "<source>" text of
     Left e -> Left e
-    Right (decls, tyAnns) ->
+    Right (decls, tySigs) ->
       let env = M.fromList . map (\(Decl x xs e _) -> (x, Lac.Eval.fromDecl xs e)) $ decls
       in
         Right (Prog decls' env)
       where
-        decls' = map (\(Decl x xs e _) -> Decl x xs e (find (\TypeAnn{..} -> taSym == x) tyAnns)) decls
+        decls' = map (\(Decl x xs e _) -> Decl x xs e (find (\TypeSig{..} -> tsName == x) tySigs)) decls
 
 readProg :: FilePath -> IO (Either ParseError Prog)
 readProg path = do

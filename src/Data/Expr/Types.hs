@@ -120,7 +120,7 @@ data Decl
     declId    :: Text
   , declArgs  :: [Text] -- TODO: Use `NonEmpty<Text>` for arguments?
   , declExpr  :: Expr
-  , declTyAnn :: Maybe TypeAnn
+  , declTySig :: Maybe TypeSig
   }
   deriving (Eq, Show)
 

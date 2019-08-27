@@ -4,26 +4,26 @@
 
 module Data.Expr.Parser where
 
-import           Data.Expr.Types      hiding (var)
-import qualified Data.Term            as Term
+import           Data.Expr.Types     hiding (var)
+import qualified Data.Term           as Term
 import           Data.Type
-import           Data.TypeAnn.TypeAnn
+import           Data.TypeAnn
 
-import           Control.Applicative  ((<*))
-import           Control.Monad        (void, when)
-import qualified Data.Char            as Char
-import           Data.Either          (partitionEithers)
-import           Data.Function.Ext    (uncurry3)
-import           Data.List.NonEmpty   (NonEmpty (..))
-import           Data.Maybe           (mapMaybe)
-import           Data.Text            (Text)
-import qualified Data.Text            as T
-import           Text.Parsec          hiding (spaces)
-import           Text.Parsec.Helpers  (many1', parens)
+import           Control.Applicative ((<*))
+import           Control.Monad       (void, when)
+import qualified Data.Char           as Char
+import           Data.Either         (partitionEithers)
+import           Data.Function.Ext   (uncurry3)
+import           Data.List.NonEmpty  (NonEmpty (..))
+import           Data.Maybe          (mapMaybe)
+import           Data.Text           (Text)
+import qualified Data.Text           as T
+import           Text.Parsec         hiding (spaces)
+import           Text.Parsec.Helpers (many1', parens)
 
-prog :: Stream s m Char => ParsecT s u m ([Decl], [TypeAnn])
+prog :: Stream s m Char => ParsecT s u m ([Decl] , [TypeSig])
 prog = do
-  parts <- many (try (Right <$> typeAnn) <|> (Left <$> decl))
+  parts <- many (try (Right <$> typeSig) <|> (Left <$> decl))
   eof
   return (partitionEithers parts)
 
@@ -211,8 +211,8 @@ literal = nat <|> true <|> false <|> tree expr LNil (uncurry3 LNode)
 nat :: Stream s m Char => ParsecT s u m Literal
 nat = (LNat . read) <$> (many1 digit <* spaces')
 
-typeAnn :: Stream s m Char => ParsecT s u m TypeAnn
-typeAnn =
+typeSig :: Stream s m Char => ParsecT s u m TypeSig
+typeSig =
   do
     f <- T.pack <$> identifier
     spaces'
@@ -221,7 +221,7 @@ typeAnn =
     ty <- toType <$> term `sepBy1` arrow
     char ';'
     spaces'
-    return $ TypeAnn f ty (mempty, mempty)
+    return $ TypeSig f ty $ TypeAnn mempty mempty
   where
     toType :: [Term.T String String] -> Type
     toType = fromTerm . foldr1 fun

@@ -3,3 +3,4 @@ module Data.TypeAnn (
   ) where
 
 import           Data.TypeAnn.TypeAnn as E
+import           Data.TypeAnn.TypeSig as E
