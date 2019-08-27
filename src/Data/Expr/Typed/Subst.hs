@@ -16,7 +16,10 @@ subst' x = go
             e2' <- go e2
             e3' <- go e3
             return $ TyLit (TyLNode e1' e2' e3')
-        TyVar y | x == y -> TyVar <$> x'
+        TyLit _ -> return e
+        TyVar y
+          | x == y    -> TyVar <$> x'
+          | otherwise -> return e
         TyCmp op (e1, τ1) (e2, τ2) ->
           do
             e1' <- go e1
@@ -38,8 +41,13 @@ subst' x = go
             e1' <- go e1
             e2' <- go e2
             return $ TyApp (e1', τ1) (e2', τ2)
-        -- TODO: TyMatch
-        _ -> return e
+        TyMatch (e1, τ1) cs ->
+          do
+            e1' <- go e1
+            cs' <- forM cs $ \(p, (ei, τi)) -> do
+                      ei' <- go ei
+                      return (p, (ei', τi))
+            return $ TyMatch (e1', τ1) cs'
     x' =
       do
         (y:ys) <- get
@@ -47,7 +55,4 @@ subst' x = go
         return y
 
 subst :: Text -> [Text] -> Typed -> Typed
-subst x xs e =
-  let (e', _) = runState (subst' x e) xs
-  in
-  e'
+subst x xs e = fst $ runState (subst' x e) xs
