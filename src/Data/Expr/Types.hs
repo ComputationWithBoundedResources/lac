@@ -15,7 +15,7 @@ import           Data.Text          (Text)
 
 data Literal
   = LNil                 -- ^ @nil@
-  | LNode Expr Expr Expr -- ^ @{x, y, z}@
+  | LNode Expr Expr Expr -- ^ @(x, y, z)@
   | LBool Bool           -- ^ @true@, @false@
   | LNat Int             -- ^ @0@, @1@, @42@, ...
   deriving (Eq, Show)
@@ -43,7 +43,7 @@ data Expr where
   -- @
   -- match x with
   --   | nil -> e
-  --   | {x, x, x} -> e
+  --   | (x, x, x) -> e
   -- @
   Match :: Expr -> NonEmpty (Pattern, Expr) -> Expr
   -- | @\\ x -> e@
@@ -113,7 +113,7 @@ data Pattern
 -- The identity function may be represented as follows:
 --
 -- @
--- Decl "id" ["x"] (Var "x")
+-- Decl "id" ["x"] (Var "x") Nothing
 -- @
 data Decl
   = Decl {
@@ -169,6 +169,7 @@ depth (Abs _ e) = 1 + depth e
 shadowed :: Expr -> Maybe Text
 shadowed = shadowed' []
 
+-- | Find a shadowed variable given a list of bound variables.
 shadowed' :: [Text] -> Expr -> Maybe Text
 shadowed' acc e =
   case e of
@@ -215,6 +216,7 @@ shadowed' acc e =
 unbound :: Expr -> Maybe Text
 unbound = unbound' []
 
+-- | Find an unbound variable given a list of bound variables.
 unbound' :: [Text] -> Expr -> Maybe Text
 unbound' acc e =
   case e of

@@ -1,4 +1,7 @@
-module Data.Expr.LetNF where
+module Data.Expr.LetNF (
+    toLetNF
+  , isImm
+  ) where
 
 import           Data.Expr.Types
 
@@ -13,9 +16,12 @@ import qualified Data.Text                      as T
 class LetNF a where
   letNF :: Monad m => a -> StateT Int m a
 
+-- | Convert a value (e.g. an expression) to let-normal-form.
 toLetNF :: LetNF a => a -> a
 toLetNF = fst . flip runState 0 . letNF
 
+-- | Check if an expression is an "immediate" value, i.e. a variable or
+-- a literal.
 isImm :: Expr -> Bool
 isImm e = isVar e || isLit e
 

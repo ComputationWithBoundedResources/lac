@@ -62,6 +62,8 @@ dispatch q e =
       ruleApp dispatch q e
     _ -> throwError (AssertionFailed "dispatch: rule unimplemented")
 
+-- | Find non-linear variables, i.e. variables that are used twice in an
+-- expression.
 nonLinear :: Ctx -> Typed -> [Text]
 nonLinear Ctx{..} e =
     filter (`elemElem` xs) ts
