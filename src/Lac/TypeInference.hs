@@ -143,7 +143,7 @@ inferProgType' decls =
             case mty of
               Just tySig ->
                 case unify [(ty', tySig)] of
-                  Left e -> error $ "inferProgType': cannot unify with given type signature (" <> show e <> ")"
+                  Left e -> error $ "inferProgType': cannot unify with given type signature (" <> e <> ")"
                   Right _ -> (f, xs, (e', tySig))
               Nothing -> (f, xs, (e', ty'))
       Left _ ->
