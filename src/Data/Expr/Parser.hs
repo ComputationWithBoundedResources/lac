@@ -10,11 +10,13 @@ import           Data.Type
 import           Data.TypeAnn
 
 import           Control.Applicative ((<*))
+import           Control.Arrow       (first)
 import           Control.Monad       (void, when)
 import qualified Data.Char           as Char
 import           Data.Either         (partitionEithers)
 import           Data.Function.Ext   (uncurry3)
 import           Data.List.NonEmpty  (NonEmpty (..))
+import           Data.Maybe          (fromMaybe)
 import           Data.Maybe          (mapMaybe)
 import           Data.Text           (Text)
 import qualified Data.Text           as T
@@ -219,9 +221,10 @@ typeSig =
     void $ char ':'
     spaces'
     ty <- toType <$> term `sepBy1` arrow
+    ma <- fromMaybe mempty <$> optionMaybe ann
     void $ char ';'
     spaces'
-    return $ TypeSig f ty $ TypeAnn mempty mempty
+    return $ TypeSig f ty ma
   where
     toType :: [Term.T String String] -> Type
     toType = fromTerm . foldr1 fun
@@ -245,10 +248,10 @@ ann =
   do
     void $ char '{'
     spaces'
-    (r, v) <- partitionEithers <$> coeffs
+    (v, r) <- partitionEithers <$> coeffs
     void $ char '}'
     spaces'
-    return $ TypeAnn mempty mempty
+    return $ TypeAnn (map (first T.pack) r) v
   where
     coeffs =
       ((Left <$> vec) <|> (Right <$> rank)) `sepBy` (char ',' >> spaces')
