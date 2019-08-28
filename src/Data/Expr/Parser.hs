@@ -216,10 +216,10 @@ typeSig =
   do
     f <- T.pack <$> identifier
     spaces'
-    char ':'
+    void $ char ':'
     spaces'
     ty <- toType <$> term `sepBy1` arrow
-    char ';'
+    void $ char ';'
     spaces'
     return $ TypeSig f ty $ TypeAnn mempty mempty
   where
@@ -243,10 +243,10 @@ term = do
 ann :: Stream s m Char => ParsecT s u m TypeAnn
 ann =
   do
-    char '{'
+    void $ char '{'
     spaces'
     (r, v) <- partitionEithers <$> coeffs
-    char '}'
+    void $ char '}'
     spaces'
     return $ TypeAnn mempty mempty
   where
@@ -255,18 +255,18 @@ ann =
     rank = do
       x <- identifier
       spaces'
-      char '='
+      void $ char '='
       spaces'
       v <- nat
       spaces'
       return (x, v)
     vec = do
-      char '('
+      void $ char '('
       ss <- nat `sepBy1` (char ',' >> spaces')
       spaces'
-      char ')'
+      void $ char ')'
       spaces'
-      char '='
+      void $ char '='
       spaces'
       v <- nat
       spaces'
