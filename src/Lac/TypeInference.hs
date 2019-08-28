@@ -146,8 +146,8 @@ inferProgType' decls =
                   Left e -> error $ "inferProgType': cannot unify with given type signature (" <> e <> ")"
                   Right _ -> (f, xs, (e', tySig))
               Nothing -> (f, xs, (e', ty'))
-      Left _ ->
-        error "inferProgType': could not apply MGU"
+      Left e ->
+        error $ "inferProgType': could not apply MGU (" <> e <> ")"
 
 inferProgType :: Prog -> [(Text, [Text], (Typed, Type))]
 inferProgType Prog{..} = fst . runState (inferProgType' progDecls) $ 0
