@@ -238,7 +238,7 @@ term = do
     then do
       -- TODO: reuse application parser
       mxs <- optionMaybe (parens (term `sepBy1` (char ',' >> spaces')))
-      let xs = maybe [] id mxs
+      let xs = fromMaybe [] mxs
       return $ Term.F f xs
     else
       return $ Term.V f
