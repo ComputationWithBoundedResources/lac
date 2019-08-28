@@ -21,6 +21,7 @@ import           Control.Monad.State.Strict (StateT, get)
 import           Control.Monad.Trans        (liftIO)
 import           Data.Default
 import           Data.List                  (isPrefixOf)
+import qualified Data.Map.Strict            as M
 import           Data.Monoid                ((<>))
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -70,13 +71,16 @@ isProgValid :: Prog -> IO Bool
 isProgValid Prog{..} =
   do
     forM_ progDecls $ \(Decl f xs e _) -> do
+      let global = map fst . M.toList $ progEnv
+      let bound = f : xs ++ global
+
       mapM_
         (\x -> dieT $ "Variable `" <> x <> "` not bound in declaration `" <> f <> "`")
-        (unbound' (f:xs) e)
+        (unbound' bound e)
 
       mapM_
         (\x -> dieT $ "Variable `" <> x <> "` shadowed in declaration `" <> f <> "`")
-        (shadowed' (f:xs) e)
+        (shadowed' bound e)
 
     return True
 
