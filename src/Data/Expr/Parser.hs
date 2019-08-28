@@ -239,3 +239,35 @@ term = do
       return $ Term.F f xs
     else
       return $ Term.V f
+
+ann :: Stream s m Char => ParsecT s u m TypeAnn
+ann =
+  do
+    char '{'
+    spaces'
+    (r, v) <- partitionEithers <$> coeffs
+    char '}'
+    spaces'
+    return $ TypeAnn mempty mempty
+  where
+    coeffs =
+      ((Left <$> vec) <|> (Right <$> rank)) `sepBy` (char ',' >> spaces')
+    rank = do
+      x <- identifier
+      spaces'
+      char '='
+      spaces'
+      v <- nat
+      spaces'
+      return (x, v)
+    vec = do
+      char '('
+      ss <- nat `sepBy1` (char ',' >> spaces')
+      spaces'
+      char ')'
+      spaces'
+      char '='
+      spaces'
+      v <- nat
+      spaces'
+      return (ss, v)
