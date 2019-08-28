@@ -11,7 +11,7 @@ null t = if t == nil then true else false;
 and t =
   match t with
     | nil -> true
-    | {l, x, r} ->
+    | (l, x, r) ->
       if and l
         then if x then and r
                   else false
@@ -20,7 +20,7 @@ and t =
 or t =
   match t with
     | nil -> false
-    | {l, x, r} ->
+    | (l, x, r) ->
       if or l then true
               else if x then true
                         else or r;
@@ -32,19 +32,19 @@ all f t = and (map f t);
 map f t =
   match t with
     | nil       -> nil
-    | {l, x, r} -> {map f l, f x, map f r};
+    | (l, x, r) -> (map f l, f x, map f r);
 
 fold f z t =
   match t with
     | nil -> z
-    | {l, x, r} -> f (f (fold f z l) x) (fold f z t);
+    | (l, x, r) -> f (f (fold f z l) x) (fold f z t);
 
 zipWith f t u =
   match t with
     | nil       -> nil
-    | {l, x, r} ->
+    | (l, x, r) ->
         match u with
           | nil       -> nil
-          | {v, y, w} -> let l' = zipWith f l v in
+          | (v, y, w) -> let l' = zipWith f l v in
                          let r' = zipWith f r w in
-                         {l', f x y, r'};
+                         (l', f x y, r');
