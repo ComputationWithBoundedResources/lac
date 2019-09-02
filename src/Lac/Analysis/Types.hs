@@ -79,7 +79,7 @@ import           Latex
 
 import           Control.Monad.Except
 import           Control.Monad.Trans            (liftIO)
-import           Control.Monad.Writer
+import           Control.Monad.Writer.Strict
 import qualified Data.Map.Strict.Ext            as M
 import qualified Data.Set                       as S
 import           Data.Text                      (Text)
