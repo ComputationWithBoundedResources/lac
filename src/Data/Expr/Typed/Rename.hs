@@ -50,9 +50,10 @@ rename' x = go
             return $ TyMatch (e1', τ1) cs'
     x' =
       do
-        (y:ys) <- get
-        put ys
-        return y
+        ys <- get
+        case ys of
+          y : ys' -> put ys' >> return y
+          [] -> error "rename': ran out of substitutions"
 
 rename :: Text -> [Text] -> Typed -> Typed
 rename x xs e = fst $ runState (rename' x e) xs
