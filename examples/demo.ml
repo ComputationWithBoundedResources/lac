@@ -30,7 +30,7 @@ k x y z =
       (l, z, r);
 
 (* test for (w : var) rule *)
-l x y t a =
+l1 x y t a =
   let p = x < y
   in
   if p
@@ -45,7 +45,7 @@ m t x y =
   in
   (t, x, s);
 
-n f x y z =
+n1 f x y z =
   let l = f x in
   let r = (l, y, z)
   in
