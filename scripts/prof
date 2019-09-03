@@ -1,21 +1,69 @@
 #!/bin/sh
-PROG=examples/demo.ml
-RTS_FLAGS="-p -h"
+
+PROG=examples/splay.ml
+
+RTS_FLAGS="-hy"
+STACK_CLEAN=0
+DISPLAY_GRAPH=0
+STACK_WORK_DIR=".stack-work-profile"
+
+STACK_FLAGS="--work-dir ${STACK_WORK_DIR}"
+HP2PS_FLAGS="-c"
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    --clean)
+      STACK_CLEAN=1
+      ;;
+    --display)
+      DISPLAY_GRAPH=1
+      ;;
+    --rts)
+      shift
+      if [ $# -gt 0 ]; then
+        RTS_FLAGS="$1"
+      else
+        echo "flag --rts requires an argument"
+        exit 1
+      fi
+      ;;
+    *)
+      echo "unknown flag: $1"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
 clean() {
   [ -e lac.hp ] && rm lac.hp
   [ -e lac.prof ] && rm lac.prof
-  #stack clean
+  ([ ${STACK_CLEAN} -gt 0 ] && stack clean ${STACK_FLAGS}) || true
 }
+
 build() {
-  stack build --profile
+  stack build ${STACK_FLAGS} \
+    --profile \
+    --ghc-options "-fprof-auto -fprof-cafs"
 }
+
 profile() {
-  stack exec -- lac ${PROG} --RTS ${RTS_FLAGS}
+  LAC=`find ${STACK_WORK_DIR} -name lac -type f | head -1`
+  #stack ${STACK_FLAGS} exec -- lac ${PROG} +RTS ${RTS_FLAGS}
+  $LAC ${PROG} +RTS ${RTS_FLAGS}
 }
+
 conv() {
-  stack exec -- hp2ps lac.hp && ps2pdf lac.ps
+  stack ${STACK_FLAGS} exec -- hp2ps ${HP2PS_FLAGS} lac.hp && ps2pdf lac.ps
 }
+
 display() {
-  open lac.pdf
+  case `uname` in
+    # TODO: call `open` on macOS
+    *)
+      xdg-open lac.pdf
+      ;;
+  esac
 }
-clean && build && profile
+
+clean && build && profile && ([ ${DISPLAY_GRAPH} -gt 0 ] && conv && display)
