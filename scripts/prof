@@ -1,0 +1,21 @@
+#!/bin/sh
+PROG=examples/demo.ml
+RTS_FLAGS="-p -h"
+clean() {
+  [ -e lac.hp ] && rm lac.hp
+  [ -e lac.prof ] && rm lac.prof
+  #stack clean
+}
+build() {
+  stack build --profile
+}
+profile() {
+  stack exec -- lac ${PROG} --RTS ${RTS_FLAGS}
+}
+conv() {
+  stack exec -- hp2ps lac.hp && ps2pdf lac.ps
+}
+display() {
+  open lac.pdf
+}
+clean && build && profile
