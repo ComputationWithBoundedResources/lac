@@ -13,7 +13,6 @@ import           Lac.Eval
 import           Lac.Prog     as E
 
 import           Data.List    (find)
-import           Data.Map     (Map)
 import qualified Data.Map     as M
 import           Data.Text    (Text)
 import qualified Data.Text.IO as T
