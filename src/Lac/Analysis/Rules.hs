@@ -69,4 +69,4 @@ nonLinear Ctx{..} e =
     filter (`elemElem` xs) ts
   where
     xs = var' .  fromTyped $ e
-    ts = map fst . filter (isTyTree . snd) . M.toList $ ctxVariables
+    ts = map fst . filter (isTyTree . snd) $ ctxVariables

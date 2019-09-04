@@ -103,7 +103,7 @@ lengthCtx :: Ctx -> Int
 lengthCtx = length . trees
 
 numVarsCtx :: Ctx -> Int
-numVarsCtx Ctx{..} = length . M.toList $ ctxVariables
+numVarsCtx Ctx{..} = length ctxVariables
 
 augmentCtx :: Bound -> Ctx -> [(Text, Type)] -> Gen Ctx
 augmentCtx bound ctx@Ctx{..} xs =
@@ -121,7 +121,7 @@ augmentCtx bound ctx@Ctx{..} xs =
         (vecs bound . ("+" :) $ ts)
 
     return $
-      ctx { ctxVariables = M.fromList xs `M.union` ctxVariables
+      ctx { ctxVariables = ctxVariables ++ xs
           , ctxCoefficients =
               M.fromList rankCoefficients
                 `M.union` M.fromList vecCoefficients
@@ -134,12 +134,12 @@ splitCtx bound q xs = go q xs []
     go ctx@Ctx{..} [] acc =
       do
         r <- emptyCtx bound
-        r' <- augmentCtx bound r (M.toList ctxVariables)
+        r' <- augmentCtx bound r ctxVariables
         return (reverse acc, r')
     go ctx@Ctx{..} (y:ys) acc =
-      case M.updateLookupWithKey (const (const Nothing)) y ctxVariables of
-        (Just ty, m) ->
-          let ctx' = ctx { ctxVariables = m }
+      case lookup y ctxVariables of
+        Just ty ->
+          let ctx' = ctx { ctxVariables = L.delete' y ctxVariables }
           in
           go ctx' ys ((y, ty) : acc)
         _ ->
@@ -155,7 +155,7 @@ splitCtx' u q y =
 
 weakenCtx :: Bound -> Ctx -> [Text] -> Gen ((Text, Type), Ctx)
 weakenCtx u q@Ctx{..} xs =
-  case (M.toList . M.deleteAll xs) ctxVariables of
+  case L.deleteAll' xs ctxVariables of
     (y, _) : _ -> splitCtx u q [y] >>=
                     \case
                       ([(y, t)], q') -> return ((y, t), q')
@@ -165,7 +165,7 @@ weakenCtx u q@Ctx{..} xs =
 ppCtx :: Ctx -> Text
 ppCtx Ctx{..} =
   "variables: "
-    <> T.intercalate ", " (map ppVar . M.toList $ ctxVariables)
+    <> T.intercalate ", " (map ppVar ctxVariables)
     <> "\n"
     <> "coefficients:\n"
     <> T.intercalate "\n" (map ppCoeff . M.toList $ ctxCoefficients)
@@ -327,7 +327,7 @@ instance Latex Ctx where
   latex Ctx{..} =
     if null ctxVariables
       then "\\varnothing"
-      else T.intercalate ", " $ map f . M.toList $ ctxVariables
+      else T.intercalate ", " $ map f ctxVariables
     where
       f (x, ty) = x <> ": TODO"
 
