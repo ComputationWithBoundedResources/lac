@@ -1,6 +1,7 @@
 module Data.List.Ext (
     module E
   , delete'
+  , deleteAll'
   , elemElem
   , enum
   , equal
@@ -34,6 +35,10 @@ delete' _ [] = []
 delete' k ((k1, v1) : xs)
   | k == k1   = delete' k xs
   | otherwise = (k1, v1) : delete' k xs
+
+deleteAll' :: Eq a => [a] -> [(a, b)] -> [(a, b)]
+deleteAll' []     ys = ys
+deleteAll' (x:xs) ys = deleteAll' xs $ delete' x ys
 
 enum :: Int -> Int -> [[Int]]
 enum u = go
