@@ -25,18 +25,11 @@ data Ctx
   }
   deriving (Eq, Show)
 
-latexCtx :: Ctx -> Text
-latexCtx Ctx{..} = varCtx <> "|Q_{" <> T.pack (show ctxId) <> "}"
-  where
-    varCtx | null vars = "\\varnothing"
-           | otherwise = T.intercalate ", " vars
-    vars = Prelude.map var ctxVariables
-    var (x, ty) = latexVar x <> ": " <> latexType ty
+length :: Ctx -> Int
+length Ctx{..} = L.length . filter (isTyTree . snd) $ ctxVariables
 
--- TODO: show type
-latexRetCtx :: Ctx -> Text
-latexRetCtx Ctx{..} = "\\Box|Q_{" <> T.pack (show ctxId) <> "}"
-
+-- TODO: "empty" should mean "does not contain variables of type tree"
+-- TODO: rename to `empty` or `null`; add note that module should be imported qualified
 ctxEmpty :: Ctx -> Bool
 ctxEmpty Ctx{..} = null ctxVariables
 
@@ -65,3 +58,17 @@ trees Ctx{..} = map fst . filter (isTyTree . snd) $ ctxVariables
 
 vecIdx :: [(Text, Int)] -> Idx
 vecIdx = VecIdx . S.fromList
+
+-- * Pretty-printing
+
+latexCtx :: Ctx -> Text
+latexCtx Ctx{..} = varCtx <> "|Q_{" <> T.pack (show ctxId) <> "}"
+  where
+    varCtx | null vars = "\\varnothing"
+           | otherwise = T.intercalate ", " vars
+    vars = Prelude.map var ctxVariables
+    var (x, ty) = latexVar x <> ": " <> latexType ty
+
+-- TODO: show type
+latexRetCtx :: Ctx -> Text
+latexRetCtx Ctx{..} = "\\Box|Q_{" <> T.pack (show ctxId) <> "}"
