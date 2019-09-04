@@ -5,6 +5,7 @@ module Lac.Analysis.Rules.Let where
 import           Data.Expr.FromTyped
 import           Data.Expr.Types           (var)
 import           Lac.Analysis.Rules.Common
+import qualified Lac.Analysis.Types.Ctx    as Ctx
 
 import qualified Data.Set                  as S
 
@@ -28,6 +29,7 @@ ruleLet dispatch q e@(TyLet x (e1, ty) (e2, _)) =
     (_, p) <- splitCtx u q (S.toList rem)
     (_, r) <- splitCtx u q (S.toList ve1)
     r' <- augmentCtx u r [(x, ty)]
+    let k = Ctx.length r'
 
     s <- prove dispatch p  e1 -- R'
     t <- prove dispatch r' e2
@@ -42,7 +44,7 @@ ruleLet dispatch q e@(TyLet x (e1, ty) (e2, _)) =
     -- only possible when x is bound to a value of type tree?
     if ty == tyTree
       then do
-        rx <- coeff r' (IdIdx x)
+        rx <- coeff r' (RankIdx $ k + 1)
         tx <- coeff t  astIdx
         accumConstr [ CEq (CAtom rx) (CAtom tx) ]
       else

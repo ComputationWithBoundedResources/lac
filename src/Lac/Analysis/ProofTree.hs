@@ -14,7 +14,7 @@ import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
 import           Lac.Analysis.Types.Ctx
-import           Lac.PP                        (latexVar)
+import           Lac.PP                        (latexVar, tshow)
 import           Latex
 
 import qualified Data.Map.Strict               as M
@@ -22,6 +22,7 @@ import qualified Data.Set                      as S
 import           Data.Text                     (Text)
 import qualified Data.Text                     as T
 import           Data.Tuple                    (swap)
+import qualified Data.Vector                   as V
 
 data ProofTree
   = ProofTree {
@@ -52,31 +53,28 @@ latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
         latexConstraint (CGe e1 e2) = latexCExpr e1 <> " \\ge " <> latexCExpr e2
 
         latexCExpr (CAtom c) = latexCoeff c
-        latexCExpr (CInt i)  = T.pack . show $ i
+        latexCExpr (CInt i)  = tshow i
         latexCExpr (CSum es) = T.intercalate " + " (map latexCExpr es)
 
         latexCoeff (Coeff c) = go contexts
           where
             contexts = [q, r] ++ lookahead ts
 
-            go [] = "\\#_{" <> T.pack (show c) <> "}"
+            go [] = "\\#_{" <> tshow c <> "}"
             go (q:qs) =
               case lookup (Coeff c) (f q) of
                 Just i -> g q i
                 Nothing -> go qs
 
             f = map swap . M.toList . ctxCoefficients
-            g Ctx{..} idx =
-              "q^{" <> T.pack (show ctxId) <> "}"
-                <> "_{" <> h idx <> "}"
-            h (IdIdx x) =
-              if x == "*"
-                then "\\ast"
-                else latexVar x
-            h (VecIdx xs) =
-              "\\{" <> T.intercalate ", " (map ppVecSubScr . S.toList $ xs) <> "\\}"
-
-            ppVecSubScr (x, v) = "(" <> latexVar x <> "," <> T.pack (show v) <> ")"
+            g q@Ctx{..} idx =
+              "q^{" <> tshow ctxId <> "}"
+                <> "_{" <> h q idx <> "}"
+            h Ctx{..} (RankIdx i)
+              | Just _ <- lookup costId ctxVariables = "\\ast"
+              | otherwise = tshow i
+            h _ (VecIdx v) =
+              "(" <> T.intercalate ", " (map tshow . V.toList $ v) <> ")"
 
 lookahead :: [ProofTree] -> [Ctx]
 lookahead = concatMap f
@@ -107,6 +105,6 @@ smtProofTree ProofTree{..} =
     (q, _, q') = ptConclusion
     cs = ptConstraints
 
-    setZero (Coeff x) = "(= x" <> (T.pack . show) x <> " 0)"
+    setZero (Coeff x) = "(= x" <> tshow x <> " 0)"
 
-    declare (Coeff x) = "(declare-fun x" <> (T.pack . show) x <> " () Int)"
+    declare (Coeff x) = "(declare-fun x" <> tshow x <> " () Int)"

@@ -8,6 +8,7 @@ import           Data.Expr                      (var')
 import           Data.Expr.FromTyped
 import           Data.Expr.Typed.Rename
 import           Lac.Analysis.Rules.Common
+import qualified Lac.Analysis.Types.Ctx         as Ctx
 
 import           Data.List.Ext                  (splits)
 import qualified Data.Set                       as S
@@ -28,10 +29,14 @@ ruleShare rec q z e =
     (_, q') <- splitCtx u q [z]
     q'' <- augmentCtx u q' (zip zs' (repeat tyTree))
 
-    qz <- coeff q (IdIdx z)
-    q''zs' <- forM zs' $ \z' -> coeff q'' (IdIdx z')
+    let m = Ctx.length q
+    {-
+    qz <- coeff q (RankIdx m)
+    q''zs' <- forM zs' $ \z' -> coeff q'' (RankIdx z')
     accumConstr [ CEq (CAtom qz) (CSum (map CAtom q''zs')) ]
+    -}
 
+    {-
     forVec_ q selAll $ \(xs, qx) ->
       case lookup z xs of
         Just v ->
@@ -45,6 +50,7 @@ ruleShare rec q z e =
               accumConstr [ CEq (CAtom qx) (CAtom c) ]
         Nothing ->
           throwError (AssertionFailed "ruleShare")
+    -}
 
     r <- prove rec q'' e'
 

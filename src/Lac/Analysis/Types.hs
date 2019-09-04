@@ -20,17 +20,8 @@ module Lac.Analysis.Types (
   , coeff
   , coeffs
 
-  , VecSel(..)
-  , after
-  , onlyCost
-  , only1
-  , only2
-  , selAll
-  , selAssign
-  , forVec
-  , forVec_
-  , dropCtxVars
-  , dropAllBut
+  , varIdx
+  , vecIdx
 
   , augmentCtx
   , weakenCtx
@@ -74,16 +65,23 @@ import           Lac.Analysis.ProofTree
 import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
-import           Lac.Analysis.Types.Ctx
+import           Lac.Analysis.Types.Ctx         hiding (length)
+import qualified Lac.Analysis.Types.Ctx         as Ctx
 import           Latex
 
 import           Control.Monad.Except
 import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer.Strict
+import qualified Data.List.Ext                  as L
 import qualified Data.Map.Strict.Ext            as M
 import qualified Data.Set                       as S
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
+import           Data.Vector                    (Vector)
+import qualified Data.Vector                    as V
+import qualified Data.Vector.Mutable            as MV
+
+import           Debug.Trace
 
 -- * Basic types
 
@@ -97,7 +95,7 @@ emptyCtx (Bound u) =
     cs <- forM is $ \i -> fresh >>= \a -> return (i, Coeff a)
     return $ q { ctxCoefficients = M.fromList cs }
   where
-    is = [VecIdx (S.singleton (costId, c)) | c <- [0..u]]
+    is = [VecIdx (V.singleton c) | c <- [0..u]]
 
 lengthCtx :: Ctx -> Int
 lengthCtx = length . trees
@@ -106,19 +104,20 @@ numVarsCtx :: Ctx -> Int
 numVarsCtx Ctx{..} = length ctxVariables
 
 augmentCtx :: Bound -> Ctx -> [(Text, Type)] -> Gen Ctx
-augmentCtx bound ctx@Ctx{..} xs =
+augmentCtx (Bound u) ctx@Ctx{..} xs =
   do
     let ts = trees ctx ++ (map fst . filter (isTyTree . snd) $ xs)
+    let nts = length ts
 
     rankCoefficients <-
       mapM
-        (\x -> fresh >>= \i -> return (IdIdx x, Coeff i))
-        ts
+        (\x -> fresh >>= \i -> return (RankIdx x, Coeff i))
+        [1..nts]
 
     vecCoefficients <-
       mapM
-        (\vec -> fresh >>= \i -> return (VecIdx (S.fromList vec), Coeff i))
-        (vecs bound . ("+" :) $ ts)
+        (\vec -> fresh >>= \i -> return (VecIdx (V.fromList vec), Coeff i))
+        (enum u (nts + 1))
 
     return $
       ctx { ctxVariables = ctxVariables ++ xs
@@ -177,10 +176,9 @@ ppCoeff :: (Idx, Coeff) -> Text
 ppCoeff (idx, (Coeff i)) = T.pack (show i) <> ": " <> c
   where
     c = case idx of
-          IdIdx "*"  -> "q*"
-          IdIdx x    -> "q(" <> x <> ")"
-          -- TODO: fix output
-          VecIdx vec -> "q(" <> T.intercalate ", " (map (T.pack . show) . S.toList $ vec) <> ")"
+          RankIdx x  -> "q(" <> T.pack (show x) <> ")"
+          -- TODO: fix output (?)
+          VecIdx vec -> "q(" <> T.intercalate ", " (map (T.pack . show) . V.toList $ vec) <> ")"
 
 ppConstr :: Constraint -> Text
 ppConstr (CEq lhs rhs) = ppCExpr lhs <> " = " <> ppCExpr rhs
@@ -200,86 +198,8 @@ coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
 coeffs :: Ctx -> [(Idx, Coeff)]
 coeffs Ctx{..} = M.toList ctxCoefficients
 
-data VecSel a
-  = Accept a -- TODO: Select ?
-  | Reject
-  | Invalid Text
-  deriving (Eq, Ord, Show)
-
-selAll = Accept . id
-
-forVec :: MonadError Error m => Ctx -> ([(Text, Int)] -> VecSel a) -> ((a, Coeff) -> m b) -> m [b]
-forVec Ctx{..} p g =
-  do
-    xs <- foldM f [] . M.toList $ ctxCoefficients
-    mapM g xs
-  where
-    f xs (VecIdx i, c) =
-      let i' = S.toList i
-      in
-      case p i' of
-        Accept j -> return $ (j, c) : xs
-        Reject   -> return xs
-        Invalid e -> throwError (AssertionFailed e)
-    f xs _ = return xs
-
-forVec_ :: MonadError Error m => Ctx -> ([(Text, Int)] -> VecSel a) -> ((a, Coeff) -> m b) -> m ()
-forVec_ q f g = void (forVec q f g)
-
--- select assignment
-selAssign :: [(Text, Int)] -> [(Text, Int)] -> VecSel [(Text, Int)]
-selAssign (x:xs) ys =
-  if x `elem` ys
-    then selAssign xs ys
-    else Reject
-selAssign [] ys = Accept ys
-
--- TODO: better name
-dropCtxVars :: Ctx -> [(Text, Int)] -> VecSel [(Text, Int)]
-dropCtxVars = dropAllBut []
-
-dropAllBut :: [Text] -> Ctx -> [(Text, Int)] -> VecSel [(Text, Int)]
-dropAllBut ys Ctx{..} = Accept . filter q
-  where
-    xs = map fst . filter p . M.toList $ ctxVariables
-
-    p (_, ty) = ty == tyTree
-
-    q ("+", _) = True
-    q (x, v)   = (x `notElem` xs) || (x `elem` ys)
-
-onlyCost :: [(Text, Int)] -> VecSel Int
-onlyCost [(x, c)] = Accept c
-onlyCost _        = Invalid "onlyCost"
-
-only1 :: Text -> [(Text, Int)] -> VecSel (Int, Int)
-only1 x ys =
-  case ys of
-    [("+", c), (y, a)] | x == y -> Accept (a, c)
-    _                           -> Invalid "only1"
-
-only2 :: Text -> Text -> [(Text, Int)] -> VecSel (Int, Int, Int)
-only2 x1 x2 ys =
-  case ys of
-    [("+", c), (y1, a1), (y2, a2)] | x1 == y1 && x2 == y2 -> Accept (a1, a2, c)
-    [("+", c), (y1, a1), (y2, a2)] | x1 == y2 && x2 == y1 -> Accept (a2, a1, c)
-    _                                                     -> Invalid $ "only2" <> (T.pack . show $ ys)
-
-after ::
-  (a -> VecSel b)
-  -> ([(Text, Int)] -> VecSel a)
-  -> [(Text, Int)] -> VecSel b
-after f g xs =
-  case g xs of
-    Accept v  -> f v
-    Reject    -> Reject
-    Invalid t -> Invalid t
-
 enumRankCoeffs :: Ctx -> [(Idx, Coeff)]
-enumRankCoeffs Ctx{..} = filter (isRankCoeff . fst) . M.toList $ ctxCoefficients
-  where
-    isRankCoeff (IdIdx _) = True
-    isRankCoeff _         = False
+enumRankCoeffs Ctx{..} = filter (isRankIdx . fst) . M.toList $ ctxCoefficients
 
 returnCtx :: Bound -> Gen Ctx
 returnCtx b =
@@ -316,12 +236,6 @@ eqCtx q r =
         qi <- coeff q i
         ri <- coeff r i
         accumConstr $ [CEq (CAtom qi) (CAtom ri)]
-
-vecs :: Bound -> [Text] -> [[(Text, Int)]]
-vecs (Bound u) xs =
-  let vvs = enum u (length xs)
-  in
-  map (zip xs) vvs
 
 instance Latex Ctx where
   latex Ctx{..} =
@@ -444,3 +358,34 @@ runGen :: Gen r -> IO (Either Error r, Output)
 runGen = fmap f . runWriterT . flip runStateT initState . runExceptT . unGen
   where
     f ((e, _), cs) = (e, cs)
+
+-- * Interface
+
+varIdx :: Ctx -> Text -> Gen Idx
+varIdx q x =
+  case L.elemIndex x . trees $ q of
+    Just i  -> return $ RankIdx $ i + 1
+    Nothing -> throwError $ AssertionFailed $ "varIdx: tree " <> x <> " not found in context"
+
+-- TODO: cost part, i.e. "+"
+vecIdx :: Ctx -> [(Text, Int)] -> Gen Idx
+vecIdx q xs =
+  do
+    when (length xs /= m + 1) $
+      throwError $ AssertionFailed $ "vecIdx: subscript with bad length (is " <> T.pack (show . length $ xs) <> ", must be " <> T.pack (show (m + 1))
+    xs' <- mapM f xs
+    liftIO $ do
+      v <- V.thaw $ V.replicate (m + 1) 0
+      forM_ xs' $ \(index, value) -> do
+        traceShowM (index, value)
+        MV.write v index value
+      VecIdx <$> V.freeze v
+  where
+    f (x, v)
+      | x == costId = return (m, v)
+      | otherwise =
+          case L.elemIndex x ts of
+            Just i  -> return (i, v)
+            Nothing -> throwError $ AssertionFailed $ "vecIdx: tree " <> x <> " not found in context"
+    ts = trees q
+    m = length ts

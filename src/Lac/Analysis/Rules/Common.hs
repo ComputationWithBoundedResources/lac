@@ -15,7 +15,7 @@ import           Data.Type              as E
 import           Lac.Analysis.ProofTree as E
 import           Lac.Analysis.RuleName  as E
 import           Lac.Analysis.Types     as E
-import           Lac.Analysis.Types.Ctx as E (astId, costId, trees, vecIdx)
+import           Lac.Analysis.Types.Ctx as E (astId, costId, trees)
 
 import           Control.Monad          as E (forM, forM_, when)
 import           Data.Default           as E (def)

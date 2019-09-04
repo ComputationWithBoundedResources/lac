@@ -21,7 +21,7 @@ ruleVar q x =
         q' <- returnCtx u
 
         -- preserve potential
-        q1 <- coeff q (IdIdx x)
+        q1 <- coeff q (RankIdx 1)
         q'x <- coeff q' astIdx
         accumConstr [ CEq (CAtom q1) (CAtom q'x) ]
 

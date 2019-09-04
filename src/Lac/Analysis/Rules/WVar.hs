@@ -19,6 +19,7 @@ ruleWVar dispatch q e xs =
       accumConstr [CEq (CAtom qi) (CAtom ri)]
 
     -- r_{(\vec{a},b)} = q_{(\vec{a},0,b)}
+    {-
     forVec_ r (dropCtxVars q) $ \ys ->
       case ys of
         ([(y, b)], rb) | y == costId ->
@@ -31,6 +32,7 @@ ruleWVar dispatch q e xs =
               _ ->
                 return ()
         _ -> throwError (AssertionFailed "ruleWVar: illegal vector index")
+    -}
 
     q' <- prove dispatch r e
 

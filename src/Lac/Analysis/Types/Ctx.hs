@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
@@ -13,6 +14,8 @@ import           Data.Set                 (Set)
 import qualified Data.Set                 as S
 import           Data.Text                (Text)
 import qualified Data.Text                as T
+import           Data.Vector              (Vector)
+import qualified Data.List as L
 
 data Ctx
   = Ctx {
@@ -37,15 +40,21 @@ ctxVars :: Ctx -> Set Text
 ctxVars Ctx{..} = S.fromList (map fst ctxVariables)
 
 data Idx
-  = IdIdx Text
-  | VecIdx (Set (Text, Int))
+  = RankIdx !Int
+  | VecIdx !(Vector Int)
   deriving (Eq, Ord, Show)
+
+isRankIdx :: Idx -> Bool
+isRankIdx =
+  \case
+    RankIdx _ -> True
+    _         -> False
 
 astId :: Text
 astId = "*"
 
 astIdx :: Idx
-astIdx = IdIdx astId
+astIdx = RankIdx 1
 
 costId :: Text
 costId = "+"
@@ -55,9 +64,6 @@ ptCoefficients Ctx{..} = map snd . M.toList $ ctxCoefficients
 
 trees :: Ctx -> [Text]
 trees Ctx{..} = map fst . filter (isTyTree . snd) $ ctxVariables
-
-vecIdx :: [(Text, Int)] -> Idx
-vecIdx = VecIdx . S.fromList
 
 -- * Pretty-printing
 

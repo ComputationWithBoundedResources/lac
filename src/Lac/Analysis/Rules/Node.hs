@@ -13,8 +13,8 @@ ruleNode ctx (TyLit (TyLNode (TyVar x1) (TyVar _) (TyVar x2))) =
 
     ctx' <- returnCtx def
 
-    q1 <- coeff ctx (IdIdx x1)
-    q2 <- coeff ctx (IdIdx x2)
+    q1 <- coeff ctx (RankIdx 1)
+    q2 <- coeff ctx (RankIdx 2)
     qx' <- coeff ctx' astIdx
 
     -- TODO: q100 = q010 = qx'

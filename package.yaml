@@ -33,6 +33,7 @@ dependencies:
 - pretty
 - process
 - text
+- vector
 
 library:
   source-dirs: src
