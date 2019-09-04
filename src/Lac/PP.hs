@@ -16,3 +16,6 @@ latexVar x =
 
 escape :: Text -> Text
 escape = T.replace "$" "\\$"
+
+tshow :: Show a => a -> Text
+tshow = T.pack . show
