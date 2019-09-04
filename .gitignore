@@ -1,6 +1,13 @@
+# stack
 .stack-work/
+.stack-work-profile/
+
+# cabal
 lac.cabal
-*~
 
 # vim
 *.swp
+*~
+
+# core dumps
+*.core
