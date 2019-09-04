@@ -9,5 +9,9 @@ lac.cabal
 *.swp
 *~
 
+# ghc
+*.prof
+*.hp
+
 # core dumps
 *.core
