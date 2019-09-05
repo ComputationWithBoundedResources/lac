@@ -22,6 +22,7 @@ module Lac.Analysis.Types (
   , varIdx
   , vecIdx
 
+  , freshCtx
   , augmentCtx
   , weakenCtx
   , returnCtx
