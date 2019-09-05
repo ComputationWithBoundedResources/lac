@@ -8,7 +8,6 @@ module Lac.Analysis.Types (
     Ctx()
   , latexCtx
   , emptyCtx
-  , lengthCtx
   , numVarsCtx
   , splitCtx
   , splitCtx'
@@ -96,9 +95,6 @@ emptyCtx (Bound u) =
     return $ q { ctxCoefficients = M.fromList cs }
   where
     is = [VecIdx (V.singleton c) | c <- [0..u]]
-
-lengthCtx :: Ctx -> Int
-lengthCtx = length . trees
 
 numVarsCtx :: Ctx -> Int
 numVarsCtx Ctx{..} = length ctxVariables
