@@ -65,6 +65,9 @@ ptCoefficients Ctx{..} = map snd . M.toList $ ctxCoefficients
 trees :: Ctx -> [Text]
 trees Ctx{..} = map fst . filter (isTyTree . snd) $ ctxVariables
 
+nonTrees :: Ctx -> [(Text, Type)]
+nonTrees = filter (not . isTyTree . snd) . ctxVariables
+
 -- * Pretty-printing
 
 latexCtx :: Ctx -> Text
