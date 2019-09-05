@@ -373,8 +373,7 @@ vecIdx q xs =
     xs' <- mapM f xs
     liftIO $ do
       v <- V.thaw $ V.replicate (m + 1) 0
-      forM_ xs' $ \(index, value) -> do
-        traceShowM (index, value)
+      forM_ xs' $ \(index, value) ->
         MV.write v index value
       VecIdx <$> V.freeze v
   where

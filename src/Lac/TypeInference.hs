@@ -8,7 +8,7 @@ module Lac.TypeInference (
 
 import           Data.Expr.Typed
 import           Data.Expr.Types
-import           Data.List.Ext                  (for)
+import           Data.List.Ext                  as L (for, lookup)
 import           Data.Term
 import           Data.Type
 import           Data.TypeAnn.TypeSig
@@ -65,11 +65,11 @@ inferExprType (env, expr, tau) =
       (ys, e2') <- infer (env, e2, argTy)
       return (xs ++ ys, TyApp (e1', funTy) (e2', argTy))
     Abs x e -> do
-      a1 <- fresh
-      a2 <- fresh
-      let env' = (V x, V a1) : env
-      (xs, e') <- infer (env', e, V a2)
-      return ((tau, F "->" [V a1, V a2]) : xs, TyAbs x (e', V a2))
+      τx <- maybe (V <$> fresh) return (L.lookup (V x) env)
+      τe <- V <$> fresh
+      let env' = (V x, τx) : env
+      (xs, e') <- infer (env', e, τe)
+      return ((tau, F "->" [τx, τe]) : xs, TyAbs x (e', τe))
     Let x e1 e2 -> do
       a <- fresh
       let env' = (V x, V a) : env
@@ -122,13 +122,16 @@ inferProgType' :: [Decl] -> State Int [(Text, [Text], (Typed, Type))]
 inferProgType' decls =
   do
     let env = mempty
+
     decls' <- mkProgEnv env decls
     let env' = extractEnv env decls'
 
     -- obtain equality constraints on type variables
     results <-
       forM decls' $ \((_, a), (f, xs, e, mty)) -> do
-        (cs, t) <- infer (env', e, a)
+        -- TODO: ensure that `declEnv ++ env'` does not contain duplicate entries
+        declEnv <- mapM (\x -> fresh >>= \α -> return (V x, V α)) xs
+        (cs, t) <- infer (declEnv ++ env', e, a)
         return (cs, (f, xs, (t, a), mty))
     let eqs = concat . map fst $ results
 
@@ -142,9 +145,13 @@ inferProgType' decls =
             in
             case mty of
               Just tySig ->
+                -- TODO: avoid overlapping variables in ty' and tySig
                 case unify [(ty', tySig)] of
                   Left e -> error $ "inferProgType': cannot unify with given type signature (" <> e <> ")"
-                  Right _ -> (f, xs, (e', tySig))
+                  Right mgu' ->
+                    let e'' = applySubst mgu' e'
+                    in
+                    (f, xs, (e'', tySig))
               Nothing -> (f, xs, (e', ty'))
       Left e ->
         error $ "inferProgType': could not apply MGU (" <> e <> ")"

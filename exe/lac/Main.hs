@@ -12,7 +12,8 @@ import           Data.Type
 import           Lac
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules
-import           Lac.Analysis.Types         (augmentCtx, emptyCtx, runGen)
+import           Lac.Analysis.Types         (Error (..), augmentCtx, emptyCtx,
+                                             runGen, throwError)
 import           Lac.Eval
 import           Lac.TypeInference
 
@@ -50,9 +51,9 @@ main = do
                 when (not progValid) exitFailure
 
                 let decls = inferProgType p
-                forM_ decls $ \(f, _, (e, ty)) -> do
+                forM_ decls $ \(f, xs, (e, ty)) -> do
                   r <- runGen $ do
-                    let (xs, e') = splitDecl e
+                    (xs, e') <- either (throwError . AssertionFailed) return (unwrap ty e)
                     let b = def
                     q <- emptyCtx b
                     q' <- augmentCtx b q xs
@@ -176,16 +177,19 @@ cmdDecls = ReplCmd "decls" cmd (const "show loaded declarations")
               liftIO $ T.putStrLn $ f <> " : " <> ppTerm' ty
             return True
 
-splitDecl :: Typed -> ([(Text, Type)], Typed)
-splitDecl e = go [] e
+-- TODO: better error type
+unwrap :: Type -> Typed -> Either Text ([(Text, Type)], Typed)
+unwrap = go []
   where
-    go acc (TyAbs x (e, τ)) =
-      let acc' = (x, τ) : acc
+    go :: [(Text, Type)] -> Type -> Typed -> Either Text ([(Text, Type)], Typed)
+    go acc (F "->" [τx, τe]) (TyAbs x (e, _)) =
+      let acc' = (x, τx) : acc
       in
-      case e of
-        TyAbs _ _ -> go acc' e
-        _         -> (reverse acc', e)
-    go _ _ = error "decl"
+      go acc' τe e
+    go acc (F "->" _) e           = Left "unwrap: expression does not match type (1)"
+    go acc _          (TyAbs _ _) = Left "unwrap: expression does not match type (2)"
+    go acc _ e =
+      Right (reverse acc, e)
 
 cmdCheck :: ReplCmd
 cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
@@ -198,7 +202,7 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
           -- TODO: add declarations to context
           liftIO $ do
             ctx' <- runGen $ do
-              let (xs, e') = splitDecl e
+              (xs, e') <- either (throwError . AssertionFailed) return (unwrap ty e)
               let b = Bound 1
               q <- emptyCtx b
               q' <- augmentCtx b q xs
