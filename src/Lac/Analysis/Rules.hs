@@ -56,7 +56,6 @@ dispatch q e =
     TyIte (TyVar x, _) (e1, _) (e2, _) ->
       ruleIte dispatch q x e1 e2
     TyLet _ _ _ ->
-      -- TODO: apply (share) rule if context is not linear
       ruleLet dispatch q e
     TyApp (TyVar _, _) (TyVar _, _) ->
       ruleApp dispatch q e
