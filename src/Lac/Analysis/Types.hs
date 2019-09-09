@@ -152,10 +152,11 @@ splitCtx' u q y =
 weakenCtx :: Bound -> Ctx -> [Text] -> Gen ((Text, Type), Ctx)
 weakenCtx u q@Ctx{..} xs =
   case L.deleteAll' xs ctxVariables of
-    (y, _) : _ -> splitCtx u q [y] >>=
-                    \case
-                      ([(y, t)], q') -> return ((y, t), q')
-                      _              -> throwError $ AssertionFailed "weakenCtx: unexpected splitCtx behavior"
+    (y, _) : _ ->
+      splitCtx u q [y] >>=
+        \case
+          ([(y, t)], q') -> return ((y, t), q')
+          _              -> throwError $ AssertionFailed "weakenCtx: unexpected splitCtx behavior"
     _ -> throwError $ AssertionFailed "weakenCtx: cannot weaken"
 
 ppCtx :: Ctx -> Text
