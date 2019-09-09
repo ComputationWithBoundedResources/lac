@@ -9,8 +9,6 @@ import qualified Lac.Analysis.Types.Ctx    as Ctx
 import qualified Data.List.Ext             as L
 import qualified Data.Vector               as V
 
-import           Debug.Trace
-
 ruleWVar
   :: Rule   -- ^ continuation
   -> Ctx    -- ^ context/annotation
@@ -36,8 +34,6 @@ ruleWVar dispatch q e xs =
       forM_ [0..u] $ \b -> do
         let vab = VecIdx . V.fromList $ as ++ [b]
         let va0b = VecIdx . V.fromList $ as ++ [0, b]
-        traceShowM vab
-        traceShowM va0b
         rab <- coeff r vab
         qa0b <- coeff q va0b
         accumConstr [CEq (CAtom rab) (CAtom qa0b)]
