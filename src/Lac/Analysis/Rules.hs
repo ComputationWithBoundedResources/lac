@@ -50,7 +50,7 @@ dispatch q e =
         else ruleWVar dispatch q e [x]
     TyCmp _ (TyVar x1, _) (TyVar x2, _) ->
       if numVarsCtx q == 2
-        then ruleCmp q e
+        then ruleW ruleCmp q e
         else ruleWVar dispatch q e [x1, x2]
     TyIte (TyVar x, _) (e1, _) (e2, _) ->
       ruleIte dispatch q x e1 e2
