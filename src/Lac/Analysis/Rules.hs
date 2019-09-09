@@ -27,7 +27,6 @@ import           Lac.Analysis.Types.Ctx
 
 import           Data.List.Ext            (elemElem)
 import           Data.List.NonEmpty       (NonEmpty (..))
-import qualified Data.Map.Strict          as M
 import           Data.Text                (Text)
 
 dispatch :: Ctx -> Typed -> Gen ProofTree
