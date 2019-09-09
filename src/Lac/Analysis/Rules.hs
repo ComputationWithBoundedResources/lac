@@ -39,7 +39,7 @@ dispatch q e =
       ruleMatch dispatch q x e1 (x1, x2, x3) e2
     TyLit TyLNil ->
       if numVarsCtx q == 0
-        then ruleNil q e
+        then ruleW ruleNil q e
         else ruleWVar dispatch q e []
     TyLit (TyLNode (TyVar x1) (TyVar x2) (TyVar x3)) ->
       if numVarsCtx q > 3
