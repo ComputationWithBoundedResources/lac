@@ -40,7 +40,7 @@ module Lac.Analysis.Types (
   , Constraint(..)
   , CExpr(..)
 
-  , Gen (..)
+  , Gen ()
   , runGen
   , tell
   , throwError
@@ -49,6 +49,8 @@ module Lac.Analysis.Types (
 
   , Rule
   , setRuleName
+  , setCostFree
+  , isCostFree
   , accumConstr
   , prove
   , conclude
@@ -286,17 +288,19 @@ newtype Gen a = Gen {
   , MonadIO
   )
 
+-- TODO: make `gsCostFree` read-only
 data GenState
   = GenState {
     gsFresh                :: Int
   , gsProofTreeRuleName    :: Maybe RuleName
   , gsProofTreeConstraints :: [Constraint]
   , gsProofTreeSubtrees    :: [ProofTree]
+  , gsCostFree             :: Bool
   }
   deriving Show
 
 initState :: GenState
-initState = GenState 0 Nothing mempty mempty
+initState = GenState 0 Nothing mempty mempty False
 
 type Rule = Ctx -> Typed -> Gen ProofTree
 
@@ -314,6 +318,12 @@ getRuleName :: Gen Text
 getRuleName =
   gsProofTreeRuleName <$> get >>=
     return . maybe "<unset>" unRuleName
+
+setCostFree :: Gen ()
+setCostFree = modify $ \s -> s { gsCostFree = True }
+
+isCostFree :: Gen Bool
+isCostFree = gsCostFree <$> get
 
 accumConstr :: [Constraint] -> Gen ()
 accumConstr cs =
