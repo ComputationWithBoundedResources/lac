@@ -37,7 +37,7 @@ ctxEmpty :: Ctx -> Bool
 ctxEmpty Ctx{..} = null ctxVariables
 
 ctxVars :: Ctx -> Set Text
-ctxVars Ctx{..} = S.fromList (map fst ctxVariables)
+ctxVars Ctx{..} = S.fromList . map fst $ ctxVariables
 
 data Idx
   = RankIdx !Int
