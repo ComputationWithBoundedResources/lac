@@ -49,7 +49,7 @@ module Lac.Analysis.Types (
 
   , Rule
   , setRuleName
-  , setCostFree
+  , costFree
   , isCostFree
   , accumConstr
   , prove
@@ -343,6 +343,9 @@ prove dispatch q e =
                          }
     let (_, _, q') = ptConclusion
     return q'
+
+costFree :: Rule -> Rule
+costFree dispatch q e = setCostFree >> dispatch q e
 
 conclude :: Ctx -> Typed -> Ctx -> Gen ProofTree
 conclude q e q' =

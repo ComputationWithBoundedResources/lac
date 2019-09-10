@@ -45,7 +45,6 @@ ruleLet dispatch q e@(TyLet x (e1, τx) (e2, _)) =
 
     s <- prove dispatch p  e1 -- R'
     t <- prove dispatch r' e2 -- P'
-    -- TODO: cost-free
 
     -- p_i = q_i
     forM_ [1..m] $ \i -> do
@@ -93,8 +92,7 @@ ruleLet dispatch q e@(TyLet x (e1, τx) (e2, _)) =
               qabc <- coeff q $ VecIdx . V.fromList $ va ++ vb ++ [c]
               accumConstr [ CEq (CAtom pbac) (CAtom qabc) ]
 
-          -- TODO: cost-free proof
-          w' <- prove dispatch w e1
+          w' <- prove (costFree dispatch) w e1
 
           -- p'^{\vec{b}}_{(a,c)} = r_{(\vec{b},a,c)}
           forM_ [0..ub] $ \a ->
