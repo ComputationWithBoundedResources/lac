@@ -22,22 +22,27 @@ ruleWVar dispatch q e xs =
     let b@(Bound u) = def
     let m = Ctx.length q - 1 -- q = Γ,x:α|Q
 
-    (_, r) <- weakenCtx b q xs
+    ((y, ty), r) <- weakenCtx b q xs
 
-    -- r_i = q_i
-    forM_ (enumRankCoeffs r) $ \(idx, ri) -> do
-      qi <- coeff q idx
-      accumConstr [CEq (CAtom qi) (CAtom ri)]
+    if ty == tyTree
+      then do
+        -- r_i = q_i
+        forM_ (enumRankCoeffs r) $ \(idx, ri) -> do
+          qi <- coeff q idx
+          accumConstr [CEq (CAtom qi) (CAtom ri)]
 
-    -- r_{(\vec{a},b)} = q_{(\vec{a},0,b)}
-    forM_ (L.enum u m) $ \as ->
-      forM_ [0..u] $ \b -> do
-        let vab = VecIdx . V.fromList $ as ++ [b]
-        let va0b = VecIdx . V.fromList $ as ++ [0, b]
-        rab <- coeff r vab
-        qa0b <- coeff q va0b
-        accumConstr [CEq (CAtom rab) (CAtom qa0b)]
+        -- r_{(\vec{a},b)} = q_{(\vec{a},0,b)}
+        forM_ (L.enum u m) $ \as -> do
+          forM_ [0..u] $ \b -> do
+            let vab = VecIdx . V.fromList $ as ++ [b]
+            let va0b = VecIdx . V.fromList $ as ++ [0, b]
+            rab <- coeff r vab
+            qa0b <- coeff q va0b
+            accumConstr [CEq (CAtom rab) (CAtom qa0b)]
 
-    q' <- prove dispatch r e
-
-    conclude q e q'
+        q' <- prove dispatch r e
+        conclude q e q'
+      else do
+        eqCtx q r
+        q' <- prove dispatch r e
+        conclude q e q'
