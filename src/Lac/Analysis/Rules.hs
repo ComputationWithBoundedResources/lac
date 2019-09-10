@@ -38,7 +38,9 @@ dispatch q e =
     _ | (z:_) <- nonLinear q e ->
       ruleSwap (ruleShare dispatch z) (pushBack q [z]) q e
     TyMatch (TyVar x, _) ((PNil, (e1, _)) :| [(PNode x1 x2 x3, (e2, _))]) ->
-      ruleMatch dispatch q x e1 (x1, x2, x3) e2
+      let ruleMatch' q' _ = ruleMatch dispatch q' x e1 (x1, x2, x3) e2
+      in
+      ruleSwap ruleMatch' (pushBack q [x]) q e
     TyLit TyLNil ->
       if numVarsCtx q == 0
         then ruleW ruleNil q e
