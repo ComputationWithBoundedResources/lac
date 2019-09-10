@@ -59,8 +59,8 @@ dispatch q e =
         else ruleWVar dispatch q e [x1, x2]
     TyIte (TyVar x, _) (e1, _) (e2, _) ->
       ruleIte dispatch q x e1 e2
-    TyLet _ _ _ ->
-      ruleLet dispatch q e
+    TyLet _ (e1, _) _ ->
+      ruleShift (ruleLet dispatch) (letOrder q e1) q e
     TyApp (TyVar _, _) (TyVar _, _) ->
       ruleApp dispatch q e
     _ -> throwError (AssertionFailed "dispatch: rule unimplemented")
