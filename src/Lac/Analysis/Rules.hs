@@ -46,7 +46,7 @@ dispatch q e =
         else ruleW ruleNode q e
     TyVar x ->
       if numVarsCtx q == 1
-        then ruleVar q x
+        then ruleW ruleVar q e
         else ruleWVar dispatch q e [x]
     TyCmp _ (TyVar x1, _) (TyVar x2, _) ->
       if numVarsCtx q == 2

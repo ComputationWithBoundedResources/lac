@@ -4,8 +4,8 @@ module Lac.Analysis.Rules.Var where
 
 import           Lac.Analysis.Rules.Common
 
-ruleVar :: Ctx -> Text -> Gen ProofTree
-ruleVar q x =
+ruleVar :: Ctx -> Typed -> Gen ProofTree
+ruleVar q (TyVar x) =
   do
     setRuleName "var"
 
