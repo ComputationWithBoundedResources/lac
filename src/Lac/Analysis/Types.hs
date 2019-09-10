@@ -224,10 +224,10 @@ eqCtx q r =
       kr = f r
   in
   if kq /= kr
-    then
-      let m = "eqCtx: contexts differ (Q: " <> g kq <> "; R: " <> g kr <> ")"
-          g = T.intercalate "," . map (T.pack . show) . S.toList
-      in
+    then do
+      ruleName <- getRuleName
+      let g = T.intercalate "," . map (T.pack . show) . S.toList
+      let m = "eqCtx (" <> ruleName <> "): contexts differ (Q: " <> g kq <> "; R: " <> g kr <> ")"
       throwError (AssertionFailed m)
     else
       forM_ kq $ \i -> do
@@ -309,6 +309,11 @@ setRuleName n = do
       let s' = s { gsProofTreeRuleName = Just (RuleName n) }
       in
       put s'
+
+getRuleName :: Gen Text
+getRuleName =
+  gsProofTreeRuleName <$> get >>=
+    return . maybe "<unset>" unRuleName
 
 accumConstr :: [Constraint] -> Gen ()
 accumConstr cs =
