@@ -1,6 +1,10 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
-module Lac.Analysis.Rules.Swap where
+module Lac.Analysis.Rules.Swap (
+    ruleSwap
+  , pushBack
+  ) where
 
 import           Lac.Analysis.Rules.Common
 import qualified Lac.Analysis.Types.Ctx    as Ctx
@@ -12,6 +16,8 @@ import qualified Data.Vector               as V
 ruleSwap :: Rule -> [Text] -> Ctx -> Typed -> Gen ProofTree
 ruleSwap dispatch toOrder q@Ctx.Ctx{..} e =
   do
+    setRuleName "swap"
+
     to <- mkToV
     from <- mkFromV
 
@@ -35,6 +41,8 @@ ruleSwap dispatch toOrder q@Ctx.Ctx{..} e =
           Ctx.ctxCoefficients = M.fromList coeffs'
         , Ctx.ctxVariables = vars
         }
+
+    -- TODO: output constraints instead of generating reordered context?
 
     q' <- prove dispatch r e
     conclude q e q'
@@ -61,10 +69,6 @@ ruleSwap dispatch toOrder q@Ctx.Ctx{..} e =
             throwError $ AssertionFailed $ "ruleSwap: variable " <> x <> " not found"
 
 pushBack :: Ctx -> [Text] -> [Text]
-pushBack q@Ctx.Ctx{..} xs = map fst $ init_ ++ tail_
+pushBack q@Ctx.Ctx{..} xs = init_ ++ tail_
   where
-    (init_, tail_) = L.partition p (Ctx.ctxVariables q)
-
-    p (x, τ) | τ /= tyTree    = True
-             | x `notElem` xs = True
-             | otherwise      = False
+    (tail_, init_) = L.partition (`elem` xs) . Ctx.trees $ q
