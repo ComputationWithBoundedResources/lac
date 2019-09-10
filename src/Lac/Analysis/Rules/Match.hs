@@ -41,7 +41,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
         forM_ [0..ub] $ \b -> do
           let vr = VecIdx . V.fromList $ as ++ [a, a] ++ [b]
           let vq = VecIdx . V.fromList $ as ++ [a]    ++ [b]
-          rv <- coeff r vr
+          rv <- coeff r' vr
           qv <- coeff q vq
           accumConstr [ CEq (CAtom rv) (CAtom qv) ]
 
