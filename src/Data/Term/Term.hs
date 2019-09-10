@@ -6,7 +6,7 @@ import           Data.Bifunctor
 data T f v
   = V v
   | F f [T f v]
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 instance Bifunctor T where
   bimap _ g (V x)    = V $ g x
