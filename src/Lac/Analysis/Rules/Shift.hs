@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
-module Lac.Analysis.Rules.Swap (
-    ruleSwap
+module Lac.Analysis.Rules.Shift (
+    ruleShift
   , pushBack
   ) where
 
@@ -13,15 +13,15 @@ import qualified Data.List.Ext             as L
 import qualified Data.Map.Strict           as M
 import qualified Data.Vector               as V
 
-ruleSwap
+ruleShift
   :: Rule   -- ^ continuation
   -> [Text] -- ^ variables to shift right in context
   -> Ctx    -- ^ context/annotation
   -> Typed  -- ^ expression
   -> Gen ProofTree
-ruleSwap dispatch toOrder q@Ctx.Ctx{..} e =
+ruleShift dispatch toOrder q@Ctx.Ctx{..} e =
   do
-    setRuleName "swap"
+    setRuleName "shift"
 
     to <- mkToV
     from <- mkFromV
@@ -71,7 +71,7 @@ ruleSwap dispatch toOrder q@Ctx.Ctx{..} e =
         case L.elemIndex x ys of
           Just i -> return i
           Nothing ->
-            throwError $ AssertionFailed $ "ruleSwap: variable " <> x <> " not found"
+            throwError $ AssertionFailed $ "ruleShift: variable " <> x <> " not found"
 
 pushBack :: Ctx -> [Text] -> [Text]
 pushBack q@Ctx.Ctx{..} xs = init_ ++ tail_
