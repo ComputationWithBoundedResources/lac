@@ -23,6 +23,7 @@ ghc-options:
 - -Wall
 - -freverse-errors
 - -fno-warn-orphans
+- -Werror=missing-fields
 
 dependencies:
 - base >= 4.7 && < 5
