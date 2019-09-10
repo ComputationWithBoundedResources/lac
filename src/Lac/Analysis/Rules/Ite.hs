@@ -11,14 +11,14 @@ ruleIte dispatch q x e1 e2 =
 
     (_, q1) <- splitCtx def q [x]
 
-    qe1 <- prove dispatch q1 e1
-    qe2 <- prove dispatch q1 e2
+    q1 <- prove dispatch q1 e1
+    q2 <- prove dispatch q1 e2
 
-    r <- returnCtx def
-    eqCtx qe1 qe2
-    eqCtx qe2 r
+    q' <- returnCtx def
+    eqCtx q1 q2
+    eqCtx q2 q'
 
     conclude
       q
       (TyIte (TyVar x, tyBool) (hole, tyBool) (hole, tyBool))
-      r
+      q'
