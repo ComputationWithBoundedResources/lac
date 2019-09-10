@@ -13,7 +13,12 @@ import qualified Data.List.Ext             as L
 import qualified Data.Map.Strict           as M
 import qualified Data.Vector               as V
 
-ruleSwap :: Rule -> [Text] -> Ctx -> Typed -> Gen ProofTree
+ruleSwap
+  :: Rule   -- ^ continuation
+  -> [Text] -- ^ variables to shift right in context
+  -> Ctx    -- ^ context/annotation
+  -> Typed  -- ^ expression
+  -> Gen ProofTree
 ruleSwap dispatch toOrder q@Ctx.Ctx{..} e =
   do
     setRuleName "swap"
