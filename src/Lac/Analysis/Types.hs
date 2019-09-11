@@ -139,8 +139,9 @@ splitCtx bound q xs = go q xs []
           let ctx' = ctx { ctxVariables = L.delete' y ctxVariables }
           in
           go ctx' ys ((y, ty) : acc)
-        _ ->
-          throwError . AssertionFailed $ "splitCtx: variable " <> y <> " not found in context"
+        _ -> do
+          ruleName <- getRuleName
+          throwError . AssertionFailed $ "[" <> ruleName <> "] splitCtx: variable " <> y <> " not found in context"
 
 splitCtx' :: Bound -> Ctx -> Text -> Gen ((Text, Type), Ctx)
 splitCtx' u q y =
@@ -189,7 +190,9 @@ coeff :: Ctx -> Idx -> Gen Coeff
 coeff ctx idx =
   case coeff' ctx idx of
     Just c -> return c
-    Nothing -> throwError . AssertionFailed $ "coefficient for index " <> T.pack (show idx) <> " not found"
+    Nothing -> do
+      ruleName <- getRuleName
+      throwError . AssertionFailed $ "[" <> ruleName <> "] coefficient for index " <> T.pack (show idx) <> " not found"
 
 coeff' :: Ctx -> Idx -> Maybe Coeff
 coeff' Ctx{..} idx = M.lookup idx ctxCoefficients
@@ -254,8 +257,12 @@ data Error
 
 assert :: Bool -> Text -> Gen ()
 assert p s =
-  if p then return ()
-       else throwError (AssertionFailed s)
+  if p
+    then return ()
+    else do
+      ruleName <- getRuleName
+      let s' = "[" <> ruleName <> "] " <> s
+      throwError (AssertionFailed s')
 
 data Output
   = Output {
