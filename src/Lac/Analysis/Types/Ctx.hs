@@ -8,6 +8,7 @@ import           Data.Type
 import           Lac.Analysis.Types.Coeff
 import           Lac.PP
 
+import qualified Data.List                as L
 import           Data.Map.Strict          (Map)
 import qualified Data.Map.Strict          as M
 import           Data.Set                 (Set)
@@ -15,7 +16,7 @@ import qualified Data.Set                 as S
 import           Data.Text                (Text)
 import qualified Data.Text                as T
 import           Data.Vector              (Vector)
-import qualified Data.List as L
+import           Data.Word
 
 data Ctx
   = Ctx {
@@ -40,8 +41,8 @@ ctxVars :: Ctx -> Set Text
 ctxVars Ctx{..} = S.fromList . map fst $ ctxVariables
 
 data Idx
-  = RankIdx !Int
-  | VecIdx !(Vector Int)
+  = RankIdx !Word8
+  | VecIdx !(Vector Word8)
   deriving (Eq, Ord, Show)
 
 isRankIdx :: Idx -> Bool

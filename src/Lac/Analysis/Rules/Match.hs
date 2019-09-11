@@ -11,6 +11,7 @@ import           Control.Monad             (when)
 import qualified Data.List.Ext             as L
 import           Data.List.NonEmpty        (NonEmpty (..))
 import qualified Data.Vector               as V
+import           Data.Word
 
 import           Debug.Trace
 
@@ -21,6 +22,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
 
     let u@(Bound ub) = def
     let m = Ctx.length q - 1
+    let m' = fromIntegral m :: Word8
 
     case L.splitAt m . Ctx.trees $ q of
       (_, [y]) | x == y ->
@@ -33,7 +35,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
     r' <- augmentCtx u r [(x1, tyTree), (x2, tyNat), (x3, tyTree)]
 
     -- generate all \vec{a}
-    let allVecA = L.enum ub m
+    let allVecA = L.enum ub m'
 
     -- r_{(\vec{a}, a, a, b)} = q_{(\vec{a}, a, b)}
     forM_ allVecA $ \as ->
@@ -56,9 +58,9 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
           accumConstr [ CEq (CAtom pv) (CAtom qv) ]
 
     -- r_{m+1} = r_{m+2} = q_{m+1}
-    rx1 <- coeff r' (RankIdx $ m + 1)
-    rx3 <- coeff r' (RankIdx $ m + 2)
-    qx <- coeff q (RankIdx $ m + 1)
+    rx1 <- coeff r' (RankIdx $ m' + 1)
+    rx3 <- coeff r' (RankIdx $ m' + 2)
+    qx  <- coeff q  (RankIdx $ m' + 1)
     accumConstr
       [ CEq (CAtom rx1) (CAtom rx3)
       , CEq (CAtom rx3) (CAtom qx)
@@ -70,7 +72,7 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
     let vr2 = VecIdx . V.fromList $ vec0 ++ [0, 1, 0]
     r0100 <- coeff r' vr1
     r0010 <- coeff r' vr2
-    qm1 <- coeff q $ RankIdx (m + 1)
+    qm1 <- coeff q $ RankIdx (m' + 1)
     accumConstr
       [ CEq (CAtom r0100) (CAtom r0010)
       , CEq (CAtom r0010) (CAtom qm1)

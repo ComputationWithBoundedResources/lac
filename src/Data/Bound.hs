@@ -3,8 +3,12 @@ module Data.Bound (
   ) where
 
 import           Data.Default
+import           Data.Word
 
-newtype Bound = Bound { unBound :: Int }
+newtype Bound
+  = Bound {
+    unBound :: Word8
+  }
   deriving (Eq, Show)
 
 instance Default Bound where

@@ -30,9 +30,9 @@ ruleShift dispatch toOrder q@Ctx.Ctx{..} e =
           L.for (coeffs q) $ \(index, coeff) ->
             case index of
               RankIdx i ->
-                let i' = succ $ to V.! pred i
+                let i' = succ $ to V.! (fromIntegral . pred $ i)
                 in
-                (RankIdx i', coeff)
+                (RankIdx . fromIntegral $ i', coeff)
               VecIdx v ->
                 let v' = V.imap (\i _ -> v V.! (from V.! i)) v
                 in

@@ -10,6 +10,7 @@ import qualified Lac.Analysis.Types.Ctx    as Ctx
 import qualified Data.List.Ext             as L
 import qualified Data.Set                  as S
 import qualified Data.Vector               as V
+import           Data.Word
 
 import           Debug.Trace
 
@@ -41,20 +42,22 @@ ruleLet dispatch q e@(TyLet x (e1, τx) (e2, _)) =
     r' <- augmentCtx u r [(x, τx)]
 
     let m = Ctx.length p
+    let m' = fromIntegral m :: Word8
     let k = Ctx.length r
+    let k' = fromIntegral k :: Word8
 
     s <- prove dispatch p  e1 -- R'
     t <- prove dispatch r' e2 -- P'
 
     -- p_i = q_i
-    forM_ [1..m] $ \i -> do
+    forM_ [1..m'] $ \i -> do
       let idx = RankIdx i
       pi <- coeff p idx
       qi <- coeff q idx
       accumConstr [ CEq (CAtom pi) (CAtom qi) ]
 
     -- p_{(\vec{a},c)} = q_{(\vec{a},\vec{0},c)}
-    let allVecA = L.enum ub m
+    let allVecA = L.enum ub m'
     let vecΔ0 = replicate k 0
     forM_ allVecA $ \xs ->
       forM_ [0..ub] $ \c -> do
@@ -66,7 +69,7 @@ ruleLet dispatch q e@(TyLet x (e1, τx) (e2, _)) =
     -- only possible when x is bound to a value of type tree?
     if τx == tyTree
       then do
-        rx <- coeff r' (RankIdx $ k + 1)
+        rx <- coeff r' (RankIdx $ k' + 1)
         tx <- coeff t  astIdx
         accumConstr [ CEq (CAtom rx) (CAtom tx) ]
       else
@@ -79,7 +82,7 @@ ruleLet dispatch q e@(TyLet x (e1, τx) (e2, _)) =
         r0ac <- coeff r' $ VecIdx . V.fromList $ a : vecΔ0 ++ [c]
         accumConstr [ CEq (CAtom p'ac) (CAtom r0ac) ]
 
-    case L.enum ub k of
+    case L.enum ub k' of
       [] -> return ()
       (_:vbs) -> do
         forM_ vbs $ \vb -> do
@@ -102,9 +105,9 @@ ruleLet dispatch q e@(TyLet x (e1, τx) (e2, _)) =
               accumConstr [ CEq (CAtom p'bac) (CAtom rbac) ]
 
     -- r_j = q_{m+j}
-    forM_ [1..k] $ \j -> do
+    forM_ [1..k'] $ \j -> do
       rj <- coeff r' $ RankIdx j
-      qmj <- coeff q $ RankIdx (m + j)
+      qmj <- coeff q $ RankIdx (m' + j)
       accumConstr [ CEq (CAtom rj) (CAtom qmj) ]
 
     -- TODO

@@ -22,6 +22,7 @@ ruleShare rec z q@Ctx.Ctx{..} e =
     setRuleName "share"
 
     let m = Ctx.length q - 1
+    let m' = fromIntegral m
 
     case L.splitAt m . Ctx.trees $ q of
       (_, [z']) | z == z' ->
@@ -44,11 +45,11 @@ ruleShare rec z q@Ctx.Ctx{..} e =
     q2 <- augmentCtx bound q1 (zip zs' (repeat tyTree))
 
     -- q_{m+1} = q^2_{m+1}, ..., q_{m+1} = q^2_{m+n}
-    qz <- coeff q (RankIdx (m + 1))
-    q''zs' <- forM [(m + 1) .. (m + nzs)] $ \i -> coeff q2 (RankIdx i)
+    qz <- coeff q (RankIdx (m' + 1))
+    q''zs' <- forM [(m + 1) .. (m + nzs)] $ \i -> coeff q2 (RankIdx . fromIntegral $ i)
     accumConstr [ CEq (CAtom qz) (CSum (map CAtom q''zs')) ]
 
-    forM_ (L.enum u m) $ \xs ->
+    forM_ (L.enum u m') $ \xs ->
       forM_ [0..u] $ \y ->
         forM_ [0..u] $ \c -> do
           let v1 = VecIdx . V.fromList $ xs ++ [y, c]

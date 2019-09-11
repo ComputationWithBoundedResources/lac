@@ -105,7 +105,7 @@ augmentCtx :: Bound -> Ctx -> [(Text, Type)] -> Gen Ctx
 augmentCtx (Bound u) ctx@Ctx{..} xs =
   do
     let ts = trees ctx ++ (map fst . filter (isTyTree . snd) $ xs)
-    let nts = length ts
+    let nts = fromIntegral . length $ ts
 
     rankCoefficients <-
       mapM
@@ -379,5 +379,5 @@ runGen = fmap f . runWriterT . flip runStateT initState . runExceptT . unGen
 varIdx :: Ctx -> Text -> Gen Idx
 varIdx q x =
   case L.elemIndex x . trees $ q of
-    Just i  -> return $ RankIdx $ i + 1
+    Just i  -> return . RankIdx . fromIntegral $ i + 1
     Nothing -> throwError $ AssertionFailed $ "varIdx: tree " <> x <> " not found in context"

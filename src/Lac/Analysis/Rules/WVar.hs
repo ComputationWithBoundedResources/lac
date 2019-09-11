@@ -21,6 +21,7 @@ ruleWVar dispatch q e xs =
 
     let b@(Bound u) = def
     let m = Ctx.length q - 1 -- q = Γ,x:α|Q
+    let m' = fromIntegral m
 
     ((y, ty), r) <- weakenCtx b q xs
 
@@ -32,7 +33,7 @@ ruleWVar dispatch q e xs =
           accumConstr [CEq (CAtom qi) (CAtom ri)]
 
         -- r_{(\vec{a},b)} = q_{(\vec{a},0,b)}
-        forM_ (L.enum u m) $ \as -> do
+        forM_ (L.enum u m') $ \as -> do
           forM_ [0..u] $ \b -> do
             let vab = VecIdx . V.fromList $ as ++ [b]
             let va0b = VecIdx . V.fromList $ as ++ [0, b]
