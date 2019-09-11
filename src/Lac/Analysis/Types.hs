@@ -191,6 +191,7 @@ coeff ctx idx =
   case coeff' ctx idx of
     Just c -> return c
     Nothing -> do
+      traceShowM ctx
       ruleName <- getRuleName
       throwError . AssertionFailed $ "[" <> ruleName <> "] coefficient for index " <> T.pack (show idx) <> " not found"
 
@@ -266,8 +267,8 @@ assert p s =
 
 data Output
   = Output {
-      outLog         :: [Text]
-    , outEqs         :: [(Text, Text)]
+      outLog :: [Text]
+    , outEqs :: [(Text, Text)]
   }
   deriving (Eq, Show)
 
