@@ -40,7 +40,7 @@ deleteAll' :: Eq a => [a] -> [(a, b)] -> [(a, b)]
 deleteAll' []     ys = ys
 deleteAll' (x:xs) ys = deleteAll' xs $ delete' x ys
 
-enum :: Int -> Int -> [[Int]]
+enum :: Integral a => a -> a -> [[a]]
 enum u = go
   where
     go 0 = []
