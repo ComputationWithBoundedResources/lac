@@ -20,7 +20,6 @@ module Lac.Analysis.Types (
   , coeffs
 
   , varIdx
-  , vecIdx
 
   , freshCtx
   , augmentCtx
@@ -382,25 +381,3 @@ varIdx q x =
   case L.elemIndex x . trees $ q of
     Just i  -> return $ RankIdx $ i + 1
     Nothing -> throwError $ AssertionFailed $ "varIdx: tree " <> x <> " not found in context"
-
--- TODO: cost part, i.e. "+"
-vecIdx :: Ctx -> [(Text, Int)] -> Gen Idx
-vecIdx q xs =
-  do
-    when (length xs /= m + 1) $
-      throwError $ AssertionFailed $ "vecIdx: subscript with bad length (is " <> T.pack (show . length $ xs) <> ", must be " <> T.pack (show (m + 1))
-    xs' <- mapM f xs
-    liftIO $ do
-      v <- V.thaw $ V.replicate (m + 1) 0
-      forM_ xs' $ \(index, value) ->
-        MV.write v index value
-      VecIdx <$> V.freeze v
-  where
-    f (x, v)
-      | x == costId = return (m, v)
-      | otherwise =
-          case L.elemIndex x ts of
-            Just i  -> return (i, v)
-            Nothing -> throwError $ AssertionFailed $ "vecIdx: tree " <> x <> " not found in context"
-    ts = trees q
-    m = length ts

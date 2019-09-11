@@ -6,6 +6,7 @@ module Lac.Analysis.Rules.Nil where
 import           Lac.Analysis.Rules.Common
 
 import qualified Data.List.Ext             as L
+import qualified Data.Vector               as V
 
 ruleNil :: Ctx -> Typed -> Gen ProofTree
 ruleNil q e =
@@ -20,9 +21,9 @@ ruleNil q e =
 
     -- q_{(c)} = \sum_{a+b=c} q'_{(a,b)}
     forM_ [0..u] $ \c -> do
-      qc <- vecIdx q [(costId, c)] >>= coeff q
+      qc <- coeff q $ VecIdx . V.fromList $ [c]
       forM_ (L.split c) $ \(a, b) -> do
-        q'ab <- vecIdx q' [(astId, a), (costId, b)] >>= coeff q'
+        q'ab <- coeff q' $ VecIdx . V.fromList $ [a, b]
         accumConstr [ CEq (CAtom qc) (CAtom q'ab) ]
 
     conclude q nil q'
