@@ -12,4 +12,4 @@ newtype Bound
   deriving (Eq, Show)
 
 instance Default Bound where
-  def = Bound 2
+  def = Bound 1
