@@ -52,7 +52,7 @@ instance LetNF Expr where
           Lit <$> letNF l
         App lhs rhs ->
           do
-            let es = unfoldl1 unApp e
+            let es = unfoldl1 splitApp e
 
             rs <- mapM normalize es
 
@@ -101,8 +101,8 @@ unfoldl1 f = go []
         Just (a, b) -> go (b : acc) a
         Nothing     -> x : reverse acc
 
-unApp :: Expr -> Maybe (Expr, Expr)
-unApp e =
+splitApp :: Expr -> Maybe (Expr, Expr)
+splitApp e =
   case e of
     App e1 e2 -> Just (e1, e2)
     _         -> Nothing
