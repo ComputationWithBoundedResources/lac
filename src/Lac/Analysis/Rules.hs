@@ -27,10 +27,12 @@ import           Lac.Analysis.Rules.W     as E
 import           Lac.Analysis.Rules.WVar  as E
 import           Lac.Analysis.Types
 import           Lac.Analysis.Types.Ctx
+import           Lac.PP.Pretty
 
 import           Data.List.Ext            (elemElem)
 import           Data.List.NonEmpty       (NonEmpty (..))
 import           Data.Text                (Text)
+import qualified Data.Text.IO             as T
 
 import           Debug.Trace
 
@@ -73,7 +75,14 @@ dispatch q e =
       ruleShift (ruleLet dispatch) (letOrder q e1) q e
     TyApp _ _ ->
       ruleApp dispatch q e
-    _ -> throwError (AssertionFailed "dispatch: rule unimplemented")
+    _ -> do
+      liftIO $ do
+        T.putStrLn ""
+        T.putStrLn "expression:\n"
+        T.putStr "  "
+        T.putStrLn . pretty . fromTyped $ e
+        T.putStrLn ""
+      throwError (AssertionFailed "dispatch: rule unimplemented")
 
 -- | Find non-linear variables, i.e. variables that are used twice in an
 -- expression.
