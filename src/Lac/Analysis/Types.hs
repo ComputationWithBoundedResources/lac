@@ -74,6 +74,7 @@ import           Control.Monad.Except
 import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer.Strict
 import qualified Data.List.Ext                  as L
+import           Data.Map.Strict.Ext            (Map)
 import qualified Data.Map.Strict.Ext            as M
 import qualified Data.Set                       as S
 import           Data.Text                      (Text)
@@ -294,6 +295,16 @@ newtype Gen a = Gen {
   , MonadIO
   )
 
+data TypedDecl
+  = TypedDecl {
+    tyDeclId :: Text
+  , tyDeclArgs :: [Text]
+  , tyDeclExpr :: Typed
+  , tyDeclType :: Type
+  -- TODO: type signature (including annotation)
+  }
+  deriving Show
+
 -- TODO: make `gsCostFree` read-only
 data GenState
   = GenState {
@@ -302,11 +313,12 @@ data GenState
   , gsProofTreeConstraints :: [Constraint]
   , gsProofTreeSubtrees    :: [ProofTree]
   , gsCostFree             :: Bool
+  , gsEnv                  :: Map Text TypedDecl
   }
   deriving Show
 
 initState :: GenState
-initState = GenState 0 Nothing mempty mempty False
+initState = GenState 0 Nothing mempty mempty False mempty
 
 type Rule = Ctx -> Typed -> Gen ProofTree
 
