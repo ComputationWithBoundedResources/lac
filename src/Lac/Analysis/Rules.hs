@@ -12,10 +12,12 @@ import           Data.Expr.Types
 import           Data.Type                (isTyTree)
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules.App   as E
+import           Lac.Analysis.Rules.Bool  as E
 import           Lac.Analysis.Rules.Cmp   as E
 import           Lac.Analysis.Rules.Ite   as E
 import           Lac.Analysis.Rules.Let   as E
 import           Lac.Analysis.Rules.Match as E
+import           Lac.Analysis.Rules.Nat   as E
 import           Lac.Analysis.Rules.Nil   as E
 import           Lac.Analysis.Rules.Node  as E
 import           Lac.Analysis.Rules.Share as E
@@ -41,6 +43,14 @@ dispatch q e =
       let ruleMatch' q' _ = ruleMatch dispatch q' x e1 (x1, x2, x3) e2
       in
       ruleShift ruleMatch' (pushBack q [x]) q e
+    TyLit (TyLNat _) ->
+      if numVarsCtx q == 0
+        then ruleW ruleNat q e
+        else ruleWVar dispatch q e []
+    TyLit (TyLBool _) ->
+      if numVarsCtx q == 0
+        then ruleW ruleBool q e
+        else ruleWVar dispatch q e []
     TyLit TyLNil ->
       if numVarsCtx q == 0
         then ruleW ruleNil q e
