@@ -71,7 +71,7 @@ dispatch q e =
       ruleIte dispatch q x e1 e2
     TyLet _ (e1, _) _ ->
       ruleShift (ruleLet dispatch) (letOrder q e1) q e
-    TyApp (TyVar _, _) (TyVar _, _) ->
+    TyApp _ _ ->
       ruleApp dispatch q e
     _ -> throwError (AssertionFailed "dispatch: rule unimplemented")
 
