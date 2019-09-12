@@ -42,31 +42,35 @@ main = do
         then
           interactive flags args
         else
-          readProg a >>=
-            \case
-              Left e -> print e
-              Right p@Prog{..} -> do
-                progValid <- isProgValid p
+          analyzeProgram a
 
-                when (not progValid) exitFailure
+analyzeProgram :: FilePath -> IO ()
+analyzeProgram path = do
+  readProg path >>=
+    \case
+      Left e -> print e
+      Right p@Prog{..} -> do
+        progValid <- isProgValid p
 
-                let decls = inferProgType p
-                forM_ decls $ \(f, xs, (e, ty)) -> do
-                  r <- runGen $ do
-                    (xs, e') <- either (throwError . AssertionFailed) return (unwrap ty e)
-                    let b = def
-                    q <- emptyCtx b
-                    q' <- augmentCtx b q xs
-                    dispatch q' e'
-                  case r of
-                    (Left e, _) -> print e
-                    (Right t, o) -> do
-                      let texPath = a <> "-" <> T.unpack f <> ".tex"
-                      T.writeFile texPath (latexProofTree t)
-                      let smtPath = a <> "-" <> T.unpack f <> ".smt"
-                      T.writeFile smtPath $ T.unlines (smtProofTree t)
-                      putStrLn $ "wrote proof tree to file `" <> texPath <> "`"
-                      putStrLn $ "wrote SMT constraints to file `" <> smtPath <> "`"
+        when (not progValid) exitFailure
+
+        let decls = inferProgType p
+        forM_ decls $ \(f, xs, (e, ty)) -> do
+          r <- runGen $ do
+            (xs, e') <- either (throwError . AssertionFailed) return (unwrap ty e)
+            let b = def
+            q <- emptyCtx b
+            q' <- augmentCtx b q xs
+            dispatch q' e'
+          case r of
+            (Left e, _) -> print e
+            (Right t, o) -> do
+              let texPath = path <> "-" <> T.unpack f <> ".tex"
+              T.writeFile texPath (latexProofTree t)
+              let smtPath = path <> "-" <> T.unpack f <> ".smt"
+              T.writeFile smtPath $ T.unlines (smtProofTree t)
+              putStrLn $ "wrote proof tree to file `" <> texPath <> "`"
+              putStrLn $ "wrote SMT constraints to file `" <> smtPath <> "`"
 
 isProgValid :: Prog -> IO Bool
 isProgValid Prog{..} =
