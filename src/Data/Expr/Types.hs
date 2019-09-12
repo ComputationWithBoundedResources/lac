@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs              #-}
+{-# LANGUAGE LambdaCase         #-}
 {-# LANGUAGE PatternSynonyms    #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
@@ -253,3 +254,17 @@ unbound' acc e =
       go acc e1 `orElse` go acc e2
   where
     go = unbound'
+
+unApp :: Expr -> Maybe (NonEmpty Text)
+unApp = go []
+  where
+    go acc =
+      \case
+        App (Var f) (Var x) ->
+          Just $ f :| x : reverse acc
+        App e (Var x) ->
+          let acc' = x : acc
+          in
+          go acc' e
+        _ ->
+          Nothing
