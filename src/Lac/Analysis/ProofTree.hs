@@ -14,7 +14,7 @@ import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
 import           Lac.Analysis.Types.Ctx
-import           Lac.PP                        (latexVar, tshow)
+import           Lac.PP                        (tshow)
 import           Latex
 
 import qualified Data.Map.Strict               as M

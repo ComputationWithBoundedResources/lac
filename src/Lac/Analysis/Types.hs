@@ -67,7 +67,6 @@ import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
 import           Lac.Analysis.Types.Ctx         hiding (length)
-import qualified Lac.Analysis.Types.Ctx         as Ctx
 import           Latex
 
 import           Control.Monad.Except
@@ -79,9 +78,7 @@ import qualified Data.Map.Strict.Ext            as M
 import qualified Data.Set                       as S
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
-import           Data.Vector                    (Vector)
 import qualified Data.Vector                    as V
-import qualified Data.Vector.Mutable            as MV
 
 import           Debug.Trace
 

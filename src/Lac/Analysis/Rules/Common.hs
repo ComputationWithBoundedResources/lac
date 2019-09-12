@@ -19,7 +19,6 @@ import           Lac.Analysis.Types.Ctx as E (astId, costId, trees)
 
 import           Control.Monad          as E (forM, forM_, when)
 import           Data.Default           as E (def)
-import qualified Data.Text.IO           as T
 
 nil :: Typed
 nil = TyLit TyLNil
