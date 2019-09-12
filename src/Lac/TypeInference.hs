@@ -118,7 +118,7 @@ extractEnv :: Env -> [((T String Text, Type), a)] -> Env
 extractEnv env decls' = map fst decls' ++ env
 
 -- TODO: keep type annotation
-inferProgType' :: [Decl] -> State Int [(Text, [Text], (Typed, Type))]
+inferProgType' :: [Decl] -> State Int [TypedDecl]
 inferProgType' decls =
   do
     let env = mempty
@@ -151,12 +151,12 @@ inferProgType' decls =
                   Right mgu' ->
                     let e'' = applySubst mgu' e'
                     in
-                    (f, xs, (e'', tySig))
-              Nothing -> (f, xs, (e', ty'))
+                    TypedDecl f xs e'' tySig
+              Nothing -> TypedDecl f xs e' ty'
       Left e ->
         error $ "inferProgType': could not apply MGU (" <> e <> ")"
 
-inferProgType :: Prog -> [(Text, [Text], (Typed, Type))]
+inferProgType :: Prog -> [TypedDecl]
 inferProgType Prog{..} = fst . runState (inferProgType' progDecls) $ 0
 
 applySubst :: [(Type, Type)] -> Typed -> Typed

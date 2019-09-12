@@ -55,9 +55,9 @@ analyzeProgram path = do
         when (not progValid) exitFailure
 
         let decls = inferProgType p
-        forM_ decls $ \(f, xs, (e, ty)) -> do
+        forM_ decls $ \TypedDecl{..} -> do
           r <- runGen $ do
-            (xs, e') <- either (throwError . AssertionFailed) return (unwrap ty e)
+            (xs, e') <- either (throwError . AssertionFailed) return (unwrap tyDeclType tyDeclExpr)
             let b = def
             q <- emptyCtx b
             q' <- augmentCtx b q xs
@@ -65,9 +65,9 @@ analyzeProgram path = do
           case r of
             (Left e, _) -> print e
             (Right t, o) -> do
-              let texPath = path <> "-" <> T.unpack f <> ".tex"
+              let texPath = path <> "-" <> T.unpack tyDeclId <> ".tex"
               T.writeFile texPath (latexProofTree t)
-              let smtPath = path <> "-" <> T.unpack f <> ".smt"
+              let smtPath = path <> "-" <> T.unpack tyDeclId <> ".smt"
               T.writeFile smtPath $ T.unlines (smtProofTree t)
               putStrLn $ "wrote proof tree to file `" <> texPath <> "`"
               putStrLn $ "wrote SMT constraints to file `" <> smtPath <> "`"
@@ -177,8 +177,8 @@ cmdDecls = ReplCmd "decls" cmd (const "show loaded declarations")
         go flags =
           do
             decls <- getTypedProgram
-            forM_ decls $ \(f, _, (e, ty)) ->
-              liftIO $ T.putStrLn $ f <> " : " <> ppTerm' ty
+            forM_ decls $ \TypedDecl{..} ->
+              liftIO $ T.putStrLn $ tyDeclId <> " : " <> ppTerm' tyDeclType
             return True
 
 -- TODO: better error type
@@ -202,11 +202,11 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
     cmd _ =
       do
         decls <- getTypedProgram
-        forM_ decls $ \(f, _, (e, ty)) -> do
+        forM_ decls $ \TypedDecl{..} -> do
           -- TODO: add declarations to context
           liftIO $ do
             ctx' <- runGen $ do
-              (xs, e') <- either (throwError . AssertionFailed) return (unwrap ty e)
+              (xs, e') <- either (throwError . AssertionFailed) return (unwrap tyDeclType tyDeclExpr)
               let b = Bound 1
               q <- emptyCtx b
               q' <- augmentCtx b q xs
@@ -214,5 +214,5 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
             print ctx'
         return True
 
-getTypedProgram :: StateT ReplState IO [(Text, [Text], (Typed, Type))]
+getTypedProgram :: StateT ReplState IO [TypedDecl]
 getTypedProgram = (inferProgType . rsProg) <$> get

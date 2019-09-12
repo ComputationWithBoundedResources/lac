@@ -58,7 +58,7 @@ module Lac.Analysis.Types (
 
 import           Control.Monad.State.Strict.Ext
 import           Data.Bound
-import           Data.Expr.Typed                (Typed)
+import           Data.Expr.Typed
 import           Data.List.Ext                  (enum)
 import           Data.Term.Pretty
 import           Data.Type
@@ -294,16 +294,6 @@ newtype Gen a = Gen {
   , MonadWriter Output
   , MonadIO
   )
-
-data TypedDecl
-  = TypedDecl {
-    tyDeclId :: Text
-  , tyDeclArgs :: [Text]
-  , tyDeclExpr :: Typed
-  , tyDeclType :: Type
-  -- TODO: type signature (including annotation)
-  }
-  deriving Show
 
 -- TODO: make `gsCostFree` read-only
 data GenState

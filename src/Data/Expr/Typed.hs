@@ -47,3 +47,13 @@ ppTyped (expr, ty) = "(" <> go expr <> " : " <> ppTerm' ty <> ")"
         TyVar x -> T.pack . show $ x
 
         TyApp e1 e2 -> "(" <> ppTyped e1 <> " " <> ppTyped e2 <> ")"
+
+data TypedDecl
+  = TypedDecl {
+    tyDeclId :: Text
+  , tyDeclArgs :: [Text]
+  , tyDeclExpr :: Typed
+  , tyDeclType :: Type
+  -- TODO: type signature (including annotation)
+  }
+  deriving Show
