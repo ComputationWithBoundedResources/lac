@@ -56,7 +56,7 @@ analyzeProgram path = do
 
         let decls = inferProgType p
         forM_ decls $ \TypedDecl{..} -> do
-          r <- runGen $ do
+          r <- runGen decls $ do
             (xs, e') <- either (throwError . AssertionFailed) return (unwrap tyDeclType tyDeclExpr)
             let b = def
             q <- emptyCtx b
@@ -205,7 +205,7 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
         forM_ decls $ \TypedDecl{..} -> do
           -- TODO: add declarations to context
           liftIO $ do
-            ctx' <- runGen $ do
+            ctx' <- runGen mempty $ do
               (xs, e') <- either (throwError . AssertionFailed) return (unwrap tyDeclType tyDeclExpr)
               let b = Bound 1
               q <- emptyCtx b

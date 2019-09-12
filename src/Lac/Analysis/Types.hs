@@ -378,10 +378,14 @@ instance HasFresh GenState where
   getFresh GenState{..} = gsFresh
   putFresh i s = s { gsFresh = i }
 
-runGen :: Gen r -> IO (Either Error r, Output)
-runGen = fmap f . runWriterT . flip runStateT initState . runExceptT . unGen
+runGen :: [TypedDecl] -> Gen r -> IO (Either Error r, Output)
+runGen decls = fmap f . runWriterT . flip runStateT s . runExceptT . unGen
   where
     f ((e, _), cs) = (e, cs)
+
+    s = initState { gsEnv = mkEnv decls }
+
+    mkEnv = M.fromList . map (\tyDecl@TypedDecl{..} -> (tyDeclId, tyDecl))
 
 -- * Interface
 
