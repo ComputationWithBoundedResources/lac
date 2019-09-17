@@ -18,6 +18,7 @@ j x =
     then nil
     else nil;
 
+k : Nat -> Nat -> Nat -> Tree (Nat);
 k x y z =
   let p = x < y
   in
@@ -30,6 +31,7 @@ k x y z =
       (l, z, r);
 
 (* test for (w : var) rule *)
+l1 : Nat -> Nat -> Tree (Nat) -> Nat -> Tree (Nat);
 l1 x y t a =
   let p = x < y
   in
