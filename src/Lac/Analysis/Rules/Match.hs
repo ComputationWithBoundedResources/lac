@@ -7,7 +7,6 @@ import           Data.Expr.Types           (Pattern (..))
 import           Lac.Analysis.Rules.Common
 import qualified Lac.Analysis.Types.Ctx    as Ctx
 
-import           Control.Monad             (when)
 import qualified Data.List.Ext             as L
 import           Data.List.NonEmpty        (NonEmpty (..))
 import qualified Data.Vector               as V
