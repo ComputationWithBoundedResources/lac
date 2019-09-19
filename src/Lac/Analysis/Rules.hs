@@ -4,6 +4,7 @@
 module Lac.Analysis.Rules (
     module E
   , dispatch
+  , dispatchReport
   ) where
 
 import           Data.Expr.FromTyped
@@ -29,12 +30,27 @@ import           Lac.Analysis.Types
 import           Lac.Analysis.Types.Ctx
 import           Lac.PP.Pretty
 
+import           Control.Monad.Except     (catchError)
 import           Data.List.Ext            (elemElem)
 import           Data.List.NonEmpty       (NonEmpty (..))
 import           Data.Text                (Text)
+import qualified Data.Text                as T
 import qualified Data.Text.IO             as T
 
 import           Debug.Trace
+
+dispatchReport :: Ctx -> Typed -> Gen ProofTree
+dispatchReport context expression = dispatch context expression `catchError` handler
+  where
+    handler :: Error -> Gen ProofTree
+    handler error = do
+      liftIO . T.putStrLn . T.unlines $
+        [ ""
+        , "Expression:\n"
+        , "  " <> (pretty . fromTyped $ expression)
+        , ""
+        ]
+      throwError error
 
 dispatch :: Ctx -> Typed -> Gen ProofTree
 dispatch q e =
@@ -75,13 +91,7 @@ dispatch q e =
       ruleShift (ruleLet dispatch) (letOrder q e1) q e
     TyApp _ _ ->
       ruleApp dispatch q e
-    _ -> do
-      liftIO $ do
-        T.putStrLn ""
-        T.putStrLn "expression:\n"
-        T.putStr "  "
-        T.putStrLn . pretty . fromTyped $ e
-        T.putStrLn ""
+    _ ->
       throwError (AssertionFailed "dispatch: rule unimplemented")
 
 -- | Find non-linear variables, i.e. variables that are used twice in an
