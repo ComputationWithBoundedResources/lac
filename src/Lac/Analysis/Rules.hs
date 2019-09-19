@@ -15,6 +15,7 @@ import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules.App   as E
 import           Lac.Analysis.Rules.Bool  as E
 import           Lac.Analysis.Rules.Cmp   as E
+import           Lac.Analysis.Rules.Error as E
 import           Lac.Analysis.Rules.Ite   as E
 import           Lac.Analysis.Rules.Let   as E
 import           Lac.Analysis.Rules.Match as E
@@ -53,7 +54,20 @@ dispatchReport context expression = dispatch context expression `catchError` han
       throwError error
 
 dispatch :: Ctx -> Typed -> Gen ProofTree
-dispatch q e =
+dispatch = catch _dispatch
+
+catch :: Rule -> Ctx -> Typed -> Gen ProofTree
+catch f q@Ctx{..} e = f q e `catchError` handler
+  where
+    handler error = do
+      liftIO $ do
+        print ctxVariables
+        T.putStrLn . pretty . fromTyped $ e
+        print error
+      ruleError q e error
+
+_dispatch :: Ctx -> Typed -> Gen ProofTree
+_dispatch q e =
   case e of
     _ | (z:_) <- nonLinear q e ->
       ruleShift (ruleShare dispatch z) (pushBack q [z]) q e
