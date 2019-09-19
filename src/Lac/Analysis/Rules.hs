@@ -74,9 +74,13 @@ dispatch q e =
         then ruleW ruleNil q e
         else ruleWVar dispatch q e []
     TyLit (TyLNode (TyVar x1) (TyVar x2) (TyVar x3)) ->
-      if numVarsCtx q > 3
-        then ruleWVar dispatch q e [x1, x2, x3]
-        else ruleW ruleNode q e
+      if and [ numVarsCtx q == 3
+             , x1 `elem` trees q
+             , x2 `elem` nats q
+             , x3 `elem` trees q
+             ]
+        then ruleW ruleNode q e
+        else ruleWVar dispatch q e [x1, x2, x3]
     TyVar x ->
       if numVarsCtx q == 1
         then ruleW ruleVar q e
