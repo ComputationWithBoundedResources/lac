@@ -383,6 +383,7 @@ conclude q e q' =
             n
             gsProofTreeConstraints
             gsProofTreeSubtrees
+            Nothing
       Nothing ->
         throwError $ AssertionFailed "no rule name set"
 

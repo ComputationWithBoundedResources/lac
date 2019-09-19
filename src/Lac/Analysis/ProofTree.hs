@@ -30,18 +30,20 @@ data ProofTree
     , ptRuleName    :: RuleName
     , ptConstraints :: [Constraint]
     , ptSubtrees    :: [ProofTree]
+    , ptComment     :: Maybe Text
     }
   deriving (Show)
 
 -- TODO: show return type
 latexProofTree :: ProofTree -> Text
-latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts) =
+latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts mc) =
     "\\infer[(\\mathsf{" <> n
       <> "})]{" <> latexCtx q <> " \\vdash " <> latexTyped e <> " : " <> latexRetCtx r <> "}"
       <> "{"
-      <> T.intercalate " & " (latexConstraints cs : map latexProofTree ts)
+      <> T.intercalate " & " (latexConstraints cs : map latexProofTree ts ++ latexComment)
       <> "}"
   where
+    latexComment = maybe [] (:[]) mc
     latexTyped = latex . fromTyped
     latexConstraints = const $
         "\\begin{array}{l}"
