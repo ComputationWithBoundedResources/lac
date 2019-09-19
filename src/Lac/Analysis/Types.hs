@@ -44,6 +44,7 @@ module Lac.Analysis.Types (
   , tell
   , throwError
   , assert
+  , assertWithContext
   , liftIO
 
   , Rule
@@ -67,6 +68,7 @@ import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
 import           Lac.Analysis.Types.Ctx         hiding (length)
+import           Lac.PP
 import           Latex
 
 import           Control.Monad.Except
@@ -251,16 +253,29 @@ data Error
   = NotImplemented Text
   | NotApplicable Text
   | AssertionFailed Text
-  deriving (Eq, Show)
+  | RuleFailed [(Text, Type)] Typed Error
+  deriving Show
 
 assert :: Bool -> Text -> Gen ()
-assert p s =
-  if p
-    then return ()
-    else do
-      ruleName <- getRuleName
-      let s' = "[" <> ruleName <> "] " <> s
-      throwError (AssertionFailed s')
+assert p s
+  | p         = return ()
+  | otherwise = makeAssertionFailedError s >>= throwError
+
+assertWithContext :: Ctx -> Typed -> Bool -> Text -> Gen ()
+assertWithContext context expression assertion message
+  | assertion = return ()
+  | otherwise = failWithContext context expression message
+
+failWithContext :: Ctx -> Typed -> Text -> Gen ()
+failWithContext Ctx{..} expression message =
+  makeAssertionFailedError message >>= \nested ->
+    throwError $ RuleFailed ctxVariables expression nested
+
+makeAssertionFailedError :: Text -> Gen Error
+makeAssertionFailedError s = do
+  ruleName <- getRuleName
+  let s' = "[" <> ruleName <> "] " <> s
+  return $ AssertionFailed s'
 
 data Output
   = Output {
