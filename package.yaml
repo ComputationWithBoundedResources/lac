@@ -55,6 +55,7 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -fobject-code
     dependencies:
     - lac
   lac-lnf:
