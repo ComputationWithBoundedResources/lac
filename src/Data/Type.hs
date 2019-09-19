@@ -44,6 +44,11 @@ tyHole = F "_" []
 isTyTree :: Type -> Bool
 isTyTree = (== tyTree)
 
+isTyNat :: Type -> Bool
+isTyNat = (== tyNat)
+
+-- TODO: do not confuse "base type" (i.e. Nat) with "ground" type, i.e.
+-- a type that does not contain type variables
 isBaseType :: Type -> Bool
 isBaseType (V _)    = False
 isBaseType (F _ xs) = all isBaseType xs
