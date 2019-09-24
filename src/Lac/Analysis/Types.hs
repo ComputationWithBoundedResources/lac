@@ -68,7 +68,6 @@ import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
 import           Lac.Analysis.Types.Ctx         hiding (length)
-import           Lac.PP
 import           Latex
 
 import           Control.Monad.Except
