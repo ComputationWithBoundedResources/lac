@@ -61,7 +61,6 @@ import           Control.Monad.State.Strict.Ext
 import           Data.Bound
 import           Data.Expr.Typed
 import           Data.List.Ext                  (enum)
-import           Data.Term.Pretty
 import           Data.Type
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.RuleName
@@ -169,7 +168,7 @@ ppCtx Ctx{..} =
     <> T.intercalate "\n" (map ppCoeff . M.toList $ ctxCoefficients)
 
 ppVar :: (Text, Type) -> Text
-ppVar (x, ty) = x <> " : " <> ppTerm' ty
+ppVar (x, ty) = x <> " : " <> ppType ty
 
 ppCoeff :: (Idx, Coeff) -> Text
 ppCoeff (idx, (Coeff i)) = T.pack (show i) <> ": " <> c

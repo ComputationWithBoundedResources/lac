@@ -6,7 +6,6 @@
 module Data.Expr.Typed where
 
 import           Data.Expr.Types    (CmpOp (..), Pattern (..))
-import           Data.Term.Pretty   (ppTerm')
 import           Data.Type
 
 import           Data.List.NonEmpty
@@ -34,7 +33,7 @@ data Typed where
 deriving instance Show Typed
 
 ppTyped :: (Typed, Type) -> Text
-ppTyped (expr, ty) = "(" <> go expr <> " : " <> ppTerm' ty <> ")"
+ppTyped (expr, ty) = "(" <> go expr <> " : " <> ppType ty <> ")"
   where
     go =
       \case
