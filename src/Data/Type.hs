@@ -69,7 +69,6 @@ fromTerm' = go
                     [] -> 0
                     xs -> maximum xs + 1
           put $ (x, i) : m
-          m' <- get
           return $ V i
     go (F f ts) = do
       ts' <- mapM go ts
