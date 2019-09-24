@@ -65,7 +65,7 @@ catch f q@Ctx{..} tyExpr@(e, τ) = f q tyExpr `catchError` handler
         print ctxVariables
         T.putStrLn . pretty . fromTyped $ e
         print error
-      ruleError q e error
+      ruleError q tyExpr error
 
 _dispatch :: Ctx -> (Typed, Type) -> Gen ProofTree
 _dispatch q tyExpr@(e, τ) =

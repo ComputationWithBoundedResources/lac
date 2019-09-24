@@ -5,11 +5,11 @@ module Lac.Analysis.Rules.Error where
 import           Lac.Analysis.Rules.Common
 import           Lac.PP
 
-ruleError :: Ctx -> Typed -> Error -> Gen ProofTree
-ruleError q e error =
+ruleError :: Ctx -> (Typed, Type) -> Error -> Gen ProofTree
+ruleError q tyExpr error =
   return $
     ProofTree
-      (q, e, q)
+      (q, tyExpr, q)
       (RuleName "error")
       []
       []

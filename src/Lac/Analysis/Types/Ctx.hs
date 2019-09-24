@@ -82,6 +82,11 @@ latexCtx Ctx{..} = varCtx <> "|Q_{" <> T.pack (show ctxId) <> "}"
     vars = Prelude.map var ctxVariables
     var (x, ty) = latexVar x <> ": " <> latexType ty
 
--- TODO: show type
-latexRetCtx :: Ctx -> Text
-latexRetCtx Ctx{..} = "\\Box|Q_{" <> T.pack (show ctxId) <> "}"
+latexRetCtx :: Maybe Type -> Ctx -> Text
+latexRetCtx mTy Ctx{..} =
+    texTy <> "|Q_{" <> T.pack (show ctxId) <> "}"
+  where
+    texTy =
+      case mTy of
+        Nothing -> "\\Box"
+        Just ty -> latexType ty

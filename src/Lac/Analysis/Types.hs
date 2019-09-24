@@ -367,7 +367,7 @@ costFree :: Rule -> Rule
 costFree dispatch q e = setCostFree >> dispatch q e
 
 conclude :: Ctx -> (Typed, Type) -> Ctx -> Gen ProofTree
-conclude q (e, τ) q' =
+conclude q tyExpr q' =
   do
     s@GenState{..} <- get
     case gsProofTreeRuleName of
@@ -378,7 +378,7 @@ conclude q (e, τ) q' =
                 }
         return $
           ProofTree
-            (q, e, q')
+            (q, tyExpr, q')
             n
             gsProofTreeConstraints
             gsProofTreeSubtrees

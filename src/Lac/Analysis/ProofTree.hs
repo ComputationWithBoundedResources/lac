@@ -10,6 +10,7 @@ module Lac.Analysis.ProofTree (
 import           Data.Expr.FromTyped
 import           Data.Expr.Latex               ()
 import           Data.Expr.Typed
+import           Data.Type                     (Type)
 import           Lac.Analysis.RuleName
 import           Lac.Analysis.Types.Coeff
 import           Lac.Analysis.Types.Constraint
@@ -26,7 +27,7 @@ import qualified Data.Vector                   as V
 
 data ProofTree
   = ProofTree {
-      ptConclusion  :: (Ctx, Typed, Ctx)
+      ptConclusion  :: (Ctx, (Typed, Type), Ctx)
     , ptRuleName    :: RuleName
     , ptConstraints :: [Constraint]
     , ptSubtrees    :: [ProofTree]
@@ -34,11 +35,10 @@ data ProofTree
     }
   deriving (Show)
 
--- TODO: show return type
 latexProofTree :: ProofTree -> Text
-latexProofTree (ProofTree (q, e, r) (RuleName n) cs ts mc) =
+latexProofTree (ProofTree (q, (e, τ), r) (RuleName n) cs ts mc) =
     "\\infer[(\\mathsf{" <> n
-      <> "})]{" <> latexCtx q <> " \\vdash " <> latexTyped e <> " : " <> latexRetCtx r <> "}"
+      <> "})]{" <> latexCtx q <> " \\vdash " <> latexTyped e <> " : " <> latexRetCtx (Just τ) r <> "}"
       <> "{"
       <> T.intercalate " & " (latexConstraints cs : map latexProofTree ts ++ latexComment)
       <> "}"
