@@ -61,7 +61,7 @@ analyzeProgram path = do
             let b = def
             q <- emptyCtx b
             q' <- augmentCtx b q xs
-            dispatch q' (e', returnType tyDeclType)
+            dispatch q' (e', returnType xs tyDeclType)
           case r of
             (Left e, _) -> print e
             (Right t, o) -> do
@@ -72,11 +72,10 @@ analyzeProgram path = do
               putStrLn $ "wrote proof tree to file `" <> texPath <> "`"
               putStrLn $ "wrote SMT constraints to file `" <> smtPath <> "`"
 
-returnType :: Type -> Type
-returnType =
-  \case
-    F "->" [_, τ] -> returnType τ
-    τ             -> τ
+returnType :: [a] -> Type -> Type
+returnType []     τ                = τ
+returnType (x:xs) (F "->" [_, τ2]) = returnType xs τ2
+returnType _      _                = error "returnType: illegal arguments"
 
 isProgValid :: Prog -> IO Bool
 isProgValid Prog{..} =
@@ -216,7 +215,7 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
               let b = Bound 1
               q <- emptyCtx b
               q' <- augmentCtx b q xs
-              dispatch q' (e', returnType tyDeclType)
+              dispatch q' (e', returnType xs tyDeclType)
             print ctx'
         return True
 
