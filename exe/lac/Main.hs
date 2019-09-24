@@ -183,7 +183,7 @@ cmdDecls = ReplCmd "decls" cmd (const "show loaded declarations")
           do
             decls <- getTypedProgram
             forM_ decls $ \TypedDecl{..} ->
-              liftIO $ T.putStrLn $ tyDeclId <> " : " <> ppTerm' tyDeclType
+              liftIO $ T.putStrLn $ tyDeclId <> " : " <> ppType tyDeclType
             return True
 
 -- TODO: better error type

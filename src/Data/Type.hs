@@ -73,3 +73,6 @@ fromTerm' = go
     go (F f ts) = do
       ts' <- mapM go ts
       return $ F f ts'
+
+ppType :: Type -> Text
+ppType = ppTerm'
