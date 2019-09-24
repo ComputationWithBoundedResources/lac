@@ -16,8 +16,8 @@ import qualified Data.Vector                    as V
 
 import           Debug.Trace
 
-ruleShare :: Rule -> Text -> Ctx -> Typed -> Gen ProofTree
-ruleShare rec z q@Ctx.Ctx{..} e =
+ruleShare :: Rule -> Text -> Ctx -> (Typed, Type) -> Gen ProofTree
+ruleShare rec z q@Ctx.Ctx{..} (e, τ) =
   do
     setRuleName "share"
 
@@ -59,9 +59,9 @@ ruleShare rec z q@Ctx.Ctx{..} e =
             q2zi <- coeff q2 v2
             accumConstr [ CEq (CAtom qv) (CAtom q2zi) ]
 
-    q' <- prove rec q2 e'
+    q' <- prove rec q2 (e', τ)
 
-    conclude q e q'
+    conclude q (e, τ) q'
 
 freshVar :: Text -> Gen Text
 freshVar x = (("$" <>) . (x <>) . T.pack . show) <$> fresh

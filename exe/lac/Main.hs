@@ -61,7 +61,7 @@ analyzeProgram path = do
             let b = def
             q <- emptyCtx b
             q' <- augmentCtx b q xs
-            dispatch q' e'
+            dispatch q' (e', tyDeclType)
           case r of
             (Left e, _) -> print e
             (Right t, o) -> do
@@ -210,7 +210,7 @@ cmdCheck = ReplCmd "check" cmd (const "infer constraints for loaded program")
               let b = Bound 1
               q <- emptyCtx b
               q' <- augmentCtx b q xs
-              dispatch q' e'
+              dispatch q' (e', tyDeclType)
             print ctx'
         return True
 

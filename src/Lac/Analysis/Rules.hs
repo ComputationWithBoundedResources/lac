@@ -10,7 +10,7 @@ module Lac.Analysis.Rules (
 import           Data.Expr.FromTyped
 import           Data.Expr.Typed
 import           Data.Expr.Types
-import           Data.Type                (isTyTree)
+import           Data.Type                (Type, isTyTree)
 import           Lac.Analysis.ProofTree
 import           Lac.Analysis.Rules.App   as E
 import           Lac.Analysis.Rules.Bool  as E
@@ -40,8 +40,9 @@ import qualified Data.Text.IO             as T
 
 import           Debug.Trace
 
-dispatchReport :: Ctx -> Typed -> Gen ProofTree
-dispatchReport context expression = dispatch context expression `catchError` handler
+dispatchReport :: Ctx -> (Typed, Type) -> Gen ProofTree
+dispatchReport context typedExpression@(expression, τ) =
+    dispatch context typedExpression `catchError` handler
   where
     handler :: Error -> Gen ProofTree
     handler error = do
@@ -53,11 +54,11 @@ dispatchReport context expression = dispatch context expression `catchError` han
         ]
       throwError error
 
-dispatch :: Ctx -> Typed -> Gen ProofTree
+dispatch :: Ctx -> (Typed, Type) -> Gen ProofTree
 dispatch = catch _dispatch
 
-catch :: Rule -> Ctx -> Typed -> Gen ProofTree
-catch f q@Ctx{..} e = f q e `catchError` handler
+catch :: Rule -> Ctx -> (Typed, Type) -> Gen ProofTree
+catch f q@Ctx{..} tyExpr@(e, τ) = f q tyExpr `catchError` handler
   where
     handler error = do
       liftIO $ do
@@ -66,49 +67,49 @@ catch f q@Ctx{..} e = f q e `catchError` handler
         print error
       ruleError q e error
 
-_dispatch :: Ctx -> Typed -> Gen ProofTree
-_dispatch q e =
+_dispatch :: Ctx -> (Typed, Type) -> Gen ProofTree
+_dispatch q tyExpr@(e, τ) =
   case e of
     _ | (z:_) <- nonLinear q e ->
-      ruleShift (ruleShare dispatch z) (pushBack q [z]) q e
-    TyMatch (TyVar x, _) ((PNil, (e1, _)) :| [(PNode x1 x2 x3, (e2, _))]) ->
-      let ruleMatch' q' _ = ruleMatch dispatch q' x e1 (x1, x2, x3) e2
+      ruleShift (ruleShare dispatch z) (pushBack q [z]) q tyExpr
+    TyMatch (TyVar x, _) ((PNil, tyExpr1) :| [(PNode x1 x2 x3, tyExpr2)]) ->
+      let ruleMatch' q' _ = ruleMatch dispatch q' x tyExpr1 (x1, x2, x3) tyExpr2
       in
-      ruleShift ruleMatch' (pushBack q [x]) q e
+      ruleShift ruleMatch' (pushBack q [x]) q tyExpr
     TyLit (TyLNat _) ->
       if numVarsCtx q == 0
-        then ruleW ruleNat q e
-        else ruleWVar dispatch q e []
+        then ruleW ruleNat q tyExpr
+        else ruleWVar dispatch q tyExpr []
     TyLit (TyLBool _) ->
       if numVarsCtx q == 0
-        then ruleW ruleBool q e
-        else ruleWVar dispatch q e []
+        then ruleW ruleBool q tyExpr
+        else ruleWVar dispatch q tyExpr []
     TyLit TyLNil ->
       if numVarsCtx q == 0
-        then ruleW ruleNil q e
-        else ruleWVar dispatch q e []
+        then ruleW ruleNil q tyExpr
+        else ruleWVar dispatch q tyExpr []
     TyLit (TyLNode (TyVar x1) (TyVar x2) (TyVar x3)) ->
       if and [ numVarsCtx q == 3
              , x1 `elem` trees q
              , x2 `elem` nats q
              , x3 `elem` trees q
              ]
-        then ruleW ruleNode q e
-        else ruleWVar dispatch q e [x1, x2, x3]
+        then ruleW ruleNode q tyExpr
+        else ruleWVar dispatch q tyExpr [x1, x2, x3]
     TyVar x ->
       if numVarsCtx q == 1
-        then ruleW ruleVar q e
-        else ruleWVar dispatch q e [x]
+        then ruleW ruleVar q tyExpr
+        else ruleWVar dispatch q tyExpr [x]
     TyCmp _ (TyVar x1, _) (TyVar x2, _) ->
       if numVarsCtx q == 2
-        then ruleW ruleCmp q e
-        else ruleWVar dispatch q e [x1, x2]
-    TyIte (TyVar x, _) (e1, _) (e2, _) ->
-      ruleIte dispatch q x e1 e2
+        then ruleW ruleCmp q tyExpr
+        else ruleWVar dispatch q tyExpr [x1, x2]
+    TyIte (TyVar x, _) tyExpr1 tyExpr2 ->
+      ruleIte dispatch q x tyExpr1 tyExpr2
     TyLet _ (e1, _) _ ->
-      ruleShift (ruleLet dispatch) (letOrder q e1) q e
+      ruleShift (ruleLet dispatch) (letOrder q e1) q tyExpr
     TyApp _ _ ->
-      ruleApp dispatch q e
+      ruleApp dispatch q tyExpr
     _ ->
       throwError (AssertionFailed "dispatch: rule unimplemented")
 

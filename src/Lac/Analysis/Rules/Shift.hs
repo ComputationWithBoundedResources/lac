@@ -14,10 +14,10 @@ import qualified Data.Map.Strict           as M
 import qualified Data.Vector               as V
 
 ruleShift
-  :: Rule   -- ^ continuation
-  -> [Text] -- ^ variables to shift right in context
-  -> Ctx    -- ^ context/annotation
-  -> Typed  -- ^ expression
+  :: Rule           -- ^ continuation
+  -> [Text]         -- ^ variables to shift right in context
+  -> Ctx            -- ^ context/annotation
+  -> (Typed, Type)  -- ^ typed expression
   -> Gen ProofTree
 ruleShift dispatch toOrder q@Ctx.Ctx{..} e =
   do

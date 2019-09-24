@@ -321,7 +321,7 @@ data GenState
 initState :: GenState
 initState = GenState 0 Nothing mempty mempty False mempty
 
-type Rule = Ctx -> Typed -> Gen ProofTree
+type Rule = Ctx -> (Typed, Type) -> Gen ProofTree
 
 setRuleName :: Text -> Gen ()
 setRuleName n = do
@@ -348,14 +348,14 @@ accumConstr :: [Constraint] -> Gen ()
 accumConstr cs =
   modify $ \s@GenState{..} -> s { gsProofTreeConstraints = gsProofTreeConstraints ++ cs }
 
-prove :: Rule -> Ctx -> Typed -> Gen Ctx
-prove dispatch q e =
+prove :: Rule -> Ctx -> (Typed, Type) -> Gen Ctx
+prove dispatch q typedExpression =
   do
     -- save current state
     saved <- get
     modify $ \s@GenState{..} -> initState { gsFresh = gsFresh }
     -- dispatch nested rule application
-    t@ProofTree{..} <- dispatch q e
+    t@ProofTree{..} <- dispatch q typedExpression
     -- recover state w/ updated "fresh" value
     modify $ \s -> saved { gsFresh             = gsFresh s
                          , gsProofTreeSubtrees = gsProofTreeSubtrees saved ++ [t]
@@ -366,8 +366,8 @@ prove dispatch q e =
 costFree :: Rule -> Rule
 costFree dispatch q e = setCostFree >> dispatch q e
 
-conclude :: Ctx -> Typed -> Ctx -> Gen ProofTree
-conclude q e q' =
+conclude :: Ctx -> (Typed, Type) -> Ctx -> Gen ProofTree
+conclude q (e, τ) q' =
   do
     s@GenState{..} <- get
     case gsProofTreeRuleName of

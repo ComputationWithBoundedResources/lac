@@ -7,8 +7,8 @@ import qualified Lac.Analysis.Types.Ctx    as Ctx
 
 import           Debug.Trace
 
-ruleVar :: Ctx -> Typed -> Gen ProofTree
-ruleVar q (TyVar x) =
+ruleVar :: Ctx -> (Typed, Type) -> Gen ProofTree
+ruleVar q (TyVar x, τ) =
   do
     setRuleName "var"
 
@@ -28,10 +28,10 @@ ruleVar q (TyVar x) =
         q'x <- coeff q' astIdx
         accumConstr [ CEq (CAtom q1) (CAtom q'x) ]
 
-        conclude q (TyVar x) q'
+        conclude q (TyVar x, τ) q'
       else do
         assert
           (Ctx.length q == 0)
           "ruleVar: context must not contain trees"
 
-        conclude q (TyVar x) q
+        conclude q (TyVar x, τ) q

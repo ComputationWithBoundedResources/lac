@@ -15,11 +15,11 @@ import           Data.Word
 import           Debug.Trace
 
 ruleLet
-  :: Rule     -- ^ continuation
-  -> Ctx      -- ^ context/annotation (i.e. Γ, Δ)
-  -> Typed    -- ^ expression
+  :: Rule           -- ^ continuation
+  -> Ctx            -- ^ context/annotation (i.e. Γ, Δ)
+  -> (Typed, Type)  -- ^ expression
   -> Gen ProofTree
-ruleLet dispatch q e@(TyLet x (e1, τx) (e2, _)) =
+ruleLet dispatch q e@(TyLet x (e1, τx) (e2, τe2), τe) =
   do
     setRuleName "let"
 
@@ -46,8 +46,8 @@ ruleLet dispatch q e@(TyLet x (e1, τx) (e2, _)) =
     let k = Ctx.length r
     let k' = fromIntegral k :: Word8
 
-    s <- prove dispatch p  e1 -- R'
-    t <- prove dispatch r' e2 -- P'
+    s <- prove dispatch p  (e1, τx)  -- R'
+    t <- prove dispatch r' (e2, τe2) -- P'
 
     -- p_i = q_i
     forM_ [1..m'] $ \i -> do
@@ -95,7 +95,7 @@ ruleLet dispatch q e@(TyLet x (e1, τx) (e2, _)) =
               qabc <- coeff q $ VecIdx . V.fromList $ va ++ vb ++ [c]
               accumConstr [ CEq (CAtom pbac) (CAtom qabc) ]
 
-          w' <- prove (costFree dispatch) w e1
+          w' <- prove (costFree dispatch) w (e1, τx)
 
           -- p'^{\vec{b}}_{(a,c)} = r_{(\vec{b},a,c)}
           forM_ [0..ub] $ \a ->

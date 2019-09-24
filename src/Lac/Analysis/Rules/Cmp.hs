@@ -4,8 +4,8 @@ module Lac.Analysis.Rules.Cmp where
 
 import           Lac.Analysis.Rules.Common
 
-ruleCmp :: Ctx -> Typed -> Gen ProofTree
-ruleCmp q e@(TyCmp op (TyVar x1, τ1) (TyVar x2, τ2)) =
+ruleCmp :: Ctx -> (Typed, Type) -> Gen ProofTree
+ruleCmp q e@(TyCmp op (TyVar x1, τ1) (TyVar x2, τ2), _) =
   do
     setRuleName "cmp"
 

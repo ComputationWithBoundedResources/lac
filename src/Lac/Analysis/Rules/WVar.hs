@@ -10,10 +10,10 @@ import qualified Data.List.Ext             as L
 import qualified Data.Vector               as V
 
 ruleWVar
-  :: Rule   -- ^ continuation
-  -> Ctx    -- ^ context/annotation
-  -> Typed  -- ^ expression
-  -> [Text] -- ^ variables that are kept
+  :: Rule           -- ^ continuation
+  -> Ctx            -- ^ context/annotation
+  -> (Typed, Type)  -- ^ typed expression
+  -> [Text]         -- ^ variables that are kept
   -> Gen ProofTree
 ruleWVar dispatch q e xs =
   do

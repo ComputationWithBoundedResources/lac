@@ -8,8 +8,8 @@ import           Lac.Analysis.Rules.Common
 import qualified Data.List.Ext             as L
 import qualified Data.Vector               as V
 
-ruleNil :: Ctx -> Typed -> Gen ProofTree
-ruleNil q e =
+ruleNil :: Ctx -> (Typed, Type) -> Gen ProofTree
+ruleNil q (e, τ) =
   do
     setRuleName "nil"
 
@@ -26,4 +26,4 @@ ruleNil q e =
         q'ab <- coeff q' $ VecIdx . V.fromList $ [a, b]
         accumConstr [ CEq (CAtom qc) (CAtom q'ab) ]
 
-    conclude q nil q'
+    conclude q (nil, τ) q'

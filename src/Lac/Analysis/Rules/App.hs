@@ -13,8 +13,12 @@ import qualified Data.Vector               as V
 
 import           Debug.Trace
 
-ruleApp :: Rule -> Ctx -> Typed -> Gen ProofTree
-ruleApp _ q1 e =
+ruleApp
+  :: Rule
+  -> Ctx
+  -> (Typed, Type)
+  -> Gen ProofTree
+ruleApp _ q1 (e, τ) =
   do
     setRuleName "app"
 
@@ -45,4 +49,4 @@ ruleApp _ q1 e =
 
     q' <- returnCtx def
 
-    conclude q1 e q'
+    conclude q1 (e, τ) q'

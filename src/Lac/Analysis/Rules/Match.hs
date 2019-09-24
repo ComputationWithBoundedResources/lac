@@ -14,10 +14,19 @@ import           Data.Word
 
 import           Debug.Trace
 
-ruleMatch :: Rule -> Ctx -> Text -> Typed -> (Text, Text, Text) -> Typed -> Gen ProofTree
-ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
+ruleMatch
+  :: Rule               -- ^ continuation
+  -> Ctx                -- ^ context/annotation
+  -> Text               -- ^ scrutinee
+  -> (Typed, Type)      -- ^ typed expression (nil-case)
+  -> (Text, Text, Text) -- ^ deconstructed tree (node)
+  -> (Typed, Type)      -- ^ typed expression (node-case)
+  -> Gen ProofTree
+ruleMatch dispatch q x (e1, τe1) (x1, x2, x3) (e2, τe2) =
   do
     setRuleName "match"
+
+    assert (τe1 == τe2) "ruleMatch: e1 and e2 have distinct types"
 
     let u@(Bound ub) = def
     let m = Ctx.length q - 1
@@ -78,8 +87,8 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
       ]
 
     -- recursive calls
-    q1' <- prove dispatch p  e1
-    q2' <- prove dispatch r' e2
+    q1' <- prove dispatch p  (e1, τe1)
+    q2' <- prove dispatch r' (e2, τe2)
 
     -- equate "return" contexts
     q' <- if Ctx.length q1' > 0
@@ -89,4 +98,10 @@ ruleMatch dispatch q x e1 (x1, x2, x3) e2 =
     eqCtx q2' q'
 
     -- TODO: fix expression
-    conclude q (TyMatch (TyVar x, τx) ((PNil, (hole, tyHole)) :| [(PNode x1 x2 x3, (hole, tyHole))])) q'
+    conclude
+      q
+      (TyMatch
+        (TyVar x, τx)
+          ((PNil, (hole, tyHole)) :|
+          [(PNode x1 x2 x3, (hole, tyHole))]), τe1)
+      q'

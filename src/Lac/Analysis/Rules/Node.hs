@@ -9,8 +9,8 @@ import qualified Lac.Analysis.Types.Ctx    as Ctx
 
 import qualified Data.Vector               as V
 
-ruleNode :: Ctx -> Typed -> Gen ProofTree
-ruleNode q (TyLit (TyLNode (TyVar x1) (TyVar _) (TyVar x2))) =
+ruleNode :: Ctx -> (Typed, Type) -> Gen ProofTree
+ruleNode q (TyLit (TyLNode (TyVar x1) (TyVar _) (TyVar x2)), τ) =
   do
     setRuleName "node"
 
@@ -50,4 +50,4 @@ ruleNode q (TyLit (TyLNode (TyVar x1) (TyVar _) (TyVar x2))) =
       q'ab <- coeff q' (VecIdx . V.fromList $ [a, b])
       accumConstr [ CEq (CAtom qaab) (CAtom q'ab) ]
 
-    conclude q (TyLit (TyLNode (TyVar x1) hole (TyVar x2))) q'
+    conclude q (TyLit (TyLNode (TyVar x1) hole (TyVar x2)), τ) q'

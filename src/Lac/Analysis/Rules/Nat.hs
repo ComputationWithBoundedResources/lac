@@ -5,8 +5,8 @@ module Lac.Analysis.Rules.Nat where
 import           Lac.Analysis.Rules.Common
 import qualified Lac.Analysis.Types.Ctx    as Ctx
 
-ruleNat :: Ctx -> Typed -> Gen ProofTree
-ruleNat q e@(TyLit (TyLNat _)) =
+ruleNat :: Ctx -> (Typed, Type) -> Gen ProofTree
+ruleNat q e@(TyLit (TyLNat _), _) =
   do
     setRuleName "nat"
     assert
