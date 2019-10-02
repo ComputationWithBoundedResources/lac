@@ -65,22 +65,21 @@ ruleLet dispatch q e@(TyLet x (e1, τx) (e2, τe2), τe) =
         qa0c <- coeff q $ VecIdx . V.fromList $ xs ++ vecΔ0 ++ [c]
         accumConstr [ CEq (CAtom pac) (CAtom qa0c) ]
 
-    -- p'_\ast = r_{k+1}
-    -- only possible when x is bound to a value of type tree?
     if τx == tyTree
       then do
+        -- p'_\ast = r_{k+1}
         rx <- coeff r' (RankIdx $ k' + 1)
         tx <- coeff t  astIdx
         accumConstr [ CEq (CAtom rx) (CAtom tx) ]
+
+        -- p'_{(a,c)} = r_{(\vec{0},a,c)}
+        forM_ [0..ub] $ \a ->
+          forM_ [0..ub] $ \c -> do
+            p'ac <- coeff t  $ VecIdx . V.fromList $ a :          [c]
+            r0ac <- coeff r' $ VecIdx . V.fromList $ a : vecΔ0 ++ [c]
+            accumConstr [ CEq (CAtom p'ac) (CAtom r0ac) ]
       else
         liftIO $ putStrLn "x is not bound to a value of type tree"
-
-    -- p'_{(a,c)} = r_{(\vec{0},a,c)}
-    forM_ [0..ub] $ \a ->
-      forM_ [0..ub] $ \c -> do
-        p'ac <- coeff t  $ VecIdx . V.fromList $ a :          [c]
-        r0ac <- coeff r' $ VecIdx . V.fromList $ a : vecΔ0 ++ [c]
-        accumConstr [ CEq (CAtom p'ac) (CAtom r0ac) ]
 
     case L.enum ub k' of
       [] -> return ()
