@@ -69,7 +69,9 @@ cmpEq = string sCmpEq >> spaces' >> return sCmpEq
 cmpOp :: Stream s m Char => ParsecT s u m CmpOp
 cmpOp = op <* spaces'
   where
-    op = (string "<" *> return CmpLt)
+    op = try (string "<=" *> return CmpLe)
+      <|> (string "<" *> return CmpLt)
+      <|> (string ">=" *> return CmpGe)
       <|> (string ">" *> return CmpGt)
       <|> (cmpEq *> return CmpEq)
 
@@ -141,8 +143,10 @@ expr = (controlExpr <|> valueExpr) `chainl1` (op <$> cmpOp)
     op =
       \case
         CmpLt -> (:<)
+        CmpLe -> (:<=)
         CmpEq -> (:==)
         CmpGt -> (:>)
+        CmpGe -> (:>=)
 
 controlExpr :: Stream s m Char => ParsecT s u m Expr
 controlExpr = try let_ <|> try match <|> try ite

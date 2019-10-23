@@ -23,8 +23,10 @@ data Literal
 
 data CmpOp
   = CmpLt -- ^ @<@
+  | CmpLe -- ^ @<=@
   | CmpEq -- ^ @==@
   | CmpGt -- ^ @>@
+  | CmpGe -- ^ @>=@
   deriving (Show, Eq)
 
 data Expr where
@@ -95,14 +97,22 @@ bvar = S.fromList . mapMaybe f . sub
 deriving instance Show Expr
 deriving instance Eq Expr
 
+-- TODO: remove patterns
+
 pattern (:<) :: Expr -> Expr -> Expr
 pattern (:<)  e1 e2 = Cmp CmpLt e1 e2
+
+pattern (:<=) :: Expr -> Expr -> Expr
+pattern (:<=) e1 e2 = Cmp CmpLe e1 e2
 
 pattern (:==) :: Expr -> Expr -> Expr
 pattern (:==) e1 e2 = Cmp CmpEq e1 e2
 
 pattern (:>) :: Expr -> Expr -> Expr
 pattern (:>)  e1 e2 = Cmp CmpGt e1 e2
+
+pattern (:>=) :: Expr -> Expr -> Expr
+pattern (:>=) e1 e2 = Cmp CmpGe e1 e2
 
 data Pattern
   = PNil
